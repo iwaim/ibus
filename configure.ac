@@ -165,6 +165,7 @@ ibus.spec
 ibus/config.py
 ibus/Makefile
 ibus/interface/Makefile
+ibus/setup/Makefile
 daemon/Makefile
 daemon/ibus-daemon
 launcher/ibus

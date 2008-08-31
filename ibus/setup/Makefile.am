@@ -37,3 +37,6 @@ CLEANFILES = \
 
 DISTCLEANFILES = \
 	$(NULL)
+
+test:
+	$(PYTHON) main.py
