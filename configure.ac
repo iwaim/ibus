@@ -104,6 +104,13 @@ if test x"$IBUS_HAS_QT3" == x"yes"; then
     AC_SUBST(QMAKE3)
 fi
 
+# Check dbus-qt3
+PKG_CHECK_MODULES(DBUS_QT3,
+    [dbus-1-qt3 >= 0.9.0],
+    [IBUS_HAS_DBUS_QT3=yes],
+    [IBUS_HAS_DBUS_QT3=no]
+)
+
 # Check for x11
 PKG_CHECK_MODULES(X11, [
     x11
@@ -187,6 +194,7 @@ AC_ARG_ENABLE(qt4-immodule,
     [enable_qt4=yes],
 )
 if test x"$IBUS_HAS_QT4" != x"yes"; then
+    AC_MSG_WARN([can not find qt4 for building qt4 im module.])
     enable_qt4=no
 fi
 AM_CONDITIONAL(IBUS_BUILD_QT4, [test x"$enable_qt4" = x"yes" ])
@@ -199,8 +207,14 @@ AC_ARG_ENABLE(qt3-immodule,
     [enable_qt3=yes],
 )
 if test x"$IBUS_HAS_QT3" != x"yes"; then
+    AC_MSG_WARN([can not find qt3 for building qt3 im module.])
     enable_qt3=no
 fi
+if test x"$IBUS_HAS_DBUS_QT3" != x"yes"; then
+    AC_MSG_WARN([can not find dbus-qt3 for building qt3 im module.])
+    enable_qt3=no
+fi
+
 AM_CONDITIONAL(IBUS_BUILD_QT3, [test x"$enable_qt3" = x"yes" ])
 
 # define --enable-pygconf
