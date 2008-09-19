@@ -81,25 +81,27 @@ PKG_CHECK_MODULES(DBUS, [
 
 
 # Check for Qt4
-PKG_CHECK_MODULES(QT,
+PKG_CHECK_MODULES(QT4,
     [QtCore >= 4.4.0 QtDBus >= 4.4.0],
     [IBUS_HAS_QT4=yes],
     [IBUS_HAS_QT4=no]
 )
 
 if test x"$IBUS_HAS_QT4" == x"yes"; then
-    QMAKE=`$PKG_CONFIG --variable=qmake Qt`
-    if test x"$QMAKE" == x""; then
-        AC_PATH_PROG(QMAKE, qmake-qt4)
-    fi
-    if test x"$QMAKE" == x""; then
-        AC_PATH_PROG(QMAKE, qmake)
-    fi
-    if test x"$QMAKE" == x""; then
-        IBUS_HAS_QT4=no
-        AC_MSG_WARN([Can not find qmake.])
-    fi
-    AC_SUBST(QMAKE)
+    QMAKE4=`$PKG_CONFIG --variable=prefix Qt`/bin/qmake
+    AC_SUBST(QMAKE4)
+fi
+
+# Check for Qt3
+PKG_CHECK_MODULES(QT3,
+    [qt-mt >= 3.3],
+    [IBUS_HAS_QT3=yes],
+    [IBUS_HAS_QT3=no]
+)
+
+if test x"$IBUS_HAS_QT3" == x"yes"; then
+    QMAKE3=`$PKG_CONFIG --variable=prefix qt-mt`/bin/qmake
+    AC_SUBST(QMAKE3)
 fi
 
 # Check for x11
@@ -132,6 +134,33 @@ AC_SUBST(PYTHON_CFLAGS)
 AC_SUBST(PYTHON_INCLUDES)
 AC_SUBST(PYTHON_LIBS)
 
+# check pygtk-2.0
+PKG_CHECK_MODULES(PYGTK,
+    pygtk-2.0 >= 2.10.3,
+    [IBUS_HAS_PYGTK=yes],
+    [IBUS_HAS_PYGTK=no]
+)
+AC_SUBST(PYGTK_CFLAGS)
+AC_SUBST(PYGTK_LIBS)
+
+# check pygtk-code-gen-2.0
+AC_PATH_PROG(PYGTK_CODEGEN, pygtk-codegen-2.0, no)
+
+# check gconf-2.0
+PKG_CHECK_MODULES(GCONF,
+    [gconf-2.0 >= 2.11.1],
+    [IBUS_HAS_GCONF=yes],
+    [IBUS_HAS_GCONF=no]
+)
+AC_SUBST(GCONF_CFLAGS)
+AC_SUBST(GCONF_LIBS)
+
+# check iso-codes
+PKG_CHECK_MODULES(ISOCODES,
+    iso-codes,
+    [IBUS_HAS_ISOCODES=yes],
+    [IBUS_HAS_ISOCODES=no],
+)
 
 # define GETTEXT_* variables
 GETTEXT_PACKAGE=ibus
@@ -142,7 +171,7 @@ AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION(0.16.1)
 
 
-# define configure arguments
+# define --with-gtk-im-module-dir
 AC_ARG_WITH(gtk-im-module-dir,
     AS_HELP_STRING([--with-gtk-im-module-dir[=DIR]],
         [Select gtk immodule dir]),
@@ -150,6 +179,7 @@ AC_ARG_WITH(gtk-im-module-dir,
 )
 AC_SUBST(GTK_IM_MODULEDIR)
 
+#define --disable-qt4-immodule
 AC_ARG_ENABLE(qt4-immodule,
     AS_HELP_STRING([--disable-qt4-immodule],
         [do not build qt4 immodule]),
@@ -161,54 +191,42 @@ if test x"$IBUS_HAS_QT4" != x"yes"; then
 fi
 AM_CONDITIONAL(IBUS_BUILD_QT4, [test x"$enable_qt4" = x"yes" ])
 
-# check pygtk gconf for pygconf
+#define --disable-qt3-immodule
+AC_ARG_ENABLE(qt3-immodule,
+    AS_HELP_STRING([--disable-qt3-immodule],
+        [do not build qt3 immodule]),
+    [enable_qt3=$enableval],
+    [enable_qt3=yes],
+)
+if test x"$IBUS_HAS_QT3" != x"yes"; then
+    enable_qt3=no
+fi
+AM_CONDITIONAL(IBUS_BUILD_QT3, [test x"$enable_qt3" = x"yes" ])
+
+# define --enable-pygconf
 AC_ARG_ENABLE(pygconf,
     AS_HELP_STRING([--enable-pygconf],
         [Build python gconf binding, with it ibus will not depend on gnome-python]),
     [enable_pygconf=$enableval],
     [enable_pygconf=no],
 )
-
-PKG_CHECK_MODULES(PYGTK,
-    pygtk-2.0 >= 2.10.3,
-    [IBUS_HAS_PYGTK=yes],
-    [IBUS_HAS_PYGTK=no]
-)
-AC_SUBST(PYGTK_CFLAGS)
-AC_SUBST(PYGTK_LIBS)
 if test x"$IBUS_HAS_PYGTK" != x"yes" -a x"$enable_pygconf" = x"yes"; then
   AC_MSG_ERROR(can not build python gconf binding without pygtk-2.0)
 fi
-
-AC_PATH_PROG(PYGTK_CODEGEN, pygtk-codegen-2.0, no)
 if test x"$PYGTK_CODEGEN" = x"no" -a x"$enable_pygconf" = x"yes"; then
   AC_MSG_ERROR(can not build python gconf binding without pygtk-codegen-2.0)
 fi
-
-PKG_CHECK_MODULES(GCONF,
-    [gconf-2.0 >= 2.11.1],
-    [IBUS_HAS_GCONF=yes],
-    [IBUS_HAS_GCONF=no]
-)
-AC_SUBST(GCONF_CFLAGS)
-AC_SUBST(GCONF_LIBS)
 if test x"$IBUS_HAS_GCONF" != x"yes" -a x"$enable_pygconf" = x"yes"; then
   AC_MSG_ERROR(can not build python gconf binding without gconf-2.0)
 fi
-
 AM_CONDITIONAL(IBUS_BUILD_PYGCONF, [test x"$enable_pygconf" = x"yes" ])
 
-# check iso-codes
+# define --disable-iso-codes-check
 AC_ARG_ENABLE(iso-codes-check,
     AS_HELP_STRING([--disable-iso-codes-check],
         [Do not check iso-codes]),
     [enable_iso_codes_check=$enableval],
     [enable_iso_codes_check=yes],
-)
-PKG_CHECK_MODULES(ISOCODES,
-    iso-codes,
-    [IBUS_HAS_ISOCODES=yes],
-    [IBUS_HAS_ISOCODES=no],
 )
 if test x"$IBUS_HAS_ISOCODES" != x"yes"; then
     if test x"$enable_iso_codes_check" != x"no"; then
@@ -239,6 +257,7 @@ lib/gtk2/Makefile
 client/Makefile
 client/gtk2/Makefile
 client/qt4/Makefile
+client/qt3/Makefile
 client/x11/Makefile
 setup/Makefile
 setup/ibus-setup
@@ -259,6 +278,7 @@ Build options:
   Build static libs        $enable_static
   Gtk immodule dir         $GTK_IM_MODULEDIR
   Enable Qt4 IM module     $enable_qt4
+  Enable Qt3 IM module     $enable_qt3
   Build pygconf            $enable_pygconf
 ])
 

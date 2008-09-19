@@ -19,9 +19,22 @@
 # Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 # Boston, MA  02111-1307  USA
 
-SUBDIRS = \
-	gtk2 \
-	qt4 \
-	qt3 \
-	x11 \
-	$(NULL)
+TEMPLATE = lib
+TARGET = ibus
+DEPENDPATH += . 
+INCLUDEPATH += . $(top_builddir)
+
+CONFIG += qt qdbus plugin x11
+
+# Input
+HEADERS += \
+	ibus-client.h \
+	ibus-input-context.h
+
+SOURCES += \
+	ibus-client.cpp \
+	ibus-input-context.cpp \
+	im-ibus-qt.cpp
+
+target.path += $$[QT_INSTALL_PLUGINS]/inputmethods
+INSTALLS    += target

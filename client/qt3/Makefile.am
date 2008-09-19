@@ -28,9 +28,9 @@ EXTRA_DIST = \
 	im-ibus-qt.cpp \
 	$(NULL)
 
-if IBUS_BUILD_QT4
+if IBUS_BUILD_QT3
 Makefile.qmake: ibus.pro
-	$(QMAKE4) -makefile -o Makefile.qmake $(srcdir)/ibus.pro
+	$(QMAKE3) -makefile -o Makefile.qmake $(srcdir)/ibus.pro
 
 all-local: Makefile.qmake
 	$(MAKE) -f Makefile.qmake $(AM_MAKEFLAGS) top_builddir=$(top_builddir) all
