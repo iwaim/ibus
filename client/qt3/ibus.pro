@@ -25,6 +25,8 @@ DEPENDPATH += .
 INCLUDEPATH += . $(top_builddir)
 
 CONFIG += qt plugin x11
+DBUS_INCLUDE = $$system(pkg-config --cflags dbus-1-qt3 2>/dev/null | sed 's/-I//g')
+DBUS_LIBS = $$system(pkg-config --libs dbus-1-qt3 2>/dev/null)
 
 # Input
 HEADERS += \
@@ -36,5 +38,7 @@ SOURCES += \
 	ibus-input-context.cpp \
 	im-ibus-qt.cpp
 
+INCLUDEPATH += $$DBUS_INCLUDE
+LIBS += $$DBUS_LIBS
 target.path += $$[QT_INSTALL_PLUGINS]/inputmethods
 INSTALLS    += target
