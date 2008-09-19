@@ -21,14 +21,25 @@
  */
 #ifndef __IBUS_CLIENT_H_
 #define __IBUS_CLIENT_H_
-#include <QObject>
-#include <QList>
-#include <QHash>
-#include <QInputContext>
-#include <QFileSystemWatcher>
-#include <QDBusMessage>
 
-class QDBusConnection;
+#ifdef QT4
+#  include <QObject>
+#  include <QList>
+#  include <QVector>
+#  include <QHash>
+#  include <QInputContext>
+#  include <QFileSystemWatcher>
+#  include <QDBusMessage>
+#else
+#  include <qobject.h>
+#  include <qptrlist.h>
+#  include <qmemarray.h>
+#  include <qdict.h> 
+#  include <qinputcontext.h>
+#  include <dbus/qdbusmessage.h>
+#endif
+
+class MyDBusConnection;
 class IBusInputContext;
 
 class IBusClient : public QObject {
@@ -76,10 +87,15 @@ private:
 	QString createInputContextRemote ();
 	void findYenBarKeys ();
 
-	QDBusConnection *ibus;
-	QFileSystemWatcher watcher;
+	MyDBusConnection *ibus;
+#ifdef QT4
 	QList <IBusInputContext *> context_list;
+	QFileSystemWatcher watcher;
 	QHash <QString, IBusInputContext *>context_dict;
+#else
+	QPtrList <IBusInputContext> context_list;
+	QDict <IBusInputContext>context_dict;
+#endif
 	QString username;
 	QString session;
 	QString ibus_path;
@@ -87,7 +103,11 @@ private:
 
 	/* hack japan keyboard */
 	unsigned int japan_groups;
+#ifdef QT4
 	QVector <unsigned int> japan_yen_bar_keys;
+#else
+	QMemArray <unsigned int> japan_yen_bar_keys;
+#endif
 
 };
 

@@ -19,13 +19,23 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
+
 #include <config.h>
-#include <QtDebug>
-#include <QFile>
-#include <QDBusConnection>
-#include <QCoreApplication>
-#include <QDBusMessage>
-#include <QDBusArgument>
+
+#ifdef QT4
+#  include <QFile>
+#  include <QtDebug>
+#  include <QDBusConnection>
+#  include <QCoreApplication>
+#  include <QDBusMessage>
+#  include <QDBusArgument>
+#else
+#  include <qvariant.h>
+#  include <qfile.h>
+#  include <dbus/qdbusconnection.h>
+#  include <dbus/qdbusdata.h>
+#  include <stdlib.h>
+#endif
 
 #include <pwd.h>
 
@@ -33,19 +43,77 @@
 #include "ibus-input-context.h"
 
 #ifdef Q_WS_X11
-# include <QX11Info>
-# include <X11/Xlib.h>
-# include <X11/keysym.h>
-# include <X11/Xutil.h>
-# ifdef HAVE_X11_XKBLIB_H
-#  define HAVE_XKB
-#  include <X11/XKBlib.h>
-# endif
+#  ifdef QT4
+#    include <QX11Info>
+#  else
+#    include <qpaintdevice.h>
+#  endif
+#  include <X11/Xlib.h>
+#  include <X11/keysym.h>
+#  include <X11/Xutil.h>
+#  ifdef HAVE_X11_XKBLIB_H
+#    define HAVE_XKB
+#    include <X11/XKBlib.h>
+#  endif
 #endif
 
 #define IBUS_NAME	"org.freedesktop.IBus"
 #define IBUS_PATH	"/org/freedesktop/IBus"
 #define IBUS_INTERFACE	"org.freedesktop.IBus"
+
+#ifdef QT4
+class MyDBusConnection : public QDBusConnection {
+};
+class MyDBusMessage : public QDBusMessage {
+};
+#else
+class MyDBusConnection : public QDBusConnection {
+public:
+	MyDBusConnection (const QDBusConnection & other) : QDBusConnection (other) {}
+	QDBusMessage call ( const QDBusMessage & message) const {
+		return this->sendWithReply (message);
+	}
+};
+class MyDBusMessage: public QDBusMessage {
+public:
+	MyDBusMessage (const QDBusMessage & other) : QDBusMessage (other) {}
+
+#if 0
+	MyDBusMessage &operator<< (const bool &arg) {
+		append (QDBusData::fromBool (arg));
+		return *this;
+	}
+#endif
+
+	MyDBusMessage &operator<< (const QVariant &arg) {
+		if (arg.type () == QVariant::String) {
+			append (QDBusData::fromString (arg.toString ()));
+		}
+		else if (arg.type () == QVariant::Int) {
+			append (QDBusData::fromInt32 (arg.toInt ()));
+		}
+		else if (arg.type () == QVariant::UInt) {
+			append (QDBusData::fromUInt32 (arg.toUInt ()));
+		}
+		else {
+			qWarning ("We can not append %s", arg.typeName ());
+		}
+		return *this;
+	}
+
+	QValueList<QDBusData> & arguments () {
+		return *this;
+	}
+
+public:
+	static QDBusMessage	createMethodCall ( const QString & service,
+							const QString & path,
+							const QString & interface,
+							const QString & method ) {
+		return QDBusMessage::methodCall (service, path, interface, method);
+	}
+};
+#endif
 
 
 IBusClient::IBusClient ()
@@ -79,7 +147,11 @@ IBusClient::IBusClient ()
 		username = getenv ("LNAME");
 
 	session = getenv ("DISPLAY");
+#ifdef QT4
 	if (session.indexOf (".") == -1) {
+#else
+	if (session.find (".") == -1) {
+#endif
 		session += ".0";
 	}
 	session.replace (":", "-");
@@ -88,6 +160,7 @@ IBusClient::IBusClient ()
 	ibus_addr = QString("unix:path=/tmp/ibus-%1/ibus-%2").arg (username, session);
 	connectToBus ();
 
+#ifdef QT4
 	QObject::connect (
 		&watcher,
 		SIGNAL(directoryChanged(const QString &)),
@@ -98,6 +171,7 @@ IBusClient::IBusClient ()
 
 	ibus_dir = QString ("/tmp/ibus-%1/").arg (username);
 	watcher.addPath (ibus_dir);
+#endif
 }
 
 IBusClient::~IBusClient ()
@@ -111,19 +185,23 @@ IBusClient::createInputContextRemote ()
 {
 	QString ic;
 	if (ibus) {
-		QDBusMessage message = QDBusMessage::createMethodCall (
+		MyDBusMessage message = MyDBusMessage::createMethodCall (
 								IBUS_NAME,
 								IBUS_PATH,
 								IBUS_INTERFACE,
 								"CreateInputContext");
+#ifdef QT4
 		message << QCoreApplication::applicationName ();
+#else
+		message << QString ("QT3Application");
+#endif
 		message = ibus->call (message);
 
 		if (message.type () == QDBusMessage::ErrorMessage) {
-			qWarning() << message.errorMessage ();
+			qWarning ("Call CreateInputContext failed!");
 		}
 		else if (message.type () == QDBusMessage::ReplyMessage) {
-			ic = message.arguments () [0].toString ();
+			ic = message.arguments ()[0].toString ();
 		}
 	}
 	return ic;
@@ -143,23 +221,34 @@ IBusClient::findYenBarKeys ()
 	int group;
 	KeySym *map = NULL, *syms;
 
-	japan_groups = 0;
-	japan_yen_bar_keys.clear ();
+#ifdef QT4
+	Display *display = QX11Info::display ();
+#else
+	Display *display = QPaintDevice::x11AppDisplay ();
+#endif
 
-	desc = XkbGetMap (QX11Info::display (), 0, XkbUseCoreKbd);
+	japan_groups = 0;
+
+#ifdef QT4
+	japan_yen_bar_keys.clear ();
+#else
+	japan_yen_bar_keys.truncate (0);
+#endif
+
+	desc = XkbGetMap (display, 0, XkbUseCoreKbd);
 	if (desc == NULL) {
 		qWarning ("Can not allocate XkbDescRec!");
 		goto _out;
 	}
 
 	retval =
-		Success == (status = XkbGetControls (QX11Info::display (),
+		Success == (status = XkbGetControls (display,
 								XkbSlowKeysMask,
 								desc)) &&
-		Success == (status = XkbGetNames (QX11Info::display (),
+		Success == (status = XkbGetNames (display,
 								XkbGroupNamesMask | XkbIndicatorNamesMask,
 								desc)) &&
-		Success == (status = XkbGetIndicatorMap (QX11Info::display (),
+		Success == (status = XkbGetIndicatorMap (display,
 								XkbAllIndicatorsMask,
 								desc));
 	if (retval) {
@@ -169,7 +258,7 @@ IBusClient::findYenBarKeys ()
 			QString group_name;
 			if (*pa == None)
 				continue;
-			group_name = XGetAtomName (QX11Info::display (), *pa);
+			group_name = XGetAtomName (display, *pa);
 			if (group_name == "Japan") {
 				japan_groups |= (1 << i);
 			}
@@ -181,9 +270,9 @@ IBusClient::findYenBarKeys ()
 	}
 
 
-	XDisplayKeycodes (QX11Info::display (), &min_keycode, &max_keycode);
+	XDisplayKeycodes (display, &min_keycode, &max_keycode);
 	keycode_count = max_keycode - min_keycode + 1;
-	map = XGetKeyboardMapping (QX11Info::display (),
+	map = XGetKeyboardMapping (display,
 				min_keycode, keycode_count, &keysyms_per_keycode);
 	if (map == NULL) {
 		goto _out;
@@ -196,7 +285,12 @@ IBusClient::findYenBarKeys ()
 				keycode++, syms += keysyms_per_keycode) {
 			if (syms[group * 2] != XK_backslash || syms[group * 2 + 1] != XK_bar)
 				continue;
+#ifdef QT4
 			japan_yen_bar_keys.append (keycode);
+#else
+			japan_yen_bar_keys.resize (japan_yen_bar_keys.size () + 1);
+			japan_yen_bar_keys[japan_yen_bar_keys.size () - 1] =  keycode;
+#endif
 		}
 	}
 
@@ -223,7 +317,7 @@ IBusClient::createInputContext ()
 	context_list.append (ctx);
 
 	if (! ic.isEmpty ()) {
-		context_dict[ic] = ctx;
+		context_dict.insert (ic, ctx);
 	}
 
 	return (QInputContext *) ctx;
@@ -237,6 +331,7 @@ IBusClient::releaseInputContext (IBusInputContext *ctx)
 	QString ic = ctx->getIC ();
 
 	if (ibus && !ic.isEmpty ()) {
+#ifdef QT4
 		QDBusMessage message = QDBusMessage::createMethodCall (
 								IBUS_NAME,
 								IBUS_PATH,
@@ -248,9 +343,26 @@ IBusClient::releaseInputContext (IBusInputContext *ctx)
 		if (message.type () == QDBusMessage::ErrorMessage) {
 			qWarning() << message.errorMessage ();
 		}
+#else
+		QDBusMessage message = QDBusMessage::methodCall (
+								IBUS_NAME,
+								IBUS_PATH,
+								IBUS_INTERFACE,
+								"ReleaseInputContext");
+		message.append (QDBusData::fromString(ctx->getIC ()));
+		message = ibus->sendWithReply (message);
+
+		if (message.type () == QDBusMessage::ErrorMessage) {
+			qWarning ("Call ReleaseInputContext failed!");
+		}
+#endif
 		context_dict.remove (ic);
 	}
+#ifdef QT4
 	context_list.removeAll (ctx);
+#else
+	while (context_list.remove (ctx)) ;
+#endif
 }
 
 #ifndef Q_WS_X11
@@ -341,12 +453,17 @@ IBusClient::x11FilterEvent (IBusInputContext *ctx, QWidget * /* keywidget */, XE
 #ifdef HAVE_XKB
 	int group = XkbGroupForCoreState (state);
 	if (keyval == XK_backslash && japan_groups & (1 << group)) {
+#ifdef QT4
 		if (japan_yen_bar_keys.indexOf (xevent->xkey.keycode) != -1) {
+#else
+		if (japan_yen_bar_keys.find (xevent->xkey.keycode) != -1) {
+#endif
 			keyval = XK_yen;
 		}
 	}
 #endif
 
+#ifdef QT4
 	QDBusMessage message = QDBusMessage::createMethodCall (
 							IBUS_NAME,
 							IBUS_PATH,
@@ -366,6 +483,28 @@ IBusClient::x11FilterEvent (IBusInputContext *ctx, QWidget * /* keywidget */, XE
 	else {
 		return message.arguments ()[0].toBool ();
 	}
+#else
+	QDBusMessage message = QDBusMessage::methodCall (
+							IBUS_NAME,
+							IBUS_PATH,
+							IBUS_INTERFACE,
+							"ProcessKeyEvent");
+	message.append (QDBusData::fromString (ctx->getIC ()));
+	message.append (QDBusData::fromUInt32 (keyval));
+	message.append (QDBusData::fromBool (is_press));
+	message.append (QDBusData::fromUInt32 (state));
+
+	message = ibus->sendWithReply (message);
+
+	if (message.type() == QDBusMessage::ErrorMessage) {
+		qWarning ("Call ProcessKeyEvent Failed");
+		return false;
+	}
+	else {
+		return message[0].toBool ();
+	}
+
+#endif
 }
 #endif
 
@@ -383,7 +522,7 @@ IBusClient::setCursorLocation (IBusInputContext *ctx, QRect &rect)
 		return;
 	}
 
-	QDBusMessage message = QDBusMessage::createMethodCall (
+	MyDBusMessage message = MyDBusMessage::createMethodCall (
 							IBUS_NAME,
 							IBUS_PATH,
 							IBUS_INTERFACE,
@@ -395,7 +534,7 @@ IBusClient::setCursorLocation (IBusInputContext *ctx, QRect &rect)
 	message << rect.height ();
 	message = ibus->call (message);
 	if (message.type() == QDBusMessage::ErrorMessage) {
-		qWarning() << message.errorMessage ();
+		qWarning("Call SetCursorLocation failed!");
 	}
 }
 
@@ -408,7 +547,7 @@ IBusClient::reset (IBusInputContext *ctx)
 		return;
 	}
 
-	QDBusMessage message = QDBusMessage::createMethodCall (
+	MyDBusMessage message = MyDBusMessage::createMethodCall (
 							IBUS_NAME,
 							IBUS_PATH,
 							IBUS_INTERFACE,
@@ -417,7 +556,7 @@ IBusClient::reset (IBusInputContext *ctx)
 	message = ibus->call (message);
 
 	if (message.type() == QDBusMessage::ErrorMessage) {
-		qWarning() << message.errorMessage ();
+		qWarning ("Call Reset failed");
 	}
 }
 
@@ -430,7 +569,7 @@ IBusClient::focusIn (IBusInputContext *ctx)
 		return;
 	}
 
-	QDBusMessage message = QDBusMessage::createMethodCall (
+	MyDBusMessage message = MyDBusMessage::createMethodCall (
 							IBUS_NAME,
 							IBUS_PATH,
 							IBUS_INTERFACE,
@@ -439,7 +578,7 @@ IBusClient::focusIn (IBusInputContext *ctx)
 	message = ibus->call (message);
 
 	if (message.type() == QDBusMessage::ErrorMessage) {
-		qWarning() << message.errorMessage ();
+		qWarning ("Call FocusIn failed");
 	}
 
 }
@@ -453,7 +592,7 @@ IBusClient::focusOut (IBusInputContext *ctx)
 		return;
 	}
 
-	QDBusMessage message = QDBusMessage::createMethodCall (
+	MyDBusMessage message = MyDBusMessage::createMethodCall (
 							IBUS_NAME,
 							IBUS_PATH,
 							IBUS_INTERFACE,
@@ -462,7 +601,7 @@ IBusClient::focusOut (IBusInputContext *ctx)
 	message = ibus->call (message);
 
 	if (message.type() == QDBusMessage::ErrorMessage) {
-		qWarning() << message.errorMessage ();
+		qWarning ("Call FocusOut failed");
 	}
 }
 
@@ -475,7 +614,7 @@ IBusClient::setCapabilities (IBusInputContext *ctx, int caps)
 		return;
 	}
 
-	QDBusMessage message = QDBusMessage::createMethodCall (
+	MyDBusMessage message = MyDBusMessage::createMethodCall (
 							IBUS_NAME,
 							IBUS_PATH,
 							IBUS_INTERFACE,
@@ -485,7 +624,7 @@ IBusClient::setCapabilities (IBusInputContext *ctx, int caps)
 	message = ibus->call (message);
 
 	if (message.type() == QDBusMessage::ErrorMessage) {
-		qWarning() << message.errorMessage ();
+		qWarning ("Call SetCapabilities failed");
 	}
 }
 

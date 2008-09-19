@@ -21,8 +21,16 @@
  */
 #ifndef __IBUS_INPUT_CONTEXT_H_
 #define __IBUS_INPUT_CONTEXT_H_
-#include <QInputContext>
-#include <QList>
+
+#ifdef QT4
+#  include <QInputContext>
+#  include <QList>
+#else
+#  include <qinputcontext.h>
+#  include <qlist.h>
+typedef unsigned int quint32;
+#endif
+
 #include "ibus-client.h"
 
 class IBusClient;
