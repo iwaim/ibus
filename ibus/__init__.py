@@ -27,6 +27,7 @@ from interface import *
 from exception import *
 from lookuptable import *
 from bus import *
+from inputcontext import *
 from lang import *
 from utility import *
 from engine import *
@@ -34,4 +35,6 @@ from factory import *
 from panel import *
 from notifications import *
 from config import *
+from serializable import *
+from text import *
 from _config import *

@@ -28,10 +28,11 @@ ibus_PYTHON = \
 	attribute.py \
 	common.py \
 	bus.py \
+	inputcontext.py \
 	engine.py \
 	exception.py \
 	factory.py \
-	gtk.py \
+	_gtk.py \
 	__init__.py \
 	keysyms.py \
 	lang.py \
@@ -41,6 +42,8 @@ ibus_PYTHON = \
 	panel.py \
 	notifications.py \
 	property.py \
+	serializable.py \
+	text.py \
 	utility.py \
 	config.py \
 	_config.py \

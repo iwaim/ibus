@@ -55,6 +55,7 @@ class Panel(ibus.PanelBase):
     def __init__ (self, bus):
         super(Panel, self).__init__(bus)
         self.__bus = bus
+        self.__config = self.__bus.get_config()
         self.__focus_ic = None
         self.__setup_pid = 0
         self.__prefix = os.getenv("IBUS_PREFIX")
@@ -67,9 +68,9 @@ class Panel(ibus.PanelBase):
         signal.signal(signal.SIGCHLD, self.__sigchld_cb)
 
         # connect bus signal
-        self.__bus.connect("config-value-changed", self.__config_value_changed_cb)
-        self.__bus.connect("config-reloaded", self.__config_reloaded_cb)
-        self.__bus.config_add_watch("panel")
+        # self.__bus.connect("config-value-changed", self.__config_value_changed_cb)
+        # self.__bus.connect("config-reloaded", self.__config_reloaded_cb)
+        # self.__bus.config_add_watch("panel")
 
         # add icon search path
         icon_theme = gtk.icon_theme_get_default()
@@ -101,28 +102,28 @@ class Panel(ibus.PanelBase):
         self.__config_load_lookup_table_orientation()
         self.__config_load_auto_hide()
         self.__config_load_custom_font()
-        self.__bus.request_name(ibus.panel.IBUS_PANEL_NAME, 0)
+        # self.__bus.request_name(ibus.panel.IBUS_SERVICE_PANEL, 0)
 
     def set_cursor_location(self, x, y, w, h):
         self.__candidate_panel.set_cursor_location(x + w, y + h)
 
-    def update_preedit(self, text, attrs, cursor_pos, visible):
-        self.__candidate_panel.update_preedit(text, attrs, cursor_pos, visible)
+    def update_preedit_text(self, text, cursor_pos, visible):
+        self.__candidate_panel.update_preedit_text(text, cursor_pos, visible)
 
-    def show_preedit(self):
-        self.__candidate_panel.show_preedit()
+    def show_preedit_text(self):
+        self.__candidate_panel.show_preedit_text()
 
-    def hide_preedit(self):
-        self.__candidate_panel.hide_preedit()
+    def hide_preedit_text(self):
+        self.__candidate_panel.hide_preedit_text()
 
-    def update_aux_string(self, text, attrs, visible):
-        self.__candidate_panel.update_aux_string(text, attrs, visible)
+    def update_auxiliary_text(self, text, visible):
+        self.__candidate_panel.update_auxiliary_text(text, visible)
 
-    def show_aux_string(self):
-        self.__candidate_panel.show_aux_string()
+    def show_auxiliary_text(self):
+        self.__candidate_panel.show_auxiliary_text()
 
-    def hide_aux_string(self):
-        self.__candidate_panel.hide_aux_string()
+    def hide_auxiliary_text(self):
+        self.__candidate_panel.hide_auxiliary_text()
 
     def update_lookup_table(self, lookup_table, visible):
         self.__candidate_panel.update_lookup_table(lookup_table, visible)
@@ -175,35 +176,35 @@ class Panel(ibus.PanelBase):
 
     def focus_in(self, ic):
         self.reset()
-        self.__focus_ic = ic
-
-        factory, enabled = self.__bus.get_input_context_states(ic)
+        self.__focus_ic = ibus.InputContext(self.__bus, ic)
+        enabled = self.__focus_ic.is_enabled()
         self.__language_bar.set_enabled(enabled)
 
-        if factory == "" or not enabled:
+        if not enabled:
             self.__set_im_icon(self.__ibus_icon)
         else:
-            name, lang, icon, authors, credits = self.__bus.get_factory_info(factory)
-            self.__set_im_icon(icon)
+            info = self.__focus_ic.get_factory_info()
+            self.__set_im_icon(info.icon)
         self.__language_bar.focus_in()
 
     def focus_out(self, ic):
         self.reset()
-        if self.__focus_ic == ic:
-            self.__focus_ic = None
-            self.__language_bar.focus_out()
-            self.__set_im_icon(self.__ibus_icon)
+        self.__focus_ic = None
+        self.__language_bar.focus_out()
+        self.__set_im_icon(self.__ibus_icon)
 
-    def states_changed(self):
+    def state_changed(self):
         if not self.__focus_ic:
             return
-        factory, enabled = self.__bus.get_input_context_states(self.__focus_ic)
+
+        enabled = self.__focus_ic.is_enabled()
         self.__language_bar.set_enabled(enabled)
-        if enabled == False or not factory:
+
+        if enabled == False:
             self.__set_im_icon(self.__ibus_icon)
         else:
-            name, lang, icon, authors, credits = self.__bus.get_factory_info(factory)
-            self.__set_im_icon(icon)
+            info = self.__focus_ic.get_factory_info()
+            self.__set_im_icon(info.icon)
 
     def reset(self):
         self.__candidate_panel.reset()
@@ -216,7 +217,7 @@ class Panel(ibus.PanelBase):
         gtk.main_quit()
 
     def __config_load_lookup_table_orientation(self):
-        value = self.__bus.config_get_value("panel", "lookup_table_orientation", 0)
+        value = self.__config.get_value("panel", "lookup_table_orientation", 0)
         if value != 0 and value != 1:
             value = 0
         if value == 0:
@@ -225,14 +226,14 @@ class Panel(ibus.PanelBase):
             self.__candidate_panel.set_orientation(gtk.ORIENTATION_VERTICAL)
 
     def __config_load_auto_hide(self):
-        auto_hide = self.__bus.config_get_value("panel", "auto_hide", False)
+        auto_hide = self.__config.get_value("panel", "auto_hide", False)
         self.__language_bar.set_auto_hide(auto_hide)
 
     def __config_load_custom_font(self):
-        use_custom_font = self.__bus.config_get_value("panel", "use_custom_font", False)
+        use_custom_font = self.__config.get_value("panel", "use_custom_font", False)
         font_name = gtk.settings_get_default().get_property("gtk-font-name")
         font_name = unicode(font_name, "utf-8")
-        custom_font =  self.__bus.config_get_value("panel", "custom_font", font_name)
+        custom_font =  self.__config.get_value("panel", "custom_font", font_name)
         style_string = 'style "custom-font" { font_name="%s" }\n' \
             'class "IBusPanelLabel" style "custom-font"\n'
         if use_custom_font:
@@ -278,7 +279,7 @@ class Panel(ibus.PanelBase):
 
     def __create_im_menu(self):
         menu = gtk.Menu()
-        factories = self.__bus.get_factories()
+        factories = self.__bus.list_factories()
 
         if not factories:
             item = gtk.MenuItem(label = "no engine")
@@ -287,24 +288,22 @@ class Panel(ibus.PanelBase):
         else:
             tmp = {}
             for factory in factories:
-                name, lang, icon, authors, credits = self.__bus.get_factory_info(factory)
-                lang = ibus.get_language_name(lang)
-                if not icon:
-                    icon = "engine-default"
+                lang = ibus.get_language_name(factory.lang)
                 if lang not in tmp:
                     tmp[lang] = []
-                tmp[lang].append((name, lang, icon, authors, credits, factory))
+                tmp[lang].append(factory)
+
             langs = tmp.keys()
             other = tmp.get(_("Other"), [])
             if _("Other") in tmp:
                 langs.remove(_("Other"))
                 langs.append(_("Other"))
+
             for lang in langs:
                 if len(tmp[lang]) == 1:
-                    name, lang, icon, authors, credits, factory = tmp[lang][0]
-                    item = gtk.ImageMenuItem("%s - %s" % (lang, name))
+                    item = gtk.ImageMenuItem("%s - %s" % (lang, factory.name))
                     size = gtk.icon_size_lookup(gtk.ICON_SIZE_MENU)
-                    item.set_image (_icon.IconWidget(icon, size[0]))
+                    item.set_image (_icon.IconWidget(factory.icon, size[0]))
                     item.connect("activate", self.__im_menu_item_activate_cb, factory)
                     menu.add(item)
                 else:
@@ -312,10 +311,10 @@ class Panel(ibus.PanelBase):
                     menu.add(item)
                     submenu = gtk.Menu()
                     item.set_submenu(submenu)
-                    for name, __lang, icon, authors, credits, factory in tmp[lang]:
-                        item = gtk.ImageMenuItem(name)
+                    for factory in tmp[lang]:
+                        item = gtk.ImageMenuItem(factory.name)
                         size = gtk.icon_size_lookup(gtk.ICON_SIZE_MENU)
-                        item.set_image (_icon.IconWidget(icon, size[0]))
+                        item.set_image (_icon.IconWidget(factory.icon, size[0]))
                         item.connect("activate", self.__im_menu_item_activate_cb, factory)
                         submenu.add(item)
 
@@ -346,7 +345,7 @@ class Panel(ibus.PanelBase):
                 self.__status_icon)
 
     def __im_menu_item_activate_cb(self, item, factory):
-        self.__bus.set_factory(factory)
+        self.__focus_ic.set_factory(factory.path)
 
     def __sys_menu_item_activate_cb(self, item, command):
         if command == gtk.STOCK_PREFERENCES:

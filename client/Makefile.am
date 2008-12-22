@@ -22,5 +22,4 @@
 SUBDIRS = \
 	gtk2 \
 	qt4 \
-	x11 \
 	$(NULL)

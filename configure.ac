@@ -55,14 +55,19 @@ AC_CHECK_HEADERS([sys/inotify.h])
 # check glib2
 AM_PATH_GLIB_2_0
 PKG_CHECK_MODULES(GLIB2, [
-    glib-2.0 >= 2.16
+    glib-2.0 >= 2.18
 ])
 PKG_CHECK_MODULES(GOBJECT2, [
-    gobject-2.0
+    gobject-2.0 >= 2.18
+])
+PKG_CHECK_MODULES(GIO2, [
+    gio-2.0 >= 2.18
+])
+PKG_CHECK_MODULES(PYGOBJECT2, [
+    pygobject-2.0 >= 2.15
 ])
 
-
-# check gtk, gdk & pygtk
+# check for gtk, gdk & pygtk
 PKG_CHECK_MODULES(GTK2, [
     gtk+-2.0
 ])
@@ -74,9 +79,11 @@ PKG_CHECK_MODULES(GDK2, [
     gdk-2.0
 ])
 
-# check dbus-glib
+# check for gtk-doc
+GTK_DOC_CHECK(1.9)
+# check for dbus-glib
 PKG_CHECK_MODULES(DBUS, [
-    dbus-glib-1
+    dbus-1
 ])
 
 # Check for Qt4
@@ -131,6 +138,9 @@ AC_SUBST(PYTHON_CFLAGS)
 AC_SUBST(PYTHON_INCLUDES)
 AC_SUBST(PYTHON_LIBS)
 
+#
+REBUILD = #
+AC_SUBST(REBUILD)
 
 # define GETTEXT_* variables
 GETTEXT_PACKAGE=ibus
@@ -220,12 +230,11 @@ fi
 # OUTPUT files
 AC_CONFIG_FILES([ po/Makefile.in
 Makefile
+ibus-1.0.pc
 ibus.spec
 ibus/_config.py
 ibus/Makefile
 ibus/interface/Makefile
-daemon/Makefile
-daemon/ibus-daemon
 launcher/ibus
 launcher/ibus.desktop
 launcher/Makefile
@@ -234,8 +243,6 @@ ui/gtk/Makefile
 ui/gtk/ibus-ui-gtk
 gconf/Makefile
 gconf/ibus-gconf
-lib/Makefile
-lib/gtk2/Makefile
 client/Makefile
 client/gtk2/Makefile
 client/qt4/Makefile
@@ -243,10 +250,17 @@ client/x11/Makefile
 setup/Makefile
 setup/ibus-setup
 setup/ibus-setup.desktop
+src/Makefile
+bus/Makefile
+bindings/Makefile
+bindings/python/Makefile
 util/Makefile
 util/IMdkit/Makefile
 util/gconf/Makefile
 icons/Makefile
+docs/Makefile
+docs/reference/Makefile
+docs/reference/ibus/Makefile
 m4/Makefile
 ])
 
@@ -260,5 +274,6 @@ Build options:
   Gtk immodule dir         $GTK_IM_MODULEDIR
   Enable Qt4 IM module     $enable_qt4
   Build pygconf            $enable_pygconf
+  Build document           $enable_gtk_doc
 ])
 

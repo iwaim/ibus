@@ -37,4 +37,4 @@ EXTRA_DIST = \
 	$(NULL)
 
 test:
-	$(ENV) PYTHONPATH=$(top_srcdir) $(PYTHON) $(srcdir)/main.py
+	$(ENV) PYTHONPATH=$(top_srcdir) DBUS_DEBUG=true $(PYTHON) $(srcdir)/main.py

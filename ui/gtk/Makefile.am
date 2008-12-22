@@ -46,5 +46,6 @@ EXTRA_DIST = \
 
 test:
 	$(ENV) DBUS_DEBUG=true \
+		IBUS_PREFIX=@prefix@ \
 		PYTHONPATH=$(top_srcdir) \
 		$(PYTHON) $(srcdir)/main.py

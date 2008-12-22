@@ -21,12 +21,12 @@
 
 __all__ = (
         "ConfigBase",
-        "IBUS_CONFIG_NAME",
-        "IBUS_CONFIG_PATH"
+        "IBUS_SERVICE_CONFIG",
+        "IBUS_PATH_CONFIG"
     )
 
-IBUS_CONFIG_NAME = "org.freedesktop.ibus.Config"
-IBUS_CONFIG_PATH = "/org/freedesktop/ibus/Config"
+IBUS_SERVICE_CONFIG = "org.freedesktop.IBus.Config"
+IBUS_PATH_CONFIG = "/org/freedesktop/IBus/Config"
 
 import ibus
 from ibus import interface
@@ -48,7 +48,7 @@ class ConfigBase(ibus.Object):
 
 class ConfigProxy(interface.IConfig):
     def __init__ (self, config, dbusconn):
-        super(ConfigProxy, self).__init__(dbusconn, IBUS_CONFIG_PATH)
+        super(ConfigProxy, self).__init__(dbusconn, IBUS_PATH_CONFIG)
         self.__dbusconn = dbusconn
         self.__config = config
 
@@ -60,3 +60,19 @@ class ConfigProxy(interface.IConfig):
 
     def Destroy(self):
         self.__config.destroy()
+
+class Config(ibus.Object):
+    def __init__(self, bus):
+        self.__config = bus.get_dbusconn().get_object(IBUS_SERVICE_CONFIG, IBUS_PATH_CONFIG)
+
+    def get_value(self, section, name, default_value):
+        try:
+            return self.__config.GetValue(section, name)
+        except:
+            return default_value
+
+    def set_value(self, section, name, value):
+        return self.__config.SetValue(section, name, value)
+
+    def set_list(self, section, name, value, signature):
+        return self.__config.SetValue(section, name, dbus.Array(value, signature=signature))
