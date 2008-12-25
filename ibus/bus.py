@@ -110,6 +110,10 @@ class Bus(object.Object):
         return common.IBUS_ADDR
 
     # define ibus methods
+    def register_factories(self, factroy_infos):
+        factories = map(serializable.serialize_object, factroy_infos)
+        return self.__ibus.RegisterFactories(factories)
+
     def list_factories(self):
         factories = self.__ibus.ListFactories()
         return map(serializable.deserialize_object, factories)

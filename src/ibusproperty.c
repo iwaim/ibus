@@ -83,7 +83,7 @@ ibus_property_class_init (IBusPropertyClass *klass)
     serializable_class->deserialize = (IBusSerializableDeserializeFunc) ibus_property_deserialize;
     serializable_class->copy        = (IBusSerializableCopyFunc) ibus_property_copy;
 
-    g_string_append (serializable_class->signature, "ssvvbbuuv");
+    g_string_append (serializable_class->signature, "suvsvbbuv");
 }
 
 static void
@@ -134,11 +134,14 @@ ibus_property_serialize (IBusProperty    *prop,
 
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &prop->key);
     g_return_val_if_fail (retval, FALSE);
-
-    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &prop->icon);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_UINT, &prop->type);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, IBUS_TYPE_TEXT, &prop->label);
     g_return_val_if_fail (retval, FALSE);
 
-    retval = ibus_message_iter_append (iter, IBUS_TYPE_TEXT, &prop->label);
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &prop->icon);
     g_return_val_if_fail (retval, FALSE);
 
     retval = ibus_message_iter_append (iter, IBUS_TYPE_TEXT, &prop->tooltip);
@@ -148,9 +151,6 @@ ibus_property_serialize (IBusProperty    *prop,
     g_return_val_if_fail (retval, FALSE);
 
     retval = ibus_message_iter_append (iter, G_TYPE_BOOLEAN, &prop->visible);
-    g_return_val_if_fail (retval, FALSE);
-
-    retval = ibus_message_iter_append (iter, G_TYPE_UINT, &prop->type);
     g_return_val_if_fail (retval, FALSE);
 
     retval = ibus_message_iter_append (iter, G_TYPE_UINT, &prop->state);
@@ -176,13 +176,16 @@ ibus_property_deserialize (IBusProperty    *prop,
     g_return_val_if_fail (retval, FALSE);
     prop->key = g_strdup (p);
 
-    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &p);
+    retval = ibus_message_iter_get (iter, G_TYPE_UINT, &prop->type);
     g_return_val_if_fail (retval, FALSE);
-    prop->key = g_strdup (p);
-
+    
     retval = ibus_message_iter_get (iter, IBUS_TYPE_TEXT, &prop->label);
     g_return_val_if_fail (retval, FALSE);
 
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &p);
+    g_return_val_if_fail (retval, FALSE);
+    prop->icon = g_strdup (p);
+    
     retval = ibus_message_iter_get (iter, IBUS_TYPE_TEXT, &prop->tooltip);
     g_return_val_if_fail (retval, FALSE);
 
@@ -190,9 +193,6 @@ ibus_property_deserialize (IBusProperty    *prop,
     g_return_val_if_fail (retval, FALSE);
 
     retval = ibus_message_iter_get (iter, G_TYPE_BOOLEAN, &prop->visible);
-    g_return_val_if_fail (retval, FALSE);
-
-    retval = ibus_message_iter_get (iter, G_TYPE_UINT, &prop->type);
     g_return_val_if_fail (retval, FALSE);
 
     retval = ibus_message_iter_get (iter, G_TYPE_UINT, &prop->state);
@@ -293,8 +293,8 @@ ibus_property_new (const gchar   *key,
 }
 
 void
-ibus_property_set_sub_props (IBusProperty   *prop,
-                             IBusPropList   *prop_list)
+ibus_property_set_sub_props (IBusProperty *prop,
+                             IBusPropList *prop_list)
 {
     g_return_if_fail (IBUS_IS_PROPERTY (prop));
     g_return_if_fail (IBUS_IS_PROP_LIST (prop_list) || prop_list == NULL);
@@ -399,6 +399,9 @@ ibus_prop_list_serialize (IBusPropList    *prop_list,
         i ++;
     }
 
+    retval = ibus_message_iter_close_container (iter, &array_iter);
+    g_return_val_if_fail (retval, FALSE);
+
     return TRUE;
 }
 
@@ -419,7 +422,7 @@ ibus_prop_list_deserialize (IBusPropList    *prop_list,
     g_return_val_if_fail (retval, FALSE);
 
     while (ibus_message_iter_get_arg_type (&array_iter) != G_TYPE_INVALID) {
-        retval = ibus_message_iter_get (iter, IBUS_TYPE_PROPERTY, &object);
+        retval = ibus_message_iter_get (&array_iter, IBUS_TYPE_PROPERTY, &object);
         g_return_val_if_fail (retval, FALSE);
 
         ibus_prop_list_append (prop_list, (IBusProperty *)object);
@@ -470,7 +473,8 @@ ibus_prop_list_new ()
 }
 
 void
-ibus_prop_list_append (IBusPropList *prop_list, IBusProperty *prop)
+ibus_prop_list_append (IBusPropList *prop_list,
+                       IBusProperty *prop)
 {
     g_return_if_fail (IBUS_IS_PROP_LIST (prop_list));
     g_return_if_fail (IBUS_IS_PROPERTY (prop));
@@ -481,7 +485,8 @@ ibus_prop_list_append (IBusPropList *prop_list, IBusProperty *prop)
 }
 
 IBusProperty *
-ibus_prop_list_get (IBusPropList *prop_list, guint index)
+ibus_prop_list_get (IBusPropList *prop_list,
+                    guint         index)
 {
     g_return_val_if_fail (IBUS_IS_PROP_LIST (prop_list), NULL);
 
@@ -494,3 +499,9 @@ ibus_prop_list_get (IBusPropList *prop_list, guint index)
 
 
 
+gboolean
+ibus_prop_list_update_property (IBusPropList *prop_list,
+                                IBusProperty *prop)
+{
+    return FALSE;
+}

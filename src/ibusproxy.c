@@ -506,6 +506,11 @@ ibus_proxy_call (IBusProxy      *proxy,
     retval = ibus_message_append_args_valist (message,
                                               first_arg_type,
                                               args);
+    if (!retval) {
+        ibus_message_unref (message);
+        g_return_val_if_reached (FALSE);
+    }
+
     va_end (args);
 
     retval = ibus_connection_send (priv->connection, message);

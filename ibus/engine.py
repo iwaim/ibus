@@ -102,7 +102,7 @@ class EngineBase(ibus.Object):
 
     def update_lookup_table(self, lookup_table, visible, just_current_page = False):
         if just_current_page:
-            lookup_table = lookup_table.current_page_as_lookup_table()
+            lookup_table = lookup_table.get_current_page_as_lookup_table()
         dbus_values = ibus.serialize_object(lookup_table)
         return self.__proxy.UpdateLookupTable(dbus_values, visible)
 

@@ -23,12 +23,12 @@ __all__ = (
         "EngineFactoryBase",
         "FactoryInfo"
     )
-
-import ibus
-from ibus import interface
+import dbus
+import object
+import interface
 from serializable import *
 
-class EngineFactoryBase(ibus.Object):
+class EngineFactoryBase(object.Object):
     def __init__(self, info, engine_class, engine_path, bus, object_path):
         super(EngineFactoryBase, self).__init__()
         self.__proxy = EngineFactoryProxy (self, bus.get_dbusconn(), object_path)
@@ -49,7 +49,7 @@ class EngineFactoryBase(ibus.Object):
         pass
 
     def register(self):
-        self.__bus.register_factories([self.__object_path])
+        self.__bus.register_factories([self.__info])
 
     def create_engine(self):
         engine = self.__engine_class(self.__bus, self.__engine_path + str(self.__engine_id))

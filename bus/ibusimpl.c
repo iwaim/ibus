@@ -133,7 +133,7 @@ _panel_destroy_cb (BusPanelProxy *panel,
     BusIBusImplPrivate *priv;
     priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
 
-    g_assert (priv->panel == panel);
+    g_return_if_fail (priv->panel == panel);
 
     priv->panel = NULL;
     g_object_unref (panel);
@@ -182,7 +182,7 @@ bus_ibus_impl_reload_config (BusIBusImpl *ibus)
 {
     g_assert (BUS_IS_IBUS_IMPL (ibus));
 
-    GValue value;
+    GValue value = { 0 };
 
     BusIBusImplPrivate *priv;
     priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);

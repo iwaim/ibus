@@ -50,10 +50,10 @@ class IIBus(dbus.service.Object):
     def GetInputContextStates(self, ic, dbusconn): pass
 
     # methods for ibus engine provide
-    @method(in_signature="ao")
+    @method(in_signature="av")
     def RegisterFactories(self, object_paths, dbusconn): pass
 
-    @method(in_signature="ao")
+    @method(in_signature="av")
     def UnregisterFactories(self, object_paths, dbusconn): pass
 
     # general methods

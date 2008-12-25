@@ -373,10 +373,10 @@ bus_input_context_class_init (BusInputContextClass *klass)
             G_SIGNAL_RUN_LAST,
             0,
             NULL, NULL,
-            ibus_marshal_VOID__BOXED,
+            ibus_marshal_VOID__OBJECT,
             G_TYPE_NONE,
             1,
-            IBUS_TYPE_PROP_LIST | G_SIGNAL_TYPE_STATIC_SCOPE);
+            IBUS_TYPE_PROP_LIST);
 
     context_signals[UPDATE_PROPERTY] =
         g_signal_new (I_("update-property"),
@@ -384,10 +384,10 @@ bus_input_context_class_init (BusInputContextClass *klass)
             G_SIGNAL_RUN_LAST,
             0,
             NULL, NULL,
-            ibus_marshal_VOID__BOXED,
+            ibus_marshal_VOID__OBJECT,
             G_TYPE_NONE,
             1,
-            IBUS_TYPE_PROPERTY | G_SIGNAL_TYPE_STATIC_SCOPE);
+            IBUS_TYPE_PROPERTY);
 
     context_signals[ENABLED] =
         g_signal_new (I_("enabled"),
@@ -441,6 +441,7 @@ bus_input_context_init (BusInputContext *context)
     priv->y = 0;
     priv->w = 0;
     priv->h = 0;
+
 }
 
 static void
@@ -797,7 +798,6 @@ _ic_set_factory (BusInputContext  *context,
     }
 
     bus_input_context_set_factory (context, factory);
-    bus_input_context_enable (context);
 
     reply = ibus_message_new_method_return (message);
     return reply;

@@ -197,12 +197,14 @@ bus_panel_proxy_real_destroy (BusPanelProxy *panel)
     BusPanelProxyPrivate *priv;
     priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
 
+    g_debug ("panel destroy");
+
     ibus_proxy_call (IBUS_PROXY (panel),
                      "Destroy",
                      DBUS_TYPE_INVALID);
 
     if (priv->focused_context) {
-        g_object_unref (priv->focused_context);
+        bus_panel_proxy_focus_out (panel, priv->focused_context);
         priv->focused_context = NULL;
     }
 
@@ -244,13 +246,13 @@ bus_panel_proxy_ibus_signal (IBusProxy      *proxy,
 
     if (ibus_message_is_signal (message, IBUS_INTERFACE_PANEL, "PropertyActivate")) {
         gchar *prop_name;
-        gint prop_state;
+        guint prop_state;
         gboolean retval;
 
         retval = ibus_message_get_args (message,
                                         &error,
                                         G_TYPE_STRING, &prop_name,
-                                        G_TYPE_INT, &prop_state,
+                                        G_TYPE_UINT, &prop_state,
                                         G_TYPE_INVALID);
         if (!retval)
             goto failed;
@@ -372,6 +374,40 @@ _context_update_lookup_table_cb (BusInputContext *context,
 }
 
 static void
+_context_register_properties_cb (BusInputContext *context,
+                                 IBusPropList    *prop_list,
+                                 BusPanelProxy   *panel)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+
+    g_return_if_fail (priv->focused_context == context);
+
+    bus_panel_proxy_register_properties (panel,
+                                         prop_list);
+}
+
+static void
+_context_update_property_cb (BusInputContext *context,
+                             IBusProperty    *prop,
+                             BusPanelProxy   *panel)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+
+    g_return_if_fail (priv->focused_context == context);
+
+    bus_panel_proxy_update_property (panel,
+                                     prop);
+}
+
+static void
 _context_destroy_cb (BusInputContext *context,
                      BusPanelProxy   *panel)
 {
@@ -420,12 +456,15 @@ static const struct {
     GCallback callback;
 } __signals [] = {
     { "set-cursor-location",        G_CALLBACK (_context_set_cursor_location_cb) },
+    
     { "update-preedit-text",        G_CALLBACK (_context_update_preedit_text_cb) },
     { "show-preedit-text",          G_CALLBACK (_context_show_preedit_text_cb) },
     { "hide-preedit-text",          G_CALLBACK (_context_hide_preedit_text_cb) },
+    
     { "update-auxiliary-text",      G_CALLBACK (_context_update_auxiliary_text_cb) },
     { "show-auxiliary-text",        G_CALLBACK (_context_show_auxiliary_text_cb) },
     { "hide-auxiliary-text",        G_CALLBACK (_context_hide_auxiliary_text_cb) },
+    
     { "update-lookup-table",        G_CALLBACK (_context_update_lookup_table_cb) },
     { "show-lookup-table",          G_CALLBACK (_context_show_lookup_table_cb) },
     { "hide-lookup-table",          G_CALLBACK (_context_hide_lookup_table_cb) },
@@ -433,6 +472,10 @@ static const struct {
     { "page-down-lookup-table",     G_CALLBACK (_context_page_down_lookup_table_cb) },
     { "cursor-up-lookup-table",     G_CALLBACK (_context_cursor_up_lookup_table_cb) },
     { "cursor-down-lookup-table",   G_CALLBACK (_context_cursor_down_lookup_table_cb) },
+    
+    { "register-properties",        G_CALLBACK (_context_register_properties_cb) },
+    { "update-property",            G_CALLBACK (_context_update_property_cb) },
+    
     { "enabled",                    G_CALLBACK (_context_state_changed_cb) },
     { "disabled",                   G_CALLBACK (_context_state_changed_cb) },
     { "factory-changed",            G_CALLBACK (_context_state_changed_cb) },
@@ -583,6 +626,7 @@ bus_panel_proxy_register_properties (BusPanelProxy  *panel,
                      "RegisterProperties",
                      IBUS_TYPE_PROP_LIST, &prop_list,
                      G_TYPE_INVALID);
+    ibus_connection_flush (ibus_proxy_get_connection((IBusProxy *)panel));
 }
 
 void

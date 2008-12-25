@@ -50,6 +50,8 @@ enum {
 /* BusEngineProxyPriv */
 struct _BusEngineProxyPrivate {
     gboolean enabled;
+
+    IBusPropList *prop_list;
 };
 typedef struct _BusEngineProxyPrivate BusEngineProxyPrivate;
 
@@ -316,11 +318,20 @@ bus_engine_proxy_init (BusEngineProxy *engine)
     priv = BUS_ENGINE_PROXY_GET_PRIVATE (engine);
 
     priv->enabled = FALSE;
+    priv->prop_list = NULL;
 }
 
 static void
 bus_engine_proxy_real_destroy (BusEngineProxy *engine)
 {
+    BusEngineProxyPrivate *priv;
+    priv = BUS_ENGINE_PROXY_GET_PRIVATE (engine);
+    
+    if (priv->prop_list) {
+        g_object_unref (priv->prop_list);
+        priv->prop_list = NULL;
+    }
+
     ibus_proxy_call (IBUS_PROXY (engine),
                      "Destroy",
                      DBUS_TYPE_INVALID);
@@ -336,6 +347,7 @@ bus_engine_proxy_ibus_signal (IBusProxy     *proxy,
     g_assert (message != NULL);
 
     BusEngineProxy *engine;
+    BusEngineProxyPrivate *priv;
     IBusError *error;
     gint i;
 
@@ -343,8 +355,8 @@ bus_engine_proxy_ibus_signal (IBusProxy     *proxy,
         const gchar *member;
         const guint signal_id;
     } signals [] = {
-        { "ShowPreedit",            SHOW_PREEDIT_TEXT },
-        { "HidePreedit",            HIDE_PREEDIT_TEXT },
+        { "ShowPreeditText",        SHOW_PREEDIT_TEXT },
+        { "HidePreeditText",        HIDE_PREEDIT_TEXT },
         { "ShowAuxiliaryText",      SHOW_AUXILIARY_TEXT },
         { "HideAuxiliaryText",      HIDE_AUXILIARY_TEXT },
         { "ShowLookupTable",        SHOW_LOOKUP_TABLE },
@@ -357,6 +369,7 @@ bus_engine_proxy_ibus_signal (IBusProxy     *proxy,
     };
 
     engine = BUS_ENGINE_PROXY (proxy);
+    priv = BUS_ENGINE_PROXY_GET_PRIVATE (engine);
 
     for (i = 0; ; i++) {
         if (signals[i].member == NULL)
@@ -450,16 +463,22 @@ bus_engine_proxy_ibus_signal (IBusProxy     *proxy,
         g_object_unref (table);
     }
     else if (ibus_message_is_signal (message, IBUS_INTERFACE_ENGINE, "RegisterProperties")) {
-        IBusPropList *prop_list;
         gboolean retval;
 
+        if (priv->prop_list) {
+            g_object_unref (priv->prop_list);
+            priv->prop_list = NULL;
+        }
+    
         retval = ibus_message_get_args (message,
                                         &error,
-                                        IBUS_TYPE_PROP_LIST, &prop_list,
+                                        IBUS_TYPE_PROP_LIST, &priv->prop_list,
                                         G_TYPE_INVALID);
-
-        g_signal_emit (engine, engine_signals[REGISTER_PROPERTIES], 0, prop_list);
-        g_object_unref (prop_list);
+        if (!retval) {
+            priv->prop_list = NULL;
+            goto failed;
+        }
+        g_signal_emit (engine, engine_signals[REGISTER_PROPERTIES], 0, priv->prop_list);
     }
     else if (ibus_message_is_signal (message, IBUS_INTERFACE_ENGINE, "UpdateProperty")) {
         IBusProperty *prop;

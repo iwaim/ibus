@@ -33,6 +33,7 @@ __all__ = (
     )
 
 import dbus
+from text import Text
 from serializable import *
 
 PROP_TYPE_NORMAL = 0
@@ -51,19 +52,18 @@ def _to_unicode(text):
     if isinstance(text, str):
         return unicode(text, "utf8")
     raise TypeError("text must be instance of unicode or str")
+def _to_text(text):
+    if isinstance(text, Text):
+        return text
+    text = _to_unicode(text)
+    return Text(text)
 
 class Property(Serializable):
     __NAME__ = "IBusProperty"
-    def __init__(self, name = "",
-                        type = PROP_TYPE_NORMAL,
-                        label = u"",
-                        icon = u"",
-                        tooltip = u"",
-                        sensitive = True,
-                        visible = True,
-                        state = PROP_STATE_UNCHECKED):
+    def __init__(self, key="", type=PROP_TYPE_NORMAL, label=u"", icon=u"", tooltip=u"",
+                 sensitive=True, visible=True, state=PROP_STATE_UNCHECKED):
         super(Property, self).__init__()
-        self.__name = _to_unicode(name)
+        self.__key = _to_unicode(key)
         self.__type = type
         self.label = label
         self.icon = icon
@@ -79,14 +79,14 @@ class Property(Serializable):
     def get_sub_props(self):
         return self.__sub_props
 
-    def get_name(self):
-        return self.__name
+    def get_key(self):
+        return self.__key
 
     def get_type(self):
         return self.__type
 
     def set_label(self, label):
-        self.__label = _to_unicode(label)
+        self.__label = _to_text(label)
 
     def get_label(self):
         return self.__label
@@ -98,7 +98,7 @@ class Property(Serializable):
         return self.__icon
 
     def set_tooltip(self, tooltip):
-        self.__tooltip = _to_unicode(tooltip)
+        self.__tooltip = _to_text(tooltip)
 
     def get_tooltip(self):
         return self.__tooltip
@@ -121,7 +121,7 @@ class Property(Serializable):
     def get_visible(self):
         return self.__visible
 
-    name        = property(get_name)
+    key         = property(get_key)
     type        = property(get_type)
     label       = property(get_label, set_label)
     icon        = property(get_icon, set_icon)
@@ -148,11 +148,11 @@ class Property(Serializable):
 
     def serialize(self, struct):
         super(Property, self).serialize(struct)
-        struct.append(dbus.String(self.__name))
+        struct.append(dbus.String(self.__key))
         struct.append(dbus.UInt32(self.__type))
-        struct.append(dbus.String(self.__label))
+        struct.append(serialize_object(self.__label))
         struct.append(dbus.String(self.__icon))
-        struct.append(dbus.String(self.__tooltip))
+        struct.append(serialize_object(self.__tooltip))
         struct.append(dbus.Boolean(self.__sensitive))
         struct.append(dbus.Boolean(self.__visible))
         struct.append(dbus.UInt32(self.__state))
@@ -161,12 +161,12 @@ class Property(Serializable):
 
     def deserialize(self, struct):
         super(Property, self).deserialize(struct)
-        self.__name = struct.pop(0)
+        self.__key = struct.pop(0)
         self.__type = struct.pop(0)
-        self.__label = struct.pop(0)
+        self.__label = deserialize_object(struct.pop(0))
         self.__icon = struct.pop(0)
-        self.__tooltip = struct.pop(0)
-        self.__sensitive = struct.pop(0)
+        self.__tooltip = deserialize_object(struct.pop(0))
+        self.__sensitive = deserialize_object(struct.pop(0))
         self.__visible = struct.pop(0)
         self.__state = struct.pop(0)
         props = struct.pop(0)

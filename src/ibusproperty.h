@@ -129,5 +129,8 @@ void             ibus_prop_list_append      (IBusPropList   *prop_list,
                                              IBusProperty   *prop);
 IBusProperty    *ibus_prop_list_get         (IBusPropList   *prop_list,
                                              guint           index);
+gboolean         ibus_prop_list_update_property
+                                            (IBusPropList   *prop_list,
+                                             IBusProperty   *prop);
 G_END_DECLS
 #endif
