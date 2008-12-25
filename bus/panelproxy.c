@@ -197,8 +197,6 @@ bus_panel_proxy_real_destroy (BusPanelProxy *panel)
     BusPanelProxyPrivate *priv;
     priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
 
-    g_debug ("panel destroy");
-
     ibus_proxy_call (IBUS_PROXY (panel),
                      "Destroy",
                      DBUS_TYPE_INVALID);
