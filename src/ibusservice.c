@@ -119,13 +119,16 @@ ibus_service_class_init (IBusServiceClass *klass)
     klass->ibus_signal = ibus_service_ibus_signal;
 
     /* install properties */
-    g_object_class_install_property (gobject_class,
+    g_object_class_install_property (
+                    gobject_class,
                     PROP_PATH,
-                    g_param_spec_string ("path",
+                    g_param_spec_string (
+                        "path",
                         "object path",
                         "The path of service object",
                         NULL,
-                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY)
+                    );
 
     /* Install signals */
     service_signals[IBUS_MESSAGE] =

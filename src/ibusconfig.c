@@ -319,6 +319,7 @@ _from_dbus_value (IBusMessageIter   *iter,
             while (ibus_message_iter_get_arg_type (&sub_iter) != G_TYPE_INVALID) {
                 _from_dbus_value (&sub_iter, &v);
                 g_value_array_append (array, &v);
+                g_value_unset (&v);
             }
             g_value_take_boxed (value, array);
             break;

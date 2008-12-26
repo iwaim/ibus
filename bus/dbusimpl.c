@@ -131,7 +131,7 @@ bus_dbus_impl_class_init (BusDBusImplClass *klass)
         g_signal_new (I_("name-owner-changed"),
             G_TYPE_FROM_CLASS (klass),
             G_SIGNAL_RUN_FIRST,
-            0,
+            G_STRUCT_OFFSET (BusDBusImplClass, name_owner_changed),
             NULL, NULL,
             ibus_marshal_VOID__STRING_STRING_STRING,
             G_TYPE_NONE,
@@ -807,6 +807,7 @@ bus_dbus_impl_name_owner_changed (BusDBusImpl   *dbus,
                               G_TYPE_STRING, &old_name,
                               G_TYPE_STRING, &new_name,
                               G_TYPE_INVALID);
+    ibus_message_set_sender (message, DBUS_SERVICE_DBUS);
 
     bus_dbus_impl_dispatch_message_by_rule (dbus, message, NULL);
 
@@ -1085,6 +1086,10 @@ bus_dbus_impl_dispatch_message_by_rule (BusDBusImpl     *dbus,
         return;
 
     dbus_message_set_data (message, data_slot, (gpointer) TRUE, NULL);
+    
+    if (g_strcmp0 (ibus_message_get_member (message), "ValueChanged") == 0) {
+        g_debug ("Dispatch ValueChanged");
+    }
 
     for (link = priv->rules; link != NULL; link = link->next) {
         if (bus_match_rule_get_recipients (BUS_MATCH_RULE (link->data),
