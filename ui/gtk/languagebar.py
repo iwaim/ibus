@@ -192,6 +192,8 @@ class LanguageBar(gtk.Toolbar):
         self.__im_menu.set_sensitive(False)
         if self.__auto_hide:
             self.hide_all()
+        else:
+            self.show_all()
 
 gobject.type_register(LanguageBar, "IBusLanguageBar")
 

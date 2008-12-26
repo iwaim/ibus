@@ -65,7 +65,7 @@ class ConfigProxy(interface.IConfig):
 
 class Config(object.Object):
     __gsignals__ = {
-        "reload" : (
+        "reloaded" : (
             gobject.SIGNAL_RUN_LAST,
             gobject.TYPE_NONE,
             ()
@@ -92,8 +92,6 @@ class Config(object.Object):
             self.__init_config()
         except:
             self.__config = None
-            import traceback
-            traceback.print_exc()
 
     def __name_owner_changed_cb(self, name, old_name, new_name):
         if name == "org.freedesktop.IBus.Config":
@@ -120,7 +118,7 @@ class Config(object.Object):
         
         self.__bus_name = bus_name
         self.__bus.add_match(match_rule % self.__bus_name)
-        self.emit("reload")
+        self.emit("reloaded")
 
     def __value_changed_cb(self, section, name, value):
         self.emit("value-changed", section, name, value)

@@ -68,8 +68,8 @@ class Panel(ibus.PanelBase):
         signal.signal(signal.SIGCHLD, self.__sigchld_cb)
 
         # connect bus signal
-        # self.__bus.connect("config-value-changed", self.__config_value_changed_cb)
-        # self.__bus.connect("config-reloaded", self.__config_reloaded_cb)
+        self.__config.connect("value-changed", self.__config_value_changed_cb)
+        self.__config.connect("reloaded", self.__config_reloaded_cb)
         # self.__bus.config_add_watch("panel")
 
         # add icon search path
@@ -247,6 +247,8 @@ class Panel(ibus.PanelBase):
         gtk.rc_reset_styles(settings)
 
     def __config_value_changed_cb(self, bus, section, name, value):
+        if section != "panel":
+            return
         if name == "lookup_table_orientation":
             self.__config_load_lookup_table_orientation()
         elif name == "auto_hide":
