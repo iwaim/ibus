@@ -199,6 +199,14 @@ static void
 _connection_destroy_cb (IBusConnection  *connection,
                         IBusProxy       *proxy)
 {
+    IBusProxyPrivate *priv;
+    priv = IBUS_PROXY_GET_PRIVATE (proxy);
+
+    g_assert (priv->connection == connection);
+
+    g_object_unref (connection);
+    priv->connection = NULL;
+    
     ibus_object_destroy ((IBusObject *) proxy);
 }
 
