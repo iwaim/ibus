@@ -420,7 +420,6 @@ ibus_config_ibus_signal (IBusProxy     *proxy,
         gchar *section;
         gchar *name;
         GValue value = { 0 };
-        gint type;
 
         ibus_message_iter_init (message, &iter);
 

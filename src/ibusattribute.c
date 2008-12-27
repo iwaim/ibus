@@ -22,7 +22,7 @@
 /* functions prototype */
 static void         ibus_attribute_class_init   (IBusAttributeClass     *klass);
 static void         ibus_attribute_init         (IBusAttribute          *attr);
-static void         ibus_attribute_destroy      (IBusAttribute          *attr);
+// static void         ibus_attribute_destroy      (IBusAttribute          *attr);
 static gboolean     ibus_attribute_serialize    (IBusAttribute          *attr,
                                                  IBusMessageIter        *iter);
 static gboolean     ibus_attribute_deserialize  (IBusAttribute          *attr,
@@ -86,9 +86,15 @@ ibus_attribute_class_init (IBusAttributeClass *klass)
 }
 
 static void
-ibus_attribute_init (IBusAttribute *attribute)
+ibus_attribute_init (IBusAttribute *attr)
 {
 }
+
+// static void
+// ibus_attribute_destroy (IBusAttribute *attr)
+// {
+//     IBUS_OBJECT (parent_class)->destroy ((IBusObject *)attr);
+// }
 
 static gboolean
 ibus_attribute_serialize (IBusAttribute   *attr,

@@ -226,10 +226,9 @@ _g_value_serialize (GValue          *value,
 static GValue *
 _g_value_deserialize (IBusMessageIter *iter)
 {
-    IBusMessageIter backup_iter, variant_iter;
+    IBusMessageIter variant_iter;
     gboolean retval;
     GValue *value = NULL;
-    gchar *type_name;
     GType type;
 
     retval = ibus_message_iter_recurse (iter, IBUS_TYPE_VARIANT, &variant_iter);
@@ -281,7 +280,6 @@ _serialize_cb (GQuark           key,
 {
     IBusMessageIter dict_entry;
     gboolean retval;
-    GType type;
     const gchar *name;
 
     retval = ibus_message_iter_open_container (iter,
@@ -341,7 +339,6 @@ ibus_serializable_real_deserialize (IBusSerializable *object,
     g_return_val_if_fail (retval, FALSE);
 
     while (ibus_message_iter_get_arg_type (&array_iter) != G_TYPE_INVALID) {
-        GType type;
         gchar *name;
         GValue *value;
         IBusMessageIter dict_entry;
@@ -392,6 +389,7 @@ ibus_serializable_real_copy (IBusSerializable *dest,
     g_datalist_foreach (&src_priv->attachments,
                         (GDataForeachFunc) _copy_cb,
                         &dest_priv->attachments);
+    return TRUE;
 }
 
 gboolean

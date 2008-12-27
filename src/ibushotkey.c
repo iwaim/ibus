@@ -20,6 +20,7 @@
 #include "ibushotkey.h"
 #include "ibuskeysyms.h"
 #include "ibusinternal.h"
+#include "ibusshare.h"
 
 #define IBUS_HOTKEY_PROFILE_GET_PRIVATE(o)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((o), IBUS_TYPE_HOTKEY_PROFILE, IBusHotkeyProfilePrivate))
