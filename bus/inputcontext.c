@@ -798,6 +798,7 @@ _ic_set_factory (BusInputContext  *context,
     }
 
     bus_input_context_set_factory (context, factory);
+    bus_input_context_enable (context);
 
     reply = ibus_message_new_method_return (message);
     return reply;
@@ -1339,7 +1340,7 @@ bus_input_context_enable_or_disable (BusInputContext *context)
         bus_input_context_set_factory (context,
                                        bus_ibus_impl_get_default_factory (BUS_DEFAULT_IBUS));
     }
-
+    
     if (priv->factory == NULL || priv->engine == NULL)
         return;
 
@@ -1424,8 +1425,6 @@ bus_input_context_set_factory (BusInputContext *context,
                               signals[i].callback,
                               context);
         }
-
-        bus_input_context_enable (context);
     }
 }
 
