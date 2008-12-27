@@ -56,6 +56,13 @@ static gboolean bus_panel_proxy_ibus_signal     (IBusProxy             *proxy,
 
 static IBusProxyClass  *parent_class = NULL;
 
+struct _SignalCallbackTable {
+    gchar *name;
+    GCallback callback;
+} ;
+
+static const struct _SignalCallbackTable __signals[];
+
 GType
 bus_panel_proxy_get_type (void)
 {
@@ -292,195 +299,6 @@ failed:
     return FALSE;
 }
 
-static void
-_context_set_cursor_location_cb (BusInputContext *context,
-                                 gint             x,
-                                 gint             y,
-                                 gint             w,
-                                 gint             h,
-                                 BusPanelProxy   *panel)
-{
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-    g_assert (BUS_IS_PANEL_PROXY (panel));
-
-    BusPanelProxyPrivate *priv;
-    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
-
-    g_return_if_fail (priv->focused_context == context);
-
-    bus_panel_proxy_set_cursor_location (panel, x, y, w, h);
-}
-
-static void
-_context_update_preedit_text_cb (BusInputContext *context,
-                                 IBusText        *text,
-                                 guint            cursor_pos,
-                                 gboolean         visible,
-                                 BusPanelProxy   *panel)
-{
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-    g_assert (text != NULL);
-    g_assert (BUS_IS_PANEL_PROXY (panel));
-
-    BusPanelProxyPrivate *priv;
-    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
-
-    g_return_if_fail (priv->focused_context == context);
-
-    bus_panel_proxy_update_preedit_text (panel,
-                                         text,
-                                         cursor_pos,
-                                         visible);
-}
-
-static void
-_context_update_auxiliary_text_cb (BusInputContext *context,
-                                   IBusText        *text,
-                                   gboolean         visible,
-                                   BusPanelProxy   *panel)
-{
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-    g_assert (BUS_IS_PANEL_PROXY (panel));
-
-    BusPanelProxyPrivate *priv;
-    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
-
-    g_return_if_fail (priv->focused_context == context);
-
-    bus_panel_proxy_update_auxiliary_text (panel,
-                                           text,
-                                           visible);
-}
-
-static void
-_context_update_lookup_table_cb (BusInputContext *context,
-                                 IBusLookupTable *table,
-                                 gboolean         visible,
-                                 BusPanelProxy   *panel)
-{
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-    g_assert (BUS_IS_PANEL_PROXY (panel));
-
-    BusPanelProxyPrivate *priv;
-    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
-
-    g_return_if_fail (priv->focused_context == context);
-
-    bus_panel_proxy_update_lookup_table (panel,
-                                         table,
-                                         visible);
-}
-
-static void
-_context_register_properties_cb (BusInputContext *context,
-                                 IBusPropList    *prop_list,
-                                 BusPanelProxy   *panel)
-{
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-    g_assert (BUS_IS_PANEL_PROXY (panel));
-
-    BusPanelProxyPrivate *priv;
-    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
-
-    g_return_if_fail (priv->focused_context == context);
-
-    bus_panel_proxy_register_properties (panel,
-                                         prop_list);
-}
-
-static void
-_context_update_property_cb (BusInputContext *context,
-                             IBusProperty    *prop,
-                             BusPanelProxy   *panel)
-{
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-    g_assert (BUS_IS_PANEL_PROXY (panel));
-
-    BusPanelProxyPrivate *priv;
-    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
-
-    g_return_if_fail (priv->focused_context == context);
-
-    bus_panel_proxy_update_property (panel,
-                                     prop);
-}
-
-static void
-_context_destroy_cb (BusInputContext *context,
-                     BusPanelProxy   *panel)
-{
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-    g_assert (BUS_IS_PANEL_PROXY (panel));
-
-    BusPanelProxyPrivate *priv;
-    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
-
-    g_assert (context == priv->focused_context);
-
-    bus_panel_proxy_focus_out (panel, context);
-}
-
-#define DEFINE_FUNCTION(name)                                   \
-    static void _context_##name##_cb (BusInputContext *context, \
-                                      BusPanelProxy   *panel)   \
-    {                                                           \
-        g_assert (BUS_IS_INPUT_CONTEXT (context));              \
-        g_assert (BUS_IS_PANEL_PROXY (panel));                  \
-                                                                \
-        BusPanelProxyPrivate *priv;                             \
-        priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);             \
-                                                                \
-        g_return_if_fail (priv->focused_context == context);    \
-                                                                \
-        bus_panel_proxy_##name (panel);                         \
-    }
-
-DEFINE_FUNCTION (show_preedit_text)
-DEFINE_FUNCTION (hide_preedit_text)
-DEFINE_FUNCTION (show_auxiliary_text)
-DEFINE_FUNCTION (hide_auxiliary_text)
-DEFINE_FUNCTION (show_lookup_table)
-DEFINE_FUNCTION (hide_lookup_table)
-DEFINE_FUNCTION (page_up_lookup_table)
-DEFINE_FUNCTION (page_down_lookup_table)
-DEFINE_FUNCTION (cursor_up_lookup_table)
-DEFINE_FUNCTION (cursor_down_lookup_table)
-DEFINE_FUNCTION (state_changed)
-
-#undef DEFINE_FUNCTION
-
-static const struct {
-    gchar *name;
-    GCallback callback;
-} __signals [] = {
-    { "set-cursor-location",        G_CALLBACK (_context_set_cursor_location_cb) },
-    
-    { "update-preedit-text",        G_CALLBACK (_context_update_preedit_text_cb) },
-    { "show-preedit-text",          G_CALLBACK (_context_show_preedit_text_cb) },
-    { "hide-preedit-text",          G_CALLBACK (_context_hide_preedit_text_cb) },
-    
-    { "update-auxiliary-text",      G_CALLBACK (_context_update_auxiliary_text_cb) },
-    { "show-auxiliary-text",        G_CALLBACK (_context_show_auxiliary_text_cb) },
-    { "hide-auxiliary-text",        G_CALLBACK (_context_hide_auxiliary_text_cb) },
-    
-    { "update-lookup-table",        G_CALLBACK (_context_update_lookup_table_cb) },
-    { "show-lookup-table",          G_CALLBACK (_context_show_lookup_table_cb) },
-    { "hide-lookup-table",          G_CALLBACK (_context_hide_lookup_table_cb) },
-    { "page-up-lookup-table",       G_CALLBACK (_context_page_up_lookup_table_cb) },
-    { "page-down-lookup-table",     G_CALLBACK (_context_page_down_lookup_table_cb) },
-    { "cursor-up-lookup-table",     G_CALLBACK (_context_cursor_up_lookup_table_cb) },
-    { "cursor-down-lookup-table",   G_CALLBACK (_context_cursor_down_lookup_table_cb) },
-    
-    { "register-properties",        G_CALLBACK (_context_register_properties_cb) },
-    { "update-property",            G_CALLBACK (_context_update_property_cb) },
-    
-    { "enabled",                    G_CALLBACK (_context_state_changed_cb) },
-    { "disabled",                   G_CALLBACK (_context_state_changed_cb) },
-    { "factory-changed",            G_CALLBACK (_context_state_changed_cb) },
-
-    //    { "destroy",                    G_CALLBACK (_context_destroy_cb) },
-    { NULL, NULL}
-};
 
 void
 bus_panel_proxy_focus_in (BusPanelProxy     *panel,
@@ -662,3 +480,194 @@ DEFINE_FUNCTION (CursorDownLookupTable, cursor_down_lookup_table)
 DEFINE_FUNCTION (StateChanged, state_changed)
 
 #undef DEFINE_FUNCTION
+
+static void
+_context_set_cursor_location_cb (BusInputContext *context,
+                                 gint             x,
+                                 gint             y,
+                                 gint             w,
+                                 gint             h,
+                                 BusPanelProxy   *panel)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+
+    g_return_if_fail (priv->focused_context == context);
+
+    bus_panel_proxy_set_cursor_location (panel, x, y, w, h);
+}
+
+static void
+_context_update_preedit_text_cb (BusInputContext *context,
+                                 IBusText        *text,
+                                 guint            cursor_pos,
+                                 gboolean         visible,
+                                 BusPanelProxy   *panel)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    g_assert (text != NULL);
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+
+    g_return_if_fail (priv->focused_context == context);
+
+    bus_panel_proxy_update_preedit_text (panel,
+                                         text,
+                                         cursor_pos,
+                                         visible);
+}
+
+static void
+_context_update_auxiliary_text_cb (BusInputContext *context,
+                                   IBusText        *text,
+                                   gboolean         visible,
+                                   BusPanelProxy   *panel)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+
+    g_return_if_fail (priv->focused_context == context);
+
+    bus_panel_proxy_update_auxiliary_text (panel,
+                                           text,
+                                           visible);
+}
+
+static void
+_context_update_lookup_table_cb (BusInputContext *context,
+                                 IBusLookupTable *table,
+                                 gboolean         visible,
+                                 BusPanelProxy   *panel)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+
+    g_return_if_fail (priv->focused_context == context);
+
+    bus_panel_proxy_update_lookup_table (panel,
+                                         table,
+                                         visible);
+}
+
+static void
+_context_register_properties_cb (BusInputContext *context,
+                                 IBusPropList    *prop_list,
+                                 BusPanelProxy   *panel)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+
+    g_return_if_fail (priv->focused_context == context);
+
+    bus_panel_proxy_register_properties (panel,
+                                         prop_list);
+}
+
+static void
+_context_update_property_cb (BusInputContext *context,
+                             IBusProperty    *prop,
+                             BusPanelProxy   *panel)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+
+    g_return_if_fail (priv->focused_context == context);
+
+    bus_panel_proxy_update_property (panel,
+                                     prop);
+}
+
+#if 0
+static void
+_context_destroy_cb (BusInputContext *context,
+                     BusPanelProxy   *panel)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+
+    g_assert (context == priv->focused_context);
+
+    bus_panel_proxy_focus_out (panel, context);
+}
+#endif
+
+#define DEFINE_FUNCTION(name)                                   \
+    static void _context_##name##_cb (BusInputContext *context, \
+                                      BusPanelProxy   *panel)   \
+    {                                                           \
+        g_assert (BUS_IS_INPUT_CONTEXT (context));              \
+        g_assert (BUS_IS_PANEL_PROXY (panel));                  \
+                                                                \
+        BusPanelProxyPrivate *priv;                             \
+        priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);             \
+                                                                \
+        g_return_if_fail (priv->focused_context == context);    \
+                                                                \
+        bus_panel_proxy_##name (panel);                         \
+    }
+
+DEFINE_FUNCTION (show_preedit_text)
+DEFINE_FUNCTION (hide_preedit_text)
+DEFINE_FUNCTION (show_auxiliary_text)
+DEFINE_FUNCTION (hide_auxiliary_text)
+DEFINE_FUNCTION (show_lookup_table)
+DEFINE_FUNCTION (hide_lookup_table)
+DEFINE_FUNCTION (page_up_lookup_table)
+DEFINE_FUNCTION (page_down_lookup_table)
+DEFINE_FUNCTION (cursor_up_lookup_table)
+DEFINE_FUNCTION (cursor_down_lookup_table)
+DEFINE_FUNCTION (state_changed)
+
+#undef DEFINE_FUNCTION
+
+static const struct _SignalCallbackTable
+__signals[] = {
+    { "set-cursor-location",        G_CALLBACK (_context_set_cursor_location_cb) },
+    
+    { "update-preedit-text",        G_CALLBACK (_context_update_preedit_text_cb) },
+    { "show-preedit-text",          G_CALLBACK (_context_show_preedit_text_cb) },
+    { "hide-preedit-text",          G_CALLBACK (_context_hide_preedit_text_cb) },
+    
+    { "update-auxiliary-text",      G_CALLBACK (_context_update_auxiliary_text_cb) },
+    { "show-auxiliary-text",        G_CALLBACK (_context_show_auxiliary_text_cb) },
+    { "hide-auxiliary-text",        G_CALLBACK (_context_hide_auxiliary_text_cb) },
+    
+    { "update-lookup-table",        G_CALLBACK (_context_update_lookup_table_cb) },
+    { "show-lookup-table",          G_CALLBACK (_context_show_lookup_table_cb) },
+    { "hide-lookup-table",          G_CALLBACK (_context_hide_lookup_table_cb) },
+    { "page-up-lookup-table",       G_CALLBACK (_context_page_up_lookup_table_cb) },
+    { "page-down-lookup-table",     G_CALLBACK (_context_page_down_lookup_table_cb) },
+    { "cursor-up-lookup-table",     G_CALLBACK (_context_cursor_up_lookup_table_cb) },
+    { "cursor-down-lookup-table",   G_CALLBACK (_context_cursor_down_lookup_table_cb) },
+    
+    { "register-properties",        G_CALLBACK (_context_register_properties_cb) },
+    { "update-property",            G_CALLBACK (_context_update_property_cb) },
+    
+    { "enabled",                    G_CALLBACK (_context_state_changed_cb) },
+    { "disabled",                   G_CALLBACK (_context_state_changed_cb) },
+    { "factory-changed",            G_CALLBACK (_context_state_changed_cb) },
+
+    //    { "destroy",                    G_CALLBACK (_context_destroy_cb) },
+    { NULL, NULL}
+};
+
