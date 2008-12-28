@@ -18,6 +18,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <libgen.h>
+
 #include "server.h"
 #include "connection.h"
 #include "dbusimpl.h"
@@ -99,7 +103,16 @@ bus_server_listen (BusServer *server)
     g_assert (BUS_IS_SERVER (server));
 
     // const gchar *address = "unix:abstract=/tmp/ibus-c"
-    const gchar *address = ibus_get_address ();
+    const gchar *address;
+    const gchar *path;
+    const gchar *dname;
+
+    path = ibus_get_socket_path ();
+    path = g_strdup (path);
+    dname = dirname (path);
+    mkdir (dname, 0775);
+    g_free(path);
+    address = ibus_get_address ();
 
     return ibus_server_listen (IBUS_SERVER (server), address);
 }
