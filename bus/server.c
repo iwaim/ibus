@@ -107,9 +107,7 @@ bus_server_listen (BusServer *server)
     const gchar *path;
     const gchar *dname;
 
-    path = ibus_get_socket_path ();
-    path = g_strdup (path);
-    dname = dirname (path);
+    path = g_strdup_printf("/tmp/ibus-%s", ibus_get_user_name ());
     mkdir (dname, 0775);
     g_free(path);
     address = ibus_get_address ();
