@@ -1294,11 +1294,14 @@ bus_input_context_enable (BusInputContext *context)
         return;
 
     priv->enabled = TRUE;
+    
+    if (priv->engine)
+        bus_engine_proxy_enable (priv->engine);
+    
     bus_input_context_send_signal (context,
                                    "Enabled",
                                    G_TYPE_INVALID);
 
-    bus_engine_proxy_enable (priv->engine);
 
     g_signal_emit (context,
                    context_signals[ENABLED],
@@ -1317,12 +1320,13 @@ bus_input_context_disable (BusInputContext *context)
     g_return_if_fail (priv->enabled == TRUE);
 
     priv->enabled = FALSE;
+    
+    if (priv->engine)
+        bus_engine_proxy_disable (priv->engine);
+    
     bus_input_context_send_signal (context,
                                    "Disabled",
                                    G_TYPE_INVALID);
-    if (priv->engine)
-        bus_engine_proxy_enable (priv->engine);
-
     g_signal_emit (context,
                    context_signals[DISABLED],
                    0);
@@ -1385,11 +1389,13 @@ bus_input_context_set_factory (BusInputContext *context,
                    0);
 
     if (priv->factory) {
+        
+        g_object_ref (priv->factory);
+        
         g_signal_connect (priv->factory,
                           "destroy",
                           G_CALLBACK (_factory_destroy_cb),
                           context);
-        g_object_ref (priv->factory);
 
         priv->engine = bus_factory_create_engine (priv->factory);
 
