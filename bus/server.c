@@ -105,10 +105,9 @@ bus_server_listen (BusServer *server)
     // const gchar *address = "unix:abstract=/tmp/ibus-c"
     const gchar *address;
     const gchar *path;
-    const gchar *dname;
 
     path = g_strdup_printf("/tmp/ibus-%s", ibus_get_user_name ());
-    mkdir (dname, 0775);
+    mkdir (path, 0775);
     g_free(path);
     address = ibus_get_address ();
 
