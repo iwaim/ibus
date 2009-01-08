@@ -30,6 +30,7 @@ AM_CFLAGS = \
 	@GLIB2_CFLAGS@ \
 	@DBUS_CFLAGS@ \
 	-DG_LOG_DOMAIN=\"IBUS\" \
+	-DPKGDATADIR=\"$(pkgdatadir)\" \
 	-I$(top_srcdir)/src \
 	$(NULL)
 AM_LDFLAGS = \
@@ -40,6 +41,7 @@ AM_LDFLAGS = \
 	$(NULL)
 
 TESTS = \
+	test-registry \
 	test-matchrule \
 	$(NULL)
 
@@ -70,12 +72,15 @@ ibus_daemon_SOURCES = \
 	matchrule.h \
 	registry.c \
 	registry.h \
+	xmlparser.c \
+	xmlparser.h \
 	$(NULL)
 ibus_daemon_CFLAGS = \
 	@X11_CFLAGS@ \
 	@GLIB2_CFLAGS@ \
 	@DBUS_CFLAGS@ \
 	-DG_LOG_DOMAIN=\"IBUS\" \
+	-DPKGDATADIR=\"$(pkgdatadir)\" \
 	-I$(top_srcdir)/src \
 	$(NULL)
 ibus_daemon_LDADD = \
@@ -83,6 +88,13 @@ ibus_daemon_LDADD = \
 	@GLIB2_LIBS@ \
 	@DBUS_LIBS@ \
 	$(libibus) \
+	$(NULL)
+
+test_registry_SOURCES = \
+	registry.c \
+	xmlparser.c \
+	xmlparser.h \
+	test-registry.c \
 	$(NULL)
 
 test_matchrule_SOURCES = \

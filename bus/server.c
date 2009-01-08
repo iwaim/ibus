@@ -29,7 +29,6 @@
 
 #define BUS_SERVER_GET_PRIVATE(o)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((o), BUS_TYPE_SERVER, BusServerPrivate))
-#define DECLARE_PRIV BusServerPrivate *priv = BUS_SERVER_GET_PRIVATE(server)
 
 enum {
     NEW_CONNECTION,
