@@ -108,7 +108,8 @@ struct _IBusEngineInfo {
 typedef struct _IBusObservedPath IBusObservedPath;
 struct _IBusObservedPath {
     gchar *path;
-    gboolean is_dir;
+    gint   is_exist:1;
+    gint   is_dir:1;
     glong  mtime;
 };
 
