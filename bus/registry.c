@@ -206,6 +206,9 @@ bus_registry_save_component (IBusComponent *comp,
 #define OUTPUT_ENTRY_1(name) OUTPUT_ENTRY(name, #name)
     OUTPUT_ENTRY_1 (name);
     OUTPUT_ENTRY_1 (description);
+    OUTPUT_ENTRY_1 (filename);
+    g_string_append_indent (output, indent_level + 1);
+    g_string_append_printf (output, "<mtime>%ld</mtime>\n", comp->mtime);
     OUTPUT_ENTRY_1 (exec);
     OUTPUT_ENTRY_1 (version);
     OUTPUT_ENTRY_1 (author);
