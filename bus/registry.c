@@ -18,6 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include <glib/gstdio.h>
+#include <gio/gio.h>
 #include "xmlparser.h"
 #include "registry.h"
 
@@ -28,7 +29,7 @@ enum {
 
 /* BusRegistryPriv */
 struct _BusRegistryPrivate {
-    GSList *components;
+    IBusComponent **components;
 };
 typedef struct _BusRegistryPrivate BusRegistryPrivate;
 
@@ -42,19 +43,22 @@ static void              bus_registry_class_init        (BusRegistryClass       
 static void              bus_registry_init              (BusRegistry            *registry);
 static void              bus_registry_destroy           (BusRegistry            *registry);
 static void              bus_registry_load              (BusRegistry            *registry);
-static void              bus_registry_load_in_dir       (BusRegistryPrivate     *priv,
+static void              bus_registry_load_in_dir       (GArray                 *components,
                                                          const gchar            *dirname);
 static void              bus_registry_load_component
-                                                        (BusRegistryPrivate     *priv,
+                                                        (GArray                 *components,
                                                          const gchar            *filename);
 static IBusComponent    *bus_registry_parse_component   (XMLNode                *node);
-static GSList           *bus_registry_parse_engines     (XMLNode                *node);
+static void              bus_registry_parse_engines     (XMLNode                *node,
+                                                         GArray                 *engines);
 static IBusEngineInfo   *bus_registry_parse_engine      (XMLNode                *node);
-static GSList           *bus_registry_parse_observed_paths
-                                                        (XMLNode                *node);
-static GSList           *bus_registry_parse_path        (XMLNode                *node);
-static GSList           *bus_registry_traverse_dir      (GSList                 *paths,
-                                                         const gchar            *dirname);
+static void              bus_registry_parse_observed_paths
+                                                        (XMLNode                *node,
+                                                         GArray                 *paths);
+static void              bus_registry_parse_path        (XMLNode                *node,
+                                                         GArray                 *paths);
+static void              bus_registry_traverse_dir      (const gchar            *dirname,
+                                                         GArray                 *paths);
 static IBusObservedPath *bus_registry_get_path_info     (const gchar            *dirname);
 static gboolean          bus_registry_save_cache        (BusRegistry            *registry);
 static gboolean          bus_registry_load_cache        (BusRegistry            *registry);
@@ -128,17 +132,22 @@ bus_registry_load (BusRegistry *registry)
 
     gchar *dirname;
     gchar *homedir;
+    GArray *components;
+
+    components = g_array_new (TRUE, TRUE, sizeof (IBusComponent *));
 
     dirname = g_build_filename (PKGDATADIR, "component", NULL);
-    bus_registry_load_in_dir (priv, dirname);
+    bus_registry_load_in_dir (components, dirname);
     g_free (dirname);
 
     homedir = (gchar *) g_getenv ("HOME");
     if (!homedir)
         homedir = (gchar *) g_get_home_dir ();
     dirname = g_build_filename (homedir, ".ibus", "component", NULL);
-    bus_registry_load_in_dir (priv, dirname);
+    bus_registry_load_in_dir (components, dirname);
     g_free (dirname);
+
+    priv->components = (IBusComponent **) g_array_free (components, FALSE);
 }
 
 
@@ -151,14 +160,30 @@ bus_registry_load_cache (BusRegistry *registry)
 static gboolean
 bus_registry_save_cache (BusRegistry *registry)
 {
+    gchar *filename;
+    GFile *file;
+    GOutputStream *output;
+    GError *error;
+    
+    filename = g_build_filename (g_get_user_cache_dir(), "ibus/registry.xml", NULL);
+    file = g_file_new_for_path (filename);
+    g_free (filename);
+
+    output = (GOutputStream *)g_file_replace (file, NULL, FALSE, 0, NULL, &error);
+
+    if (output == NULL) {
+        g_warning ("create registry.xml failed: %s", error->message);
+        g_error_free (error);
+        return FALSE;
+    }
+
     return TRUE;   
 }
 
 static void
-bus_registry_load_in_dir (BusRegistryPrivate   *priv,
-                          const gchar          *dirname)
+bus_registry_load_in_dir (GArray      *components,
+                          const gchar *dirname)
 {
-    g_assert (priv != NULL);
     g_assert (dirname != NULL);
 
     GError *error = NULL;
@@ -178,7 +203,7 @@ bus_registry_load_in_dir (BusRegistryPrivate   *priv,
         if (g_strcmp0 (MAX (filename, filename + size -4), ".xml" ) != 0)
             continue;
         gchar *path = g_build_filename (dirname, filename, NULL);
-        bus_registry_load_component (priv, path);
+        bus_registry_load_component (components, path);
         g_free (path);
     }
 
@@ -188,14 +213,13 @@ bus_registry_load_in_dir (BusRegistryPrivate   *priv,
 
 
 static void
-bus_registry_load_component (BusRegistryPrivate *priv,
+bus_registry_load_component (GArray             *components,
                              const gchar        *filename)
 {
     IBusComponent *comp;
     struct stat buf;
     XMLNode *node;
 
-    g_assert (priv != NULL);
     g_assert (filename != NULL);
 
     if (g_stat (filename, &buf) != 0) {
@@ -223,7 +247,7 @@ bus_registry_load_component (BusRegistryPrivate *priv,
     if (comp != NULL) {
         comp->filename = g_strdup (filename);
         comp->mtime = buf.st_mtime;
-        priv->components = g_slist_append (priv->components, comp);
+        g_array_append_val (components, comp);
     }
 
     xml_free_node (node);
@@ -242,6 +266,8 @@ bus_registry_parse_component (XMLNode *node)
     }
 
     comp = g_slice_new0 (IBusComponent);
+    GArray *engines = g_array_new (TRUE, TRUE, sizeof (IBusEngineInfo *));
+    GArray *paths = g_array_new (TRUE, TRUE, sizeof (IBusObservedPath *));
     GSList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
         XMLNode *sub_node = (XMLNode *)p->data;
@@ -268,37 +294,34 @@ bus_registry_parse_component (XMLNode *node)
 #undef PARSE_ENTRY_1
 
         if (g_strcmp0 (sub_node->name, "engines") == 0) {
-            GSList *engines = bus_registry_parse_engines (sub_node);
-            if (engines) {
-                comp->engines = g_slist_concat (comp->engines, engines);
-            }
+            bus_registry_parse_engines (sub_node, engines);
             continue;
         }
         
         if (g_strcmp0 (sub_node->name, "observed-paths") == 0) {
-            GSList *paths = bus_registry_parse_observed_paths (sub_node);
-            if (paths) {
-                comp->observed_paths = g_slist_concat (comp->observed_paths, paths);
-            }
+            bus_registry_parse_observed_paths (sub_node, paths);
             continue;
         }
 
         g_warning ("<component> element contains invalidate element <%s>", sub_node->name);
     }
 
+    comp->engines = (IBusEngineInfo **)g_array_free (engines, FALSE);
+    comp->observed_paths = (IBusObservedPath **)g_array_free (paths, FALSE);
+
     return comp;
 }
 
 
-static GSList *
-bus_registry_parse_engines (XMLNode *node)
+static void
+bus_registry_parse_engines (XMLNode *node,
+                            GArray  *engines)
 {
     g_assert (node != NULL);
-    
-    GSList *engines = NULL;
+    g_assert (engines != NULL);
     
     if (g_strcmp0 (node->name, "engines") != 0) {
-        return NULL;
+        return;
     }
 
     GSList *p;
@@ -308,10 +331,8 @@ bus_registry_parse_engines (XMLNode *node)
 
         if (G_UNLIKELY (engine == NULL))
             continue;
-
-        engines = g_slist_append (engines, engine);
+        g_array_append_val (engines, engine);
     }
-    return engines;
 }
 
 static IBusEngineInfo *
@@ -357,14 +378,16 @@ bus_registry_parse_engine (XMLNode *node)
 }
 
 static void
-print_paths (GSList *paths)
+print_paths (GArray *paths)
 {
     GString *output = g_string_new ("");
 
-    GSList *p;
     IBusObservedPath *path;
-    for (p = paths; p != NULL; p = p->next) {
-        path = (IBusObservedPath *)p->data;
+    gint i;
+    for (i = 0;; i++) {
+        path = g_array_index (paths, IBusObservedPath *, i);
+        if (path == NULL)
+            break;
         g_string_append_printf (output, "<path mtime=%ld>%s</path>\n", path->mtime, path->path);
     }
 
@@ -372,53 +395,45 @@ print_paths (GSList *paths)
     g_string_free (output, TRUE);
 }
 
-static GSList *
-bus_registry_parse_observed_paths (XMLNode *node)
+static void
+bus_registry_parse_observed_paths (XMLNode *node,
+                                   GArray  *paths)
 {
     g_assert (node != NULL);
-    
-    GSList *paths = NULL;
+    g_assert (paths != NULL);
     
     if (g_strcmp0 (node->name, "observed-paths") != 0) {
-        return NULL;
+        return;
     }
 
     GSList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
-        GSList *sub_paths;
-        sub_paths = bus_registry_parse_path ((XMLNode *)p->data);
-
-        if (G_UNLIKELY (sub_paths == NULL))
-            continue;
-
-        paths = g_slist_concat (paths, sub_paths);
+        bus_registry_parse_path ((XMLNode *)p->data, paths);
     }
     
     print_paths (paths);
-
-    return paths;
 }
 
 
-static GSList *
-bus_registry_parse_path (XMLNode *node)
+static void
+bus_registry_parse_path (XMLNode *node,
+                         GArray  *paths)
 {
     g_assert (node != NULL);
+    g_assert (paths != NULL);
 
-    GSList *paths = NULL;
-    
     if (g_strcmp0 (node->name, "path") != 0) {
-        return NULL;
+        return;
     }
 
     if (node->text == NULL || g_utf8_strlen (node->text, -1) <= 0) {
         g_warning ("path must not be empty");
-        return NULL;
+        return;
     }
 
     if (node->text[0] == '~' && node->text[1] != G_DIR_SEPARATOR) {
         g_warning ("invalide path \"%s\"", node->text);
-        return NULL;
+        return;
     }
     
     IBusObservedPath *path;
@@ -435,13 +450,11 @@ bus_registry_parse_path (XMLNode *node)
         path = bus_registry_get_path_info (node->text);
     }
 
-    paths = g_slist_append (paths, path);
-
+    g_array_append_val (paths, path);
+    
     if (path->is_exist && path->is_dir) {
-        paths = bus_registry_traverse_dir (paths, path->path); 
+        bus_registry_traverse_dir (path->path, paths); 
     }
-
-    return paths;
 }
 
 static IBusObservedPath *
@@ -464,29 +477,32 @@ bus_registry_get_path_info (const gchar *dirname)
     return path;
 }
 
-static GSList *
-bus_registry_traverse_dir (GSList      *paths,
-                           const gchar *dirname)
+static void
+bus_registry_traverse_dir (const gchar *dirname,
+                           GArray      *paths)
 {
+    g_assert (dirname != NULL);
+    g_assert (paths != NULL);
+
     GDir *dir;
+    const gchar *name;
 
     dir = g_dir_open (dirname, 0, NULL);
     
     if (dir == NULL)
-        return paths;
+        return;
 
-    const gchar *name;
+    
     while ((name = g_dir_read_name (dir)) != NULL) {
         gchar *path = g_build_filename (dirname, name, NULL);
         IBusObservedPath *p = bus_registry_get_path_info (path);
-        paths = g_slist_append (paths, p);
+        g_array_append_val (paths, p);
         if (p->is_exist && p->is_dir)
-            paths = bus_registry_traverse_dir (paths, path);
+            bus_registry_traverse_dir (path, paths);
         g_free (path);
     }
 
     g_dir_close (dir);
-    return paths;
 }
 
 BusRegistry *
