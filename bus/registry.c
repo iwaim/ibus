@@ -19,6 +19,7 @@
  */
 #include <glib/gstdio.h>
 #include <gio/gio.h>
+#include <stdlib.h>
 #include "xmlparser.h"
 #include "registry.h"
 
@@ -29,6 +30,7 @@ enum {
 
 /* BusRegistryPriv */
 struct _BusRegistryPrivate {
+    IBusObservedPath **paths;
     IBusComponent **components;
 };
 typedef struct _BusRegistryPrivate BusRegistryPrivate;
@@ -48,20 +50,25 @@ static void              bus_registry_load_in_dir       (GArray                 
 static void              bus_registry_load_component
                                                         (GArray                 *components,
                                                          const gchar            *filename);
-static IBusComponent    *bus_registry_parse_component   (XMLNode                *node);
+static IBusComponent    *bus_registry_parse_component   (XMLNode                *node,
+                                                         gboolean                access_fs);
 static void              bus_registry_parse_engines     (XMLNode                *node,
                                                          GArray                 *engines);
 static IBusEngineInfo   *bus_registry_parse_engine      (XMLNode                *node);
 static void              bus_registry_parse_observed_paths
                                                         (XMLNode                *node,
-                                                         GArray                 *paths);
+                                                         GArray                 *paths,
+                                                         gboolean                access_fs);
 static void              bus_registry_parse_path        (XMLNode                *node,
-                                                         GArray                 *paths);
+                                                         GArray                 *paths,
+                                                         gboolean                access_fs);
 static void              bus_registry_traverse_dir      (const gchar            *dirname,
                                                          GArray                 *paths);
 static IBusObservedPath *bus_registry_get_path_info     (const gchar            *dirname);
 static gboolean          bus_registry_save_cache        (BusRegistry            *registry);
 static gboolean          bus_registry_load_cache        (BusRegistry            *registry);
+static gboolean          bus_registry_check_cache       (BusRegistry            *registry);
+static gboolean          bus_registry_check_path        (IBusObservedPath       *path);
 
 static IBusObjectClass  *parent_class = NULL;
 
@@ -107,18 +114,95 @@ bus_registry_class_init (BusRegistryClass *klass)
 }
 
 static void
+observed_path_free (IBusObservedPath *path)
+{
+    g_free (path->path);
+    g_slice_free (IBusObservedPath, path);
+}
+
+static void
+engine_info_free (IBusEngineInfo *engine)
+{
+    g_free (engine->name);
+    g_free (engine->longname);
+    g_free (engine->description);
+    g_free (engine->language);
+    g_free (engine->license);
+    g_free (engine->author);
+    g_free (engine->icon);
+    g_free (engine->layout);
+    g_slice_free (IBusEngineInfo, engine);
+}
+
+static void
+component_free (IBusComponent *comp)
+{
+    g_free (comp->name);
+    g_free (comp->description);
+    g_free (comp->exec);
+    g_free (comp->version);
+    g_free (comp->author);
+    g_free (comp->license);
+    g_free (comp->homepage);
+    g_free (comp->service_name);
+    g_free (comp->filename);
+    g_free (comp->textdomain);
+    g_free (comp->engine_exec);
+
+    IBusObservedPath **path;
+    for (path = comp->observed_paths; path && *path; path++) {
+        observed_path_free (*path);
+    }
+    g_free (comp->observed_paths);
+
+    IBusEngineInfo **engine;
+    for (engine = comp->engines; engine && *engine; engine++) {
+        engine_info_free (*engine);
+    }
+    g_free (comp->engines);
+
+    g_slice_free (IBusComponent, comp);
+}
+
+static void
+bus_registry_free (BusRegistry *registry)
+{
+    BusRegistryPrivate *priv = BUS_REGISTRY_GET_PRIVATE (registry);
+    IBusObservedPath **path;
+    IBusComponent **comp;
+
+    for (path = priv->paths; path && *path; path++) {
+        observed_path_free (*path);
+    }
+    g_free (priv->paths);
+    priv->paths = NULL;
+
+    for (comp = priv->components; comp && *comp; comp++) {
+        component_free (*comp);
+    }
+    g_free (priv->components);
+    priv->components = NULL;
+}
+
+static void
 bus_registry_init (BusRegistry *registry)
 {
     BusRegistryPrivate *priv = BUS_REGISTRY_GET_PRIVATE (registry);
 
+    priv->paths = NULL;
     priv->components = NULL;
 
-    bus_registry_load (registry);
+    if (!bus_registry_load_cache (registry) || !bus_registry_check_cache (registry)) {
+        bus_registry_free (registry);
+        bus_registry_load (registry);
+        bus_registry_save_cache (registry);
+    }
 }
 
 static void
 bus_registry_destroy (BusRegistry *registry)
 {
+    bus_registry_free (registry);
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (registry));
 }
 
@@ -132,11 +216,16 @@ bus_registry_load (BusRegistry *registry)
 
     gchar *dirname;
     gchar *homedir;
+    GArray *paths;
     GArray *components;
+    IBusObservedPath *path;
 
+    paths = g_array_new (TRUE, TRUE, sizeof (IBusObservedPath *));
     components = g_array_new (TRUE, TRUE, sizeof (IBusComponent *));
 
     dirname = g_build_filename (PKGDATADIR, "component", NULL);
+    path = bus_registry_get_path_info (dirname);
+    g_array_append_val (paths, path);
     bus_registry_load_in_dir (components, dirname);
     g_free (dirname);
 
@@ -144,20 +233,15 @@ bus_registry_load (BusRegistry *registry)
     if (!homedir)
         homedir = (gchar *) g_get_home_dir ();
     dirname = g_build_filename (homedir, ".ibus", "component", NULL);
+    path = bus_registry_get_path_info (dirname);
+    g_array_append_val (paths, path);
     bus_registry_load_in_dir (components, dirname);
     g_free (dirname);
 
+    priv->paths = (IBusObservedPath **) g_array_free (paths, FALSE);
     priv->components = (IBusComponent **) g_array_free (components, FALSE);
-
-    bus_registry_save_cache (registry);
 }
 
-
-static gboolean
-bus_registry_load_cache (BusRegistry *registry)
-{
-    return TRUE;
-}
 
 #define g_string_append_indent(string, indent)  \
     {                                           \
@@ -174,9 +258,14 @@ bus_registry_save_engine (IBusEngineInfo   *engine,
 {
     g_string_append_indent (output, indent_level);
     g_string_append (output, "<engine>\n");
-#define OUTPUT_ENTRY(field, element)                                            \
-    g_string_append_indent (output, indent_level + 1);                          \
-    g_string_append_printf (output, "<"element">%s</"element">\n", engine->field);
+#define OUTPUT_ENTRY(field, element)                                    \
+    {                                                                   \
+        gchar *escape_text = g_markup_escape_text (engine->field, -1);  \
+        g_string_append_indent (output, indent_level + 1);              \
+        g_string_append_printf (output, "<"element">%s</"element">\n",  \
+                                escape_text);                           \
+        g_free (escape_text);                                            \
+    }
 #define OUTPUT_ENTRY_1(name) OUTPUT_ENTRY(name, #name)
     OUTPUT_ENTRY_1(name);
     OUTPUT_ENTRY_1(longname);
@@ -200,9 +289,14 @@ bus_registry_save_component (IBusComponent *comp,
     g_string_append_indent (output, indent_level);
     g_string_append (output, "<component>\n");
 
-#define OUTPUT_ENTRY(field, element)                                            \
-    g_string_append_indent (output, indent_level + 1);                          \
-    g_string_append_printf (output, "<"element">%s</"element">\n", comp->field);
+#define OUTPUT_ENTRY(field, element)                                    \
+    {                                                                   \
+        gchar *escape_text = g_markup_escape_text (comp->field, -1);    \
+        g_string_append_indent (output, indent_level + 1);              \
+        g_string_append_printf (output, "<"element">%s</"element">\n",  \
+                                escape_text);                           \
+        g_free (escape_text);                                           \
+    }
 #define OUTPUT_ENTRY_1(name) OUTPUT_ENTRY(name, #name)
     OUTPUT_ENTRY_1 (name);
     OUTPUT_ENTRY_1 (description);
@@ -227,7 +321,7 @@ bus_registry_save_component (IBusComponent *comp,
 
         for (i = 0; comp->observed_paths[i]; i++) {
             g_string_append_indent (output, indent_level + 2);
-            g_string_append_printf (output, "<path mtime=%ld>%s</path>\n",
+            g_string_append_printf (output, "<path mtime=\"%ld\" >%s</path>\n",
                                     comp->observed_paths[i]->mtime,
                                     comp->observed_paths[i]->path);
         }
@@ -256,6 +350,95 @@ bus_registry_save_component (IBusComponent *comp,
 }
 
 static gboolean
+bus_registry_load_cache (BusRegistry *registry)
+{
+    BusRegistryPrivate *priv = BUS_REGISTRY_GET_PRIVATE (registry);
+
+    gchar *filename;
+    XMLNode *node;
+
+    filename = g_build_filename (g_get_user_cache_dir (), "ibus", "registry.xml", NULL);
+    node = xml_parse_file (filename);
+    g_free (filename);
+
+    if (node == NULL) {
+        return FALSE;
+    }
+
+    if (g_strcmp0 (node->name, "ibus-registry") != 0) {
+        xml_free_node (node);
+        return FALSE;
+    }
+
+    GSList *p;
+    GArray *paths = g_array_new (TRUE, TRUE, sizeof (IBusObservedPath *));
+    GArray *components = g_array_new (TRUE, TRUE, sizeof (IBusComponent *));
+    for (p = node->sub_nodes; p != NULL; p = p->next) {
+        XMLNode *sub_node = (XMLNode *) p->data;
+
+        if (g_strcmp0 (sub_node->name, "path") == 0) {
+            bus_registry_parse_path (sub_node, paths, FALSE);
+            continue;
+        }
+        if (g_strcmp0 (sub_node->name, "component") == 0) {
+            IBusComponent *comp = bus_registry_parse_component (sub_node, FALSE);
+            g_array_append_val (components, comp);
+            continue;
+        }
+        g_warning ("Invalidate element <%s>", sub_node->name);
+    }
+
+    xml_free_node (node);
+    priv->paths = (IBusObservedPath **)g_array_free (paths, FALSE);
+    priv->components = (IBusComponent **)g_array_free (components, FALSE);
+
+    return TRUE;
+}
+
+static gboolean
+bus_registry_check_cache (BusRegistry *registry)
+{
+    BusRegistryPrivate *priv = BUS_REGISTRY_GET_PRIVATE (registry);
+
+    IBusObservedPath **path;
+    IBusComponent **comp;
+
+    if (priv->components == NULL) {
+        return FALSE;
+    }
+
+    for (path = priv->paths; *path != NULL; path ++) {
+        if (!bus_registry_check_path (*path))
+            return FALSE;
+    }
+
+    for (comp = priv->components; *comp != NULL; comp++) {
+        for (path = (*comp)->observed_paths; *path != NULL; path ++) {
+            if (!bus_registry_check_path (*path))
+                return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+static gboolean
+bus_registry_check_path (IBusObservedPath *path)
+{
+    struct stat buf;
+
+    if (g_stat (path->path, &buf) != 0) {
+        if (path->mtime != 0l)
+            return FALSE;
+        return TRUE;
+    }
+
+    if (path->mtime != buf.st_mtime)
+        return FALSE;
+    return TRUE;
+}
+
+static gboolean
 bus_registry_save_cache (BusRegistry *registry)
 {
     gchar *cachedir;
@@ -265,7 +448,7 @@ bus_registry_save_cache (BusRegistry *registry)
 
     BusRegistryPrivate *priv = BUS_REGISTRY_GET_PRIVATE (registry);
 
-    cachedir = g_build_filename (g_get_user_cache_dir(), "ibus", NULL);
+    cachedir = g_build_filename (g_get_user_cache_dir (), "ibus", NULL);
     filename = g_build_filename (cachedir, "registry.xml", NULL);
     g_mkdir_with_parents (cachedir, 0775);
     pf = g_fopen (filename, "w");
@@ -282,15 +465,22 @@ bus_registry_save_cache (BusRegistry *registry)
     g_string_append (output, "<!-- \n"
                              "    This file was generated by ibus-daemon. Please don't modify it.\n"
                              "    -->\n");
-    g_string_append (output, "<ibus>\n");
+    g_string_append (output, "<ibus-registry>\n");
     gint i;
+
+    for (i = 0; priv->paths && priv->paths[i] != NULL; i++) {
+        g_string_append_indent (output, 1);
+        g_string_append_printf (output, "<path mtime=\"%ld\" >%s</path>\n",
+                                        priv->paths[i]->mtime,
+                                        priv->paths[i]->path);
+    }
     for (i = 0; priv->components && priv->components[i] != NULL; i++) {
         bus_registry_save_component (priv->components[i], output, 1);
     }
-    g_string_append (output, "</ibus>");
+    g_string_append (output, "</ibus-registry>");
 
-    g_debug ("%s", output->str);
     fwrite (output->str, output->len, 1, pf);
+    g_string_free (output, TRUE);
     fclose (pf);
 
     return TRUE;
@@ -359,7 +549,7 @@ bus_registry_load_component (GArray             *components,
         return;
     }
 
-    comp = bus_registry_parse_component (node);
+    comp = bus_registry_parse_component (node, TRUE);
     if (comp != NULL) {
         comp->filename = g_strdup (filename);
         comp->mtime = buf.st_mtime;
@@ -370,7 +560,8 @@ bus_registry_load_component (GArray             *components,
 }
 
 static IBusComponent *
-bus_registry_parse_component (XMLNode *node)
+bus_registry_parse_component (XMLNode *node,
+                              gboolean access_fs)
 {
     g_assert (node != NULL);
 
@@ -399,6 +590,7 @@ bus_registry_parse_component (XMLNode *node)
 #define PARSE_ENTRY_1(name) PARSE_ENTRY (name, #name)
         PARSE_ENTRY_1 (name);
         PARSE_ENTRY_1 (description);
+        PARSE_ENTRY_1 (filename);
         PARSE_ENTRY_1 (exec);
         PARSE_ENTRY_1 (version);
         PARSE_ENTRY_1 (author);
@@ -409,13 +601,19 @@ bus_registry_parse_component (XMLNode *node)
 #undef PARSE_ENTRY
 #undef PARSE_ENTRY_1
 
+        if (g_strcmp0 (sub_node->name, "mtime") == 0) {
+            comp->mtime = atol (sub_node->text);
+            bus_registry_parse_engines (sub_node, engines);
+            continue;
+        }
+
         if (g_strcmp0 (sub_node->name, "engines") == 0) {
             bus_registry_parse_engines (sub_node, engines);
             continue;
         }
 
         if (g_strcmp0 (sub_node->name, "observed-paths") == 0) {
-            bus_registry_parse_observed_paths (sub_node, paths);
+            bus_registry_parse_observed_paths (sub_node, paths, access_fs);
             continue;
         }
 
@@ -504,7 +702,7 @@ print_paths (GArray *paths)
         path = g_array_index (paths, IBusObservedPath *, i);
         if (path == NULL)
             break;
-        g_string_append_printf (output, "<path mtime=%ld>%s</path>\n", path->mtime, path->path);
+        g_string_append_printf (output, "<path mtime=\"%ld\" >%s</path>\n", path->mtime, path->path);
     }
 
     g_debug (output->str);
@@ -513,7 +711,8 @@ print_paths (GArray *paths)
 
 static void
 bus_registry_parse_observed_paths (XMLNode *node,
-                                   GArray  *paths)
+                                   GArray  *paths,
+                                   gboolean access_fs)
 {
     g_assert (node != NULL);
     g_assert (paths != NULL);
@@ -524,16 +723,15 @@ bus_registry_parse_observed_paths (XMLNode *node,
 
     GSList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
-        bus_registry_parse_path ((XMLNode *)p->data, paths);
+        bus_registry_parse_path ((XMLNode *)p->data, paths, access_fs);
     }
-
-    print_paths (paths);
 }
 
 
 static void
 bus_registry_parse_path (XMLNode *node,
-                         GArray  *paths)
+                         GArray  *paths,
+                         gboolean access_fs)
 {
     g_assert (node != NULL);
     g_assert (paths != NULL);
@@ -553,24 +751,38 @@ bus_registry_parse_path (XMLNode *node,
     }
 
     IBusObservedPath *path;
+    gchar *extend_path;
     if (node->text[0] == '~') {
-        gchar *extend_path;
         const gchar *homedir = g_getenv ("HOME");
         if (homedir == NULL)
             homedir = g_get_home_dir ();
         extend_path = g_build_filename (homedir, node->text + 2, NULL);
+    }
+    else {
+        extend_path = g_strdup (node->text);
+    }
+
+    if (access_fs) {
         path = bus_registry_get_path_info (extend_path);
+        g_array_append_val (paths, path);
+        if (path->is_exist && path->is_dir) {
+            bus_registry_traverse_dir (path->path, paths); 
+        }
         g_free (extend_path);
     }
     else {
-        path = bus_registry_get_path_info (node->text);
+        gchar **attr;
+        path = g_slice_new0 (IBusObservedPath);
+        path->path = extend_path;
+
+        for (attr = node->attributes; *attr != NULL; attr += 2) {
+            if (g_strcmp0 (*attr, "mtime") == 0) {
+                path->mtime = atol (*(attr + 1));
+            }
+        }
+        g_array_append_val (paths, path);
     }
 
-    g_array_append_val (paths, path);
-
-    if (path->is_exist && path->is_dir) {
-        bus_registry_traverse_dir (path->path, paths); 
-    }
 }
 
 static IBusObservedPath *

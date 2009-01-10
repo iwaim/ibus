@@ -220,6 +220,8 @@ xml_parse_file (const gchar *filename)
     return node;
 
 _failed_out:
+    g_warning ("Parse %s failed: %s", filename, error->message);
+    g_error_free (error);
     g_markup_parse_context_free (context);
     return NULL;
 }
