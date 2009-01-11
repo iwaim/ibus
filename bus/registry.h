@@ -59,7 +59,9 @@ struct _BusRegistryClass {
 };
 
 GType            bus_registry_get_type        (void);
-BusRegistry     *bus_registry_get_default     (void);
+BusRegistry     *bus_registry_new             (void);
+GSList          *bus_registry_get_components  (BusRegistry  *registry);
+GSList          *bus_registry_get_engines     (BusRegistry  *registry);
 
 G_END_DECLS
 #endif

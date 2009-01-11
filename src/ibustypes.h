@@ -68,6 +68,7 @@ struct _IBusRectangle {
     gint height;
 };
 
+typedef struct _IBusComponent IBusComponent;
 typedef struct _IBusEngineInfo IBusEngineInfo;
 struct _IBusEngineInfo {
     gchar *name;
@@ -78,6 +79,7 @@ struct _IBusEngineInfo {
     gchar *author;
     gchar *icon;
     gchar *layout;
+    IBusComponent *component;
 };
 
 typedef struct _IBusObservedPath IBusObservedPath;
@@ -88,7 +90,6 @@ struct _IBusObservedPath {
     glong  mtime;
 };
 
-typedef struct _IBusComponent IBusComponent;
 struct _IBusComponent {
     gchar *name;
     gchar *description;
@@ -110,10 +111,10 @@ struct _IBusComponent {
     
     /* observed paths */
     IBusObservedPath **observed_paths;
-
+    
+    gboolean is_active;
+    GPid     pid;
 };
-
-
 
 typedef void (* IBusFreeFunc) (gpointer );
 

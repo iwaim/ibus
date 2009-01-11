@@ -32,6 +32,8 @@ enum {
 struct _BusRegistryPrivate {
     IBusObservedPath **paths;
     IBusComponent **components;
+    GHashTable *engine_table;
+    GSList *active_engines;
 };
 typedef struct _BusRegistryPrivate BusRegistryPrivate;
 
@@ -191,18 +193,33 @@ bus_registry_init (BusRegistry *registry)
 
     priv->paths = NULL;
     priv->components = NULL;
+    priv->engine_table = g_hash_table_new (g_str_hash, g_str_equal);
 
     if (!bus_registry_load_cache (registry) || !bus_registry_check_cache (registry)) {
         bus_registry_free (registry);
         bus_registry_load (registry);
         bus_registry_save_cache (registry);
     }
+
+    IBusComponent **comp;
+    IBusEngineInfo **engine;
+
+    for (comp = priv->components; comp && *comp; comp++) {
+        for (engine = (*comp)->engines; engine && *engine; engine++) {
+            (*engine)->component = *comp;
+            g_hash_table_insert (priv->engine_table, (*engine)->name, *engine);
+        }
+    }
 }
 
 static void
 bus_registry_destroy (BusRegistry *registry)
 {
+    BusRegistryPrivate *priv = BUS_REGISTRY_GET_PRIVATE (registry);
+    
     bus_registry_free (registry);
+    g_hash_table_destroy (priv->engine_table);
+    
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (registry));
 }
 
@@ -691,6 +708,7 @@ bus_registry_parse_engine (XMLNode *node)
     return engine;
 }
 
+#if 0
 static void
 print_paths (GArray *paths)
 {
@@ -708,6 +726,7 @@ print_paths (GArray *paths)
     g_debug (output->str);
     g_string_free (output, TRUE);
 }
+#endif
 
 static void
 bus_registry_parse_observed_paths (XMLNode *node,
@@ -834,7 +853,7 @@ bus_registry_traverse_dir (const gchar *dirname,
 }
 
 BusRegistry *
-bus_registry_get_default (void)
+bus_registry_new (void)
 {
     static BusRegistry *registry = NULL;
 
