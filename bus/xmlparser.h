@@ -31,7 +31,7 @@ typedef struct {
     gchar  *name;
     gchar  *text;
     gchar  **attributes;
-    GSList *sub_nodes;
+    GList *sub_nodes;
 } XMLNode;
 
 XMLNode *xml_parse_file (const gchar    *name);

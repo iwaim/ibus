@@ -39,12 +39,12 @@ xml_free_node (XMLNode *node)
     }
 
     if (node->sub_nodes) {
-        GSList *p;
+        GList *p;
 
         for (p = node->sub_nodes; p != NULL; p = p->next)
             xml_free_node (p->data);
 
-        g_slist_free (node->sub_nodes);
+        g_list_free (node->sub_nodes);
     }
 
     g_slice_free (XMLNode, node);
@@ -99,7 +99,7 @@ _start_element_cb (GMarkupParseContext *context,
     
     XMLNode *p = g_slice_new0 (XMLNode);
     
-    node->sub_nodes = g_slist_append (node->sub_nodes, p);
+    node->sub_nodes = g_list_append (node->sub_nodes, p);
     g_markup_parse_context_push (context, &parser, p);
 
     p->name = g_strdup (element_name);
@@ -256,7 +256,7 @@ xml_output_indent (const XMLNode *node, int level, GString *output)
 
     if (node->sub_nodes != NULL){
         g_string_append (output, ">\n");
-        GSList *sub_node;
+        GList *sub_node;
 
         for (sub_node = node->sub_nodes; sub_node != NULL; sub_node = sub_node->next) {
             xml_output_indent (sub_node->data, level + 1, output);

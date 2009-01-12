@@ -66,7 +66,7 @@ GType            bus_observed_path_get_type             (void);
 BusObservedPath *bus_observed_path_new_from_xml_node    (XMLNode            *node,
                                                          gboolean            fill_stat);
 BusObservedPath *bus_observed_path_new_from_path        (const gchar        *path);
-GSList          *bus_observed_path_traverse             (BusObservedPath    *path);
+GList           *bus_observed_path_traverse             (BusObservedPath    *path);
 gboolean         bus_observed_path_check_modification   (BusObservedPath    *path);
 void             bus_observed_path_output               (BusObservedPath    *path,
                                                          GString            *output,

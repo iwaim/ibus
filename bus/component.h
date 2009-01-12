@@ -66,10 +66,10 @@ struct _BusComponent {
     gchar *textdomain;
     
     /* engines */
-    GSList *engines;
+    GList *engines;
     
     /* observed paths */
-    GSList *observed_paths;
+    GList *observed_paths;
     
     GPid     pid;
 };

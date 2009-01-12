@@ -99,39 +99,54 @@ bus_registry_class_init (BusRegistryClass *klass)
 static void
 bus_registry_init (BusRegistry *registry)
 {
+    GList *p;
     registry->observed_paths = NULL;
     registry->components = NULL;
+    registry->engine_table = g_hash_table_new (g_str_hash, g_str_equal);
 
     if (bus_registry_load_cache (registry) == FALSE || bus_registry_check_modification (registry)) {
         bus_registry_remove_all (registry);
         bus_registry_load (registry);
         bus_registry_save_cache (registry);
     }
+
+    for (p = registry->components; p != NULL; p = p->next) {
+        GList *p1;
+        for (p1 = ((BusComponent *)p->data)->engines; p1 != NULL; p1 = p1->next) {
+            BusEngineInfo *engine = (BusEngineInfo *)p1->data;
+            g_hash_table_insert (registry->engine_table, engine->name, engine);
+        }
+    }
 }
 
 static void
 bus_registry_remove_all (BusRegistry *registry)
 {
-    GSList *p;
+    GList *p;
 
     for (p = registry->observed_paths; p != NULL; p = p->next) {
         g_object_unref (p->data);
     }
-    g_slist_free (registry->observed_paths);
+    g_list_free (registry->observed_paths);
     registry->observed_paths = NULL;
 
     for (p = registry->components; p != NULL; p = p ->next) {
         g_object_unref (p->data);
     }
-    g_slist_free (registry->components);
+    g_list_free (registry->components);
     registry->components = NULL;
-   
+
+    g_hash_table_remove_all (registry->engine_table);
 }
 
 static void
 bus_registry_destroy (BusRegistry *registry)
 {
     bus_registry_remove_all (registry);
+
+    g_hash_table_destroy (registry->engine_table);
+    registry->engine_table = NULL;
+
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (registry));
 }
 
@@ -148,7 +163,7 @@ bus_registry_load (BusRegistry *registry)
     dirname = g_build_filename (PKGDATADIR, "component", NULL);
     
     path = bus_observed_path_new_from_path (dirname);
-    registry->observed_paths = g_slist_append (registry->observed_paths, path);
+    registry->observed_paths = g_list_append (registry->observed_paths, path);
     
     bus_registry_load_in_dir (registry, dirname);
     
@@ -160,7 +175,7 @@ bus_registry_load (BusRegistry *registry)
     dirname = g_build_filename (homedir, ".ibus", "component", NULL);
     
     path = bus_observed_path_new_from_path (dirname);
-    registry->observed_paths = g_slist_append (registry->observed_paths, path);
+    registry->observed_paths = g_list_append (registry->observed_paths, path);
     
     bus_registry_load_in_dir (registry, dirname);
     
@@ -183,7 +198,7 @@ bus_registry_load_cache (BusRegistry *registry)
 
     gchar *filename;
     XMLNode *node;
-    GSList *p;
+    GList *p;
 
     filename = g_build_filename (g_get_user_cache_dir (), "ibus", "registry.xml", NULL);
     node = xml_parse_file (filename);
@@ -202,23 +217,23 @@ bus_registry_load_cache (BusRegistry *registry)
         XMLNode *sub_node = (XMLNode *) p->data;
 
         if (g_strcmp0 (sub_node->name, "observed-paths") == 0) {
-            GSList *pp;
+            GList *pp;
             for (pp = sub_node->sub_nodes; pp != NULL; pp = pp->next) {
                 BusObservedPath *path;
                 path = bus_observed_path_new_from_xml_node (pp->data, FALSE);
                 if (path) {
-                    registry->observed_paths = g_slist_append (registry->observed_paths, path);
+                    registry->observed_paths = g_list_append (registry->observed_paths, path);
                 }
             }
             continue;
         }
         if (g_strcmp0 (sub_node->name, "components") == 0) {
-            GSList *pp;
+            GList *pp;
             for (pp = sub_node->sub_nodes; pp != NULL; pp = pp->next) {
                 BusComponent *component;
                 component = bus_component_new_from_xml_node (pp->data);
                 if (component) {
-                    registry->components = g_slist_append (registry->components, component);
+                    registry->components = g_list_append (registry->components, component);
                 }
             }
 
@@ -234,7 +249,7 @@ bus_registry_load_cache (BusRegistry *registry)
 static gboolean
 bus_registry_check_modification (BusRegistry *registry)
 {
-    GSList *p;
+    GList *p;
 
     for (p = registry->observed_paths; p != NULL; p = p->next) {
         if (bus_observed_path_check_modification ((BusObservedPath *)p->data))
@@ -257,7 +272,7 @@ bus_registry_save_cache (BusRegistry *registry)
     gchar *cachedir;
     gchar *filename;
     GString *output;
-    GSList *p;
+    GList *p;
     FILE *pf;
 
     cachedir = g_build_filename (g_get_user_cache_dir (), "ibus", NULL);
@@ -338,7 +353,7 @@ bus_registry_load_in_dir (BusRegistry *registry,
 
         path = g_build_filename (dirname, filename, NULL);
         component = bus_component_new_from_file (path);
-        registry->components = g_slist_append (registry->components, component);
+        registry->components = g_list_append (registry->components, component);
         
         g_free (path);
     }
@@ -362,9 +377,18 @@ bus_registry_lookup_component_by_name (BusRegistry *registry,
     return NULL;
 }
 
-static BusComponent *
-bus_registry_lookup_component_by_pid (BusRegistry *registry,
-                                      GPid         pid)
+GList *
+bus_registry_get_components (BusRegistry *registry)
 {
-    return NULL;
+    g_assert (BUS_IS_REGISTRY (registry));
+    
+    return g_list_copy (registry->components);
+}
+
+GList *
+bus_registry_get_engines (BusRegistry *registry)
+{
+    g_assert (BUS_IS_REGISTRY (registry));
+
+    return g_hash_table_get_values (registry->engine_table);
 }

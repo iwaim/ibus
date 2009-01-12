@@ -161,7 +161,7 @@ static gboolean
 bus_engine_info_parse_xml_node (BusEngineInfo *info,
                                 XMLNode       *node)
 {
-    GSList *p;
+    GList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
         XMLNode *sub_node = (XMLNode *) p->data;
 

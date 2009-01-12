@@ -162,14 +162,14 @@ bus_observed_path_fill_stat (BusObservedPath *path)
     }
 }
 
-GSList *
+GList *
 bus_observed_path_traverse (BusObservedPath *path)
 {
     g_assert (BUS_IS_OBSERVED_PATH (path));
 
     GDir *dir;
     const gchar *name;
-    GSList *paths = NULL;
+    GList *paths = NULL;
 
     dir = g_dir_open (path->path, 0, NULL);
 
@@ -183,10 +183,10 @@ bus_observed_path_traverse (BusObservedPath *path)
         sub->path = g_build_filename (path->path, name, NULL);
         
         bus_observed_path_fill_stat (sub);
-        paths = g_slist_append (paths, sub);
+        paths = g_list_append (paths, sub);
         
         if (sub->is_exist && sub->is_dir)
-            paths = g_slist_concat (paths, bus_observed_path_traverse (sub));
+            paths = g_list_concat (paths, bus_observed_path_traverse (sub));
     }
     g_dir_close (dir);
 

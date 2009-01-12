@@ -130,16 +130,16 @@ bus_component_destroy (BusComponent *component)
     g_free (component->filename);
     g_free (component->textdomain);
 
-    GSList *p;
+    GList *p;
     for (p = component->observed_paths; p != NULL; p = p->next) {
         g_object_unref (p->data);
     }
-    g_slist_free (component->observed_paths);
+    g_list_free (component->observed_paths);
 
     for (p = component->engines; p != NULL; p = p->next) {
         g_object_unref (p->data);
     }
-    g_slist_free (component->engines);
+    g_list_free (component->engines);
 
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (component));
 }
@@ -158,7 +158,7 @@ bus_component_output (BusComponent *component,
                       gint          indent)
 {
     g_assert (BUS_IS_COMPONENT (component));
-    GSList *p;
+    GList *p;
 
     g_string_append_indent (output, indent);
     g_string_append (output, "<component>\n");
@@ -233,7 +233,7 @@ bus_component_parse_xml_node (BusComponent   *component,
         return FALSE;
     }
     
-    GSList *p;
+    GList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
         XMLNode *sub_node = (XMLNode *)p->data;
 
@@ -292,14 +292,14 @@ bus_component_parse_engines (BusComponent *component,
         return;
     }
 
-    GSList *p;
+    GList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
         BusEngineInfo *engine;
         engine = bus_engine_info_new_from_xml_node (component, (XMLNode *)p->data);
 
         if (G_UNLIKELY (engine == NULL))
             continue;
-        component->engines = g_slist_append(component->engines, engine);
+        component->engines = g_list_append(component->engines, engine);
     }
 }
 
@@ -315,16 +315,16 @@ bus_component_parse_observed_paths (BusComponent    *component,
         return;
     }
 
-    GSList *p;
+    GList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
         BusObservedPath *path;
         
         path = bus_observed_path_new_from_xml_node ((XMLNode *)p->data, access_fs);
-        component->observed_paths = g_slist_append (component->observed_paths, path);
+        component->observed_paths = g_list_append (component->observed_paths, path);
 
         if (access_fs && path->is_dir && path->is_exist) {
-        component->observed_paths = g_slist_concat (component->observed_paths,
-                                        bus_observed_path_traverse (path));
+            component->observed_paths = g_list_concat (component->observed_paths,
+                                            bus_observed_path_traverse (path));
         }
     }
 }
@@ -454,7 +454,7 @@ bus_component_check_modification (BusComponent *component)
 {
     g_assert (BUS_IS_COMPONENT (component));
 
-    GSList *p;
+    GList *p;
 
     for (p = component->observed_paths; p != NULL; p = p->next) {
         if (bus_observed_path_check_modification ((BusObservedPath *)p->data))

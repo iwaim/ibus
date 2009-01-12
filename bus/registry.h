@@ -49,10 +49,11 @@ struct _BusRegistry {
     IBusObject parent;
     
     /* instance members */
-    GSList *observed_paths;
-    GSList *components;
+    GList *observed_paths;
+    GList *components;
+    
     GHashTable *engine_table;
-    GSList *active_engines;
+    GList *active_engines;
 };
 
 struct _BusRegistryClass {
@@ -63,8 +64,8 @@ struct _BusRegistryClass {
 
 GType            bus_registry_get_type        (void);
 BusRegistry     *bus_registry_new             (void);
-GSList          *bus_registry_get_components  (BusRegistry  *registry);
-GSList          *bus_registry_get_engines     (BusRegistry  *registry);
+GList           *bus_registry_get_components  (BusRegistry  *registry);
+GList           *bus_registry_get_engines     (BusRegistry  *registry);
 gboolean         bus_registry_exec_component  (BusRegistry  *registry,
                                                const gchar  *name);
 gboolean         bus_registry_kill_component  (BusRegistry  *registry,
