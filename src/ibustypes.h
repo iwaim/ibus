@@ -68,53 +68,6 @@ struct _IBusRectangle {
     gint height;
 };
 
-typedef struct _IBusComponent IBusComponent;
-typedef struct _IBusEngineInfo IBusEngineInfo;
-struct _IBusEngineInfo {
-    gchar *name;
-    gchar *longname;
-    gchar *description;
-    gchar *language;
-    gchar *license;
-    gchar *author;
-    gchar *icon;
-    gchar *layout;
-    IBusComponent *component;
-};
-
-typedef struct _IBusObservedPath IBusObservedPath;
-struct _IBusObservedPath {
-    gchar *path;
-    gint   is_exist:1;
-    gint   is_dir:1;
-    glong  mtime;
-};
-
-struct _IBusComponent {
-    gchar *name;
-    gchar *description;
-    gchar *exec;
-    gchar *version;
-    gchar *author;
-    gchar *license;
-    gchar *homepage;
-    gchar *service_name;
-    gchar *filename;
-    glong  mtime;
-    
-    /* text domain for dgettext */
-    gchar *textdomain;
-    
-    /* engines */
-    gchar  *engine_exec;
-    IBusEngineInfo **engines;
-    
-    /* observed paths */
-    IBusObservedPath **observed_paths;
-    
-    GPid     pid;
-};
-
 typedef void (* IBusFreeFunc) (gpointer );
 
 #endif

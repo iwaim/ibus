@@ -59,7 +59,7 @@ struct _BusEngineInfo {
     gchar *icon;
     gchar *layout;
     
-    BusComponent *component;
+    struct _BusComponent *component;
 };
 
 struct _BusEngineInfoClass {
@@ -69,7 +69,8 @@ struct _BusEngineInfoClass {
 };
 
 GType            bus_engine_info_get_type       (void);
-BusEngineInfo   *bus_engine_info_from_xml_node  (BusComponent   *component,
+BusEngineInfo   *bus_engine_info_new_from_xml_node
+                                                (BusComponent   *component,
                                                  XMLNode        *node);
 void             bus_engine_info_output         (BusEngineInfo  *info,
                                                  GString        *output,

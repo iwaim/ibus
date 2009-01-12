@@ -43,33 +43,16 @@ typedef struct _BusComponentPrivate BusComponentPrivate;
 static void              bus_component_class_init        (BusComponentClass       *klass);
 static void              bus_component_init              (BusComponent            *component);
 static void              bus_component_destroy           (BusComponent            *component);
-static void              bus_component_load              (BusComponent            *component);
-static void              bus_component_load_in_dir       (GArray                 *components,
-                                                         const gchar            *dirname);
-static void              bus_component_load_component
-                                                        (GArray                 *components,
-                                                         const gchar            *filename);
 static gboolean          bus_component_parse_xml_node   (BusComponent           *component,
                                                          XMLNode                *node,
                                                          gboolean                access_fs);
 
-static void              bus_component_parse_engines     (XMLNode                *node,
-                                                         GArray                 *engines);
-static IBusEngineInfo   *bus_component_parse_engine      (XMLNode                *node);
+static void              bus_component_parse_engines    (BusComponent           *component,
+                                                         XMLNode                *node);
 static void              bus_component_parse_observed_paths
-                                                        (XMLNode                *node,
-                                                         GArray                 *paths,
+                                                        (BusComponent           *component,
+                                                         XMLNode                *node,
                                                          gboolean                access_fs);
-static void              bus_component_parse_path        (XMLNode                *node,
-                                                         GArray                 *paths,
-                                                         gboolean                access_fs);
-static void              bus_component_traverse_dir      (const gchar            *dirname,
-                                                         GArray                 *paths);
-static IBusObservedPath *bus_component_get_path_info     (const gchar            *dirname);
-static gboolean          bus_component_save_cache        (BusComponent            *component);
-static gboolean          bus_component_load_cache        (BusComponent            *component);
-static gboolean          bus_component_check_cache       (BusComponent            *component);
-static gboolean          bus_component_check_path        (IBusObservedPath       *path);
 
 static IBusObjectClass  *parent_class = NULL;
 
@@ -114,150 +97,52 @@ bus_component_class_init (BusComponentClass *klass)
 
 }
 
-static void
-observed_path_free (IBusObservedPath *path)
-{
-    g_free (path->path);
-    g_slice_free (IBusObservedPath, path);
-}
 
-static void
-engine_info_free (IBusEngineInfo *engine)
-{
-    g_free (engine->name);
-    g_free (engine->longname);
-    g_free (engine->description);
-    g_free (engine->language);
-    g_free (engine->license);
-    g_free (engine->author);
-    g_free (engine->icon);
-    g_free (engine->layout);
-    g_slice_free (IBusEngineInfo, engine);
-}
-
-static void
-component_free (IBusComponent *comp)
-{
-    g_free (comp->name);
-    g_free (comp->description);
-    g_free (comp->exec);
-    g_free (comp->version);
-    g_free (comp->author);
-    g_free (comp->license);
-    g_free (comp->homepage);
-    g_free (comp->service_name);
-    g_free (comp->filename);
-    g_free (comp->textdomain);
-    g_free (comp->engine_exec);
-
-    IBusObservedPath **path;
-    for (path = comp->observed_paths; path && *path; path++) {
-        observed_path_free (*path);
-    }
-    g_free (comp->observed_paths);
-
-    IBusEngineInfo **engine;
-    for (engine = comp->engines; engine && *engine; engine++) {
-        engine_info_free (*engine);
-    }
-    g_free (comp->engines);
-
-    g_slice_free (IBusComponent, comp);
-}
-
-static void
-bus_component_free (BusComponent *component)
-{
-    BusComponentPrivate *priv = BUS_COMPONENT_GET_PRIVATE (component);
-    IBusObservedPath **path;
-    IBusComponent **comp;
-
-    for (path = priv->paths; path && *path; path++) {
-        observed_path_free (*path);
-    }
-    g_free (priv->paths);
-    priv->paths = NULL;
-
-    for (comp = priv->components; comp && *comp; comp++) {
-        component_free (*comp);
-    }
-    g_free (priv->components);
-    priv->components = NULL;
-}
 
 static void
 bus_component_init (BusComponent *component)
 {
-    BusComponentPrivate *priv = BUS_COMPONENT_GET_PRIVATE (component);
-
-    priv->paths = NULL;
-    priv->components = NULL;
-    priv->engine_table = g_hash_table_new (g_str_hash, g_str_equal);
-
-    if (!bus_component_load_cache (component) || !bus_component_check_cache (component)) {
-        bus_component_free (component);
-        bus_component_load (component);
-        bus_component_save_cache (component);
-    }
-
-    IBusComponent **comp;
-    IBusEngineInfo **engine;
-
-    for (comp = priv->components; comp && *comp; comp++) {
-        for (engine = (*comp)->engines; engine && *engine; engine++) {
-            (*engine)->component = *comp;
-            g_hash_table_insert (priv->engine_table, (*engine)->name, *engine);
-        }
-    }
+    component->name = NULL;
+    component->description = NULL;
+    component->exec = NULL;
+    component->version = NULL;
+    component->author = NULL;
+    component->license = NULL;
+    component->homepage = NULL;
+    component->service_name = NULL;
+    component->filename = NULL;
+    component->textdomain = NULL;
+    component->engines = NULL;
+    component->observed_paths = NULL;
 }
 
 static void
 bus_component_destroy (BusComponent *component)
 {
-    BusComponentPrivate *priv = BUS_COMPONENT_GET_PRIVATE (component);
-    
-    bus_component_free (component);
-    g_hash_table_destroy (priv->engine_table);
-    
+    g_free (component->name);
+    g_free (component->description);
+    g_free (component->exec);
+    g_free (component->version);
+    g_free (component->author);
+    g_free (component->license);
+    g_free (component->homepage);
+    g_free (component->service_name);
+    g_free (component->filename);
+    g_free (component->textdomain);
+
+    GSList *p;
+    for (p = component->observed_paths; p != NULL; p = p->next) {
+        g_object_unref (p->data);
+    }
+    g_slist_free (component->observed_paths);
+
+    for (p = component->engines; p != NULL; p = p->next) {
+        g_object_unref (p->data);
+    }
+    g_slist_free (component->engines);
+
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (component));
 }
-
-
-static void
-bus_component_load (BusComponent *component)
-{
-    BusComponentPrivate *priv = BUS_COMPONENT_GET_PRIVATE (component);
-
-    g_assert (priv->components == NULL);
-
-    gchar *dirname;
-    gchar *homedir;
-    GArray *paths;
-    GArray *components;
-    IBusObservedPath *path;
-
-    paths = g_array_new (TRUE, TRUE, sizeof (IBusObservedPath *));
-    components = g_array_new (TRUE, TRUE, sizeof (IBusComponent *));
-
-    dirname = g_build_filename (PKGDATADIR, "component", NULL);
-    path = bus_component_get_path_info (dirname);
-    g_array_append_val (paths, path);
-    bus_component_load_in_dir (components, dirname);
-    g_free (dirname);
-
-    homedir = (gchar *) g_getenv ("HOME");
-    if (!homedir)
-        homedir = (gchar *) g_get_home_dir ();
-    dirname = g_build_filename (homedir, ".ibus", "component", NULL);
-    path = bus_component_get_path_info (dirname);
-    g_array_append_val (paths, path);
-    bus_component_load_in_dir (components, dirname);
-    g_free (dirname);
-
-    priv->paths = (IBusObservedPath **) g_array_free (paths, FALSE);
-    priv->components = (IBusComponent **) g_array_free (components, FALSE);
-}
-
 
 #define g_string_append_indent(string, indent)  \
     {                                           \
@@ -267,58 +152,31 @@ bus_component_load (BusComponent *component)
         }                                       \
     }
 
-static void
-bus_component_save_engine (IBusEngineInfo   *engine,
-                          GString          *output,
-                          gint              indent_level)
+void
+bus_component_output (BusComponent *component,
+                      GString      *output,
+                      gint          indent)
 {
-    g_string_append_indent (output, indent_level);
-    g_string_append (output, "<engine>\n");
-#define OUTPUT_ENTRY(field, element)                                    \
-    {                                                                   \
-        gchar *escape_text = g_markup_escape_text (engine->field, -1);  \
-        g_string_append_indent (output, indent_level + 1);              \
-        g_string_append_printf (output, "<"element">%s</"element">\n",  \
-                                escape_text);                           \
-        g_free (escape_text);                                            \
-    }
-#define OUTPUT_ENTRY_1(name) OUTPUT_ENTRY(name, #name)
-    OUTPUT_ENTRY_1(name);
-    OUTPUT_ENTRY_1(longname);
-    OUTPUT_ENTRY_1(description);
-    OUTPUT_ENTRY_1(language);
-    OUTPUT_ENTRY_1(license);
-    OUTPUT_ENTRY_1(author);
-    OUTPUT_ENTRY_1(icon);
-    OUTPUT_ENTRY_1(layout);
-#undef OUTPUT_ENTRY
-#undef OUTPUT_ENTRY_1
-    g_string_append_indent (output, indent_level);
-    g_string_append (output, "</engine>\n");
-}
+    g_assert (BUS_IS_COMPONENT (component));
+    GSList *p;
 
-static void
-bus_component_save_component (IBusComponent *comp,
-                             GString       *output,
-                             gint           indent_level)
-{
-    g_string_append_indent (output, indent_level);
+    g_string_append_indent (output, indent);
     g_string_append (output, "<component>\n");
 
-#define OUTPUT_ENTRY(field, element)                                    \
-    {                                                                   \
-        gchar *escape_text = g_markup_escape_text (comp->field, -1);    \
-        g_string_append_indent (output, indent_level + 1);              \
-        g_string_append_printf (output, "<"element">%s</"element">\n",  \
-                                escape_text);                           \
-        g_free (escape_text);                                           \
+#define OUTPUT_ENTRY(field, element)                                        \
+    {                                                                       \
+        gchar *escape_text = g_markup_escape_text (component->field, -1);   \
+        g_string_append_indent (output, indent + 1);                        \
+        g_string_append_printf (output, "<"element">%s</"element">\n",      \
+                                escape_text);                               \
+        g_free (escape_text);                                               \
     }
 #define OUTPUT_ENTRY_1(name) OUTPUT_ENTRY(name, #name)
     OUTPUT_ENTRY_1 (name);
     OUTPUT_ENTRY_1 (description);
     OUTPUT_ENTRY_1 (filename);
-    g_string_append_indent (output, indent_level + 1);
-    g_string_append_printf (output, "<mtime>%ld</mtime>\n", comp->mtime);
+    g_string_append_indent (output, indent + 1);
+    g_string_append_printf (output, "<mtime>%ld</mtime>\n", component->mtime);
     OUTPUT_ENTRY_1 (exec);
     OUTPUT_ENTRY_1 (version);
     OUTPUT_ENTRY_1 (author);
@@ -329,250 +187,38 @@ bus_component_save_component (IBusComponent *comp,
 #undef OUTPUT_ENTRY
 #undef OUTPUT_ENTRY_1
 
-    if (comp->observed_paths && comp->observed_paths[0]) {
-        gint i;
-
-        g_string_append_indent (output, indent_level + 1);
+    if (component->observed_paths) {
+        g_string_append_indent (output, indent + 1);
         g_string_append (output, "<observed-paths>\n");
+        
+        for (p = component->observed_paths; p != NULL; p = p->next ) {
+            BusObservedPath *path = (BusObservedPath *) p->data;
 
-        for (i = 0; comp->observed_paths[i]; i++) {
-            g_string_append_indent (output, indent_level + 2);
+            g_string_append_indent (output, indent + 2);
             g_string_append_printf (output, "<path mtime=\"%ld\" >%s</path>\n",
-                                    comp->observed_paths[i]->mtime,
-                                    comp->observed_paths[i]->path);
+                                    path->mtime,
+                                    path->path);
         }
 
-        g_string_append_indent (output, indent_level + 1);
+        g_string_append_indent (output, indent + 1);
         g_string_append (output, "</observed-paths>\n");
     }
 
-    if (comp->engines && comp->engines[0]) {
-        gint i;
-
-        g_string_append_indent (output, indent_level + 1);
+    if (component->engines) {
+        g_string_append_indent (output, indent + 1);
         g_string_append (output, "<engines>\n");
 
-        for (i = 0; comp->engines[i]; i++) {
-            bus_component_save_engine (comp->engines[i], output, indent_level + 2);
+        for (p = component->engines; p != NULL; p = p->next) {
+            bus_engine_info_output ((BusEngineInfo *)p->data, output, indent + 2);
         }
 
-        g_string_append_indent (output, indent_level + 1);
+        g_string_append_indent (output, indent + 1);
         g_string_append (output, "</engines>\n");
     }
 
 
-    g_string_append_indent (output, indent_level);
+    g_string_append_indent (output, indent);
     g_string_append (output, "</component>\n");
-}
-
-static gboolean
-bus_component_load_cache (BusComponent *component)
-{
-    BusComponentPrivate *priv = BUS_COMPONENT_GET_PRIVATE (component);
-
-    gchar *filename;
-    XMLNode *node;
-
-    filename = g_build_filename (g_get_user_cache_dir (), "ibus", "component.xml", NULL);
-    node = xml_parse_file (filename);
-    g_free (filename);
-
-    if (node == NULL) {
-        return FALSE;
-    }
-
-    if (g_strcmp0 (node->name, "ibus-component") != 0) {
-        xml_free_node (node);
-        return FALSE;
-    }
-
-    GSList *p;
-    GArray *paths = g_array_new (TRUE, TRUE, sizeof (IBusObservedPath *));
-    GArray *components = g_array_new (TRUE, TRUE, sizeof (IBusComponent *));
-    for (p = node->sub_nodes; p != NULL; p = p->next) {
-        XMLNode *sub_node = (XMLNode *) p->data;
-
-        if (g_strcmp0 (sub_node->name, "path") == 0) {
-            bus_component_parse_path (sub_node, paths, FALSE);
-            continue;
-        }
-        if (g_strcmp0 (sub_node->name, "component") == 0) {
-            IBusComponent *comp = bus_component_parse_component (sub_node, FALSE);
-            g_array_append_val (components, comp);
-            continue;
-        }
-        g_warning ("Invalidate element <%s>", sub_node->name);
-    }
-
-    xml_free_node (node);
-    priv->paths = (IBusObservedPath **)g_array_free (paths, FALSE);
-    priv->components = (IBusComponent **)g_array_free (components, FALSE);
-
-    return TRUE;
-}
-
-static gboolean
-bus_component_check_cache (BusComponent *component)
-{
-    BusComponentPrivate *priv = BUS_COMPONENT_GET_PRIVATE (component);
-
-    IBusObservedPath **path;
-    IBusComponent **comp;
-
-    if (priv->components == NULL) {
-        return FALSE;
-    }
-
-    for (path = priv->paths; *path != NULL; path ++) {
-        if (!bus_component_check_path (*path))
-            return FALSE;
-    }
-
-    for (comp = priv->components; *comp != NULL; comp++) {
-        for (path = (*comp)->observed_paths; *path != NULL; path ++) {
-            if (!bus_component_check_path (*path))
-                return FALSE;
-        }
-    }
-
-    return TRUE;
-}
-
-static gboolean
-bus_component_check_path (IBusObservedPath *path)
-{
-    struct stat buf;
-
-    if (g_stat (path->path, &buf) != 0) {
-        if (path->mtime != 0l)
-            return FALSE;
-        return TRUE;
-    }
-
-    if (path->mtime != buf.st_mtime)
-        return FALSE;
-    return TRUE;
-}
-
-static gboolean
-bus_component_save_cache (BusComponent *component)
-{
-    gchar *cachedir;
-    gchar *filename;
-    GString *output;
-    FILE *pf;
-
-    BusComponentPrivate *priv = BUS_COMPONENT_GET_PRIVATE (component);
-
-    cachedir = g_build_filename (g_get_user_cache_dir (), "ibus", NULL);
-    filename = g_build_filename (cachedir, "component.xml", NULL);
-    g_mkdir_with_parents (cachedir, 0775);
-    pf = g_fopen (filename, "w");
-    g_free (filename);
-    g_free (cachedir);
-
-    if (pf == NULL) {
-        g_warning ("create component.xml failed");
-        return FALSE;
-    }
-
-    output = g_string_new ("");
-    g_string_append (output, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-    g_string_append (output, "<!-- \n"
-                             "    This file was generated by ibus-daemon. Please don't modify it.\n"
-                             "    -->\n");
-    g_string_append (output, "<ibus-component>\n");
-    gint i;
-
-    for (i = 0; priv->paths && priv->paths[i] != NULL; i++) {
-        g_string_append_indent (output, 1);
-        g_string_append_printf (output, "<path mtime=\"%ld\" >%s</path>\n",
-                                        priv->paths[i]->mtime,
-                                        priv->paths[i]->path);
-    }
-    for (i = 0; priv->components && priv->components[i] != NULL; i++) {
-        bus_component_save_component (priv->components[i], output, 1);
-    }
-    g_string_append (output, "</ibus-component>");
-
-    fwrite (output->str, output->len, 1, pf);
-    g_string_free (output, TRUE);
-    fclose (pf);
-
-    return TRUE;
-}
-
-static void
-bus_component_load_in_dir (GArray      *components,
-                          const gchar *dirname)
-{
-    g_assert (dirname != NULL);
-
-    GError *error = NULL;
-    GDir *dir;
-    const gchar *filename;
-
-    dir = g_dir_open (dirname, 0, &error);
-
-    if (dir == NULL) {
-        g_warning ("Unable open directory %s : %s", dirname, error->message);
-        g_error_free (error);
-        return;
-    }
-
-    while ((filename = g_dir_read_name (dir)) != NULL) {
-        glong size = g_utf8_strlen (filename, -1);
-        if (g_strcmp0 (MAX (filename, filename + size -4), ".xml" ) != 0)
-            continue;
-        gchar *path = g_build_filename (dirname, filename, NULL);
-        bus_component_load_component (components, path);
-        g_free (path);
-    }
-
-    g_dir_close (dir);
-}
-
-
-
-static void
-bus_component_load_component (GArray             *components,
-                             const gchar        *filename)
-{
-    IBusComponent *comp;
-    struct stat buf;
-    XMLNode *node;
-
-    g_assert (filename != NULL);
-
-    if (g_stat (filename, &buf) != 0) {
-        g_warning ("Can not get stat of file %s", filename);
-        return;
-    }
-
-    node = xml_parse_file (filename);
-
-#if 0
-    GString *string = g_string_new ("");
-
-    xml_output (node, string);
-
-    g_debug ("%s", string->str);
-    g_string_free (string, TRUE);
-#endif
-
-    if (node == NULL) {
-        g_warning ("parse %s failed", filename);
-        return;
-    }
-
-    comp = bus_component_parse_component (node, TRUE);
-    if (comp != NULL) {
-        comp->filename = g_strdup (filename);
-        comp->mtime = buf.st_mtime;
-        g_array_append_val (components, comp);
-    }
-
-    xml_free_node (node);
 }
 
 static gboolean
@@ -583,8 +229,10 @@ bus_component_parse_xml_node (BusComponent   *component,
     g_assert (component);
     g_assert (node);
 
-    GArray *engines = g_array_new (TRUE, TRUE, sizeof (IBusEngineInfo *));
-    GArray *paths = g_array_new (TRUE, TRUE, sizeof (IBusObservedPath *));
+    if (G_UNLIKELY (g_strcmp0 (node->name, "component") != 0)) {
+        return FALSE;
+    }
+    
     GSList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
         XMLNode *sub_node = (XMLNode *)p->data;
@@ -613,36 +261,32 @@ bus_component_parse_xml_node (BusComponent   *component,
 
         if (g_strcmp0 (sub_node->name, "mtime") == 0) {
             component->mtime = atol (sub_node->text);
-            bus_component_parse_engines (sub_node, engines);
             continue;
         }
 
         if (g_strcmp0 (sub_node->name, "engines") == 0) {
-            bus_component_parse_engines (sub_node, engines);
+            bus_component_parse_engines (component, sub_node);
             continue;
         }
 
         if (g_strcmp0 (sub_node->name, "observed-paths") == 0) {
-            bus_component_parse_observed_paths (sub_node, paths, access_fs);
+            bus_component_parse_observed_paths (component, sub_node, access_fs);
             continue;
         }
 
         g_warning ("<component> element contains invalidate element <%s>", sub_node->name);
     }
 
-    component->engines = (IBusEngineInfo **)g_array_free (engines, FALSE);
-    component->observed_paths = (IBusObservedPath **)g_array_free (paths, FALSE);
-
     return TRUE;
 }
 
 
 static void
-bus_component_parse_engines (XMLNode *node,
-                            GArray  *engines)
+bus_component_parse_engines (BusComponent *component,
+                             XMLNode      *node)
 {
-    g_assert (node != NULL);
-    g_assert (engines != NULL);
+    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (node);
 
     if (g_strcmp0 (node->name, "engines") != 0) {
         return;
@@ -650,84 +294,22 @@ bus_component_parse_engines (XMLNode *node,
 
     GSList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
-        IBusEngineInfo *engine;
-        engine = bus_component_parse_engine ((XMLNode *)p->data);
+        BusEngineInfo *engine;
+        engine = bus_engine_info_new_from_xml_node (component, (XMLNode *)p->data);
 
         if (G_UNLIKELY (engine == NULL))
             continue;
-        g_array_append_val (engines, engine);
+        component->engines = g_slist_append(component->engines, engine);
     }
 }
-
-static IBusEngineInfo *
-bus_component_parse_engine (XMLNode *node)
-{
-    IBusEngineInfo *engine;
-
-    g_assert (node != NULL);
-
-    if (G_UNLIKELY (g_strcmp0 (node->name, "engine") != 0)) {
-        g_warning ("engines element contains invalidate sub element <%s> ", node->name);
-        return NULL;
-    }
-
-    engine = g_slice_new0 (IBusEngineInfo);
-
-    GSList *p;
-    for (p = node->sub_nodes; p != NULL; p = p->next) {
-        XMLNode *sub_node = (XMLNode *) p->data;
-
-#define PARSE_ENTRY(field_name, element_name)                   \
-        if (g_strcmp0 (sub_node->name, element_name) == 0) {    \
-            if (engine->field_name != NULL) {                   \
-                g_free (engine->field_name);                    \
-            }                                                   \
-            engine->field_name = g_strdup (sub_node->text);     \
-            continue;                                           \
-        }
-#define PARSE_ENTRY_1(name) PARSE_ENTRY(name, #name)
-        PARSE_ENTRY_1(name);
-        PARSE_ENTRY_1(longname);
-        PARSE_ENTRY_1(description);
-        PARSE_ENTRY_1(language);
-        PARSE_ENTRY_1(license);
-        PARSE_ENTRY_1(author);
-        PARSE_ENTRY_1(icon);
-        PARSE_ENTRY_1(layout);
-#undef PARSE_ENTRY
-#undef PARSE_ENTRY1
-        g_warning ("<engines> element contains invalidate element <%s>", sub_node->name);
-    }
-    return engine;
-}
-
-#if 0
-static void
-print_paths (GArray *paths)
-{
-    GString *output = g_string_new ("");
-
-    IBusObservedPath *path;
-    gint i;
-    for (i = 0;; i++) {
-        path = g_array_index (paths, IBusObservedPath *, i);
-        if (path == NULL)
-            break;
-        g_string_append_printf (output, "<path mtime=\"%ld\" >%s</path>\n", path->mtime, path->path);
-    }
-
-    g_debug (output->str);
-    g_string_free (output, TRUE);
-}
-#endif
 
 static void
-bus_component_parse_observed_paths (XMLNode *node,
-                                   GArray  *paths,
-                                   gboolean access_fs)
+bus_component_parse_observed_paths (BusComponent    *component,
+                                    XMLNode         *node,
+                                    gboolean         access_fs)
 {
-    g_assert (node != NULL);
-    g_assert (paths != NULL);
+    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (node);
 
     if (g_strcmp0 (node->name, "observed-paths") != 0) {
         return;
@@ -735,128 +317,27 @@ bus_component_parse_observed_paths (XMLNode *node,
 
     GSList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
-        bus_component_parse_path ((XMLNode *)p->data, paths, access_fs);
-    }
-}
+        BusObservedPath *path;
+        
+        path = bus_observed_path_new_from_xml_node ((XMLNode *)p->data, access_fs);
+        component->observed_paths = g_slist_append (component->observed_paths, path);
 
-
-static void
-bus_component_parse_path (XMLNode *node,
-                         GArray  *paths,
-                         gboolean access_fs)
-{
-    g_assert (node != NULL);
-    g_assert (paths != NULL);
-
-    if (g_strcmp0 (node->name, "path") != 0) {
-        return;
-    }
-
-    if (node->text == NULL || g_utf8_strlen (node->text, -1) <= 0) {
-        g_warning ("path must not be empty");
-        return;
-    }
-
-    if (node->text[0] == '~' && node->text[1] != G_DIR_SEPARATOR) {
-        g_warning ("invalide path \"%s\"", node->text);
-        return;
-    }
-
-    IBusObservedPath *path;
-    gchar *extend_path;
-    if (node->text[0] == '~') {
-        const gchar *homedir = g_getenv ("HOME");
-        if (homedir == NULL)
-            homedir = g_get_home_dir ();
-        extend_path = g_build_filename (homedir, node->text + 2, NULL);
-    }
-    else {
-        extend_path = g_strdup (node->text);
-    }
-
-    if (access_fs) {
-        path = bus_component_get_path_info (extend_path);
-        g_array_append_val (paths, path);
-        if (path->is_exist && path->is_dir) {
-            bus_component_traverse_dir (path->path, paths); 
+        if (access_fs && path->is_dir && path->is_exist) {
+        component->observed_paths = g_slist_concat (component->observed_paths,
+                                        bus_observed_path_traverse (path));
         }
-        g_free (extend_path);
     }
-    else {
-        gchar **attr;
-        path = g_slice_new0 (IBusObservedPath);
-        path->path = extend_path;
-
-        for (attr = node->attributes; *attr != NULL; attr += 2) {
-            if (g_strcmp0 (*attr, "mtime") == 0) {
-                path->mtime = atol (*(attr + 1));
-            }
-        }
-        g_array_append_val (paths, path);
-    }
-
-}
-
-static IBusObservedPath *
-bus_component_get_path_info (const gchar *dirname)
-{
-    g_assert (dirname);
-
-    IBusObservedPath *path = g_slice_new0 (IBusObservedPath);
-
-    path->path = g_strdup (dirname);
-
-    struct stat buf;
-    if (g_stat (path->path, &buf) == 0) {
-        path->is_exist = 1;
-        if (S_ISDIR (buf.st_mode)) {
-            path->is_dir = 1;
-        }
-        path->mtime = buf.st_mtime;
-    }
-    return path;
-}
-
-static void
-bus_component_traverse_dir (const gchar *dirname,
-                           GArray      *paths)
-{
-    g_assert (dirname != NULL);
-    g_assert (paths != NULL);
-
-    GDir *dir;
-    const gchar *name;
-
-    dir = g_dir_open (dirname, 0, NULL);
-
-    if (dir == NULL)
-        return;
-
-
-    while ((name = g_dir_read_name (dir)) != NULL) {
-        gchar *path = g_build_filename (dirname, name, NULL);
-        IBusObservedPath *p = bus_component_get_path_info (path);
-        g_array_append_val (paths, p);
-        if (p->is_exist && p->is_dir)
-            bus_component_traverse_dir (path, paths);
-        g_free (path);
-    }
-
-    g_dir_close (dir);
 }
 
 BusComponent *
-bus_component_from_xml_node (XMLNode  *node,
-                             gboolean  access_fs)
+bus_component_new_from_xml_node (XMLNode  *node)
 {
+    g_assert (node);
+
     BusComponent *component;
 
-    if (G_UNLIKELY (g_strcmp0 (node->name, "component") != 0)) {
-        return NULL;
-    }
-
     component = (BusComponent *)g_object_new (BUS_TYPE_COMPONENT, NULL);
-    if (!bus_component_parse_xml_node (component, node, access_fs)) {
+    if (!bus_component_parse_xml_node (component, node, FALSE)) {
         g_object_unref (component);
         component = NULL;
     }
@@ -864,94 +345,120 @@ bus_component_from_xml_node (XMLNode  *node,
     return component;
 }
 
-static IBusComponent *
-bus_component_lookup_component_by_name (BusComponent *component,
-                                       const gchar *name)
+BusComponent *
+bus_component_new_from_file (const gchar *filename)
 {
-    BusComponentPrivate *priv;
-    priv = BUS_COMPONENT_GET_PRIVATE (component);
-
-    IBusComponent **comp;
-
-    for (comp = priv->components; *comp != NULL; comp ++) {
-        if (g_strcmp0 (name, (*comp)->name) == 0)
-            return *comp;
+    g_assert (filename);
+    
+    XMLNode *node;
+    struct stat buf;
+    BusComponent *component;
+    gboolean retval;
+    
+    if (g_stat (filename, &buf) != 0) {
+        g_warning ("Can not get stat of file %s", filename);
+        return NULL;
     }
-    return NULL;
-}
 
-static IBusComponent *
-bus_component_lookup_component_by_pid (BusComponent *component,
-                                      GPid         pid)
-{
-    BusComponentPrivate *priv;
-    priv = BUS_COMPONENT_GET_PRIVATE (component);
+    node = xml_parse_file (filename);
 
-    IBusComponent **comp;
-
-    for (comp = priv->components; *comp != NULL; comp ++) {
-        if ((*comp)->pid == pid)
-            return *comp;
+    if (!node) {
+        return NULL;
     }
-    return NULL;
+
+    component = (BusComponent *)g_object_new (BUS_TYPE_COMPONENT, NULL);
+    retval = bus_component_parse_xml_node (component, node, TRUE);
+    xml_free_node (node);
+
+    if (!retval) {
+        g_object_unref (component);
+        component = NULL;
+    }
+
+    component->filename = g_strdup (filename);
+    component->mtime = buf.st_mtime;
+
+    return component;
 }
 
 static void
-_child_cb (GPid          pid,
+bus_component_child_cb (GPid          pid,
            gint          status,
            BusComponent  *component)
 {
-    g_spawn_close_pid (pid);
+    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (component->pid == pid);
     
-    IBusComponent *comp = bus_component_lookup_component_by_pid (component, pid);
-    g_assert (comp != NULL);
-
-    comp->pid = 0;
+    g_spawn_close_pid (pid);
+    component->pid = 0;
 }
 
 gboolean
-bus_regisrty_exec_component (BusComponent *component,
-                             const gchar *name)
+bus_component_start (BusComponent *component)
 {
-    IBusComponent *comp = bus_component_lookup_component_by_name (component, name);
-    if (comp == NULL)
-        return FALSE;
-    if (comp->pid != 0)
+    g_assert (BUS_IS_COMPONENT (component));
+
+    if (component->pid != 0)
         return TRUE;
     
     gint argc;
     gchar **argv;
+    gboolean retval;
     GError *error;
 
-    if (!g_shell_parse_argv (comp->exec, &argc, &argv, &error)) {
-        g_warning ("Can not parse component %s exec: %s", name, error->message);
+    if (!g_shell_parse_argv (component->exec, &argc, &argv, &error)) {
+        g_warning ("Can not parse component %s exec: %s", component->name, error->message);
         g_error_free (error);
         return FALSE;
     }
 
-    gboolean retval = g_spawn_async (NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &(comp->pid), &error);
-    g_strfreev (argv);
+    retval = g_spawn_async (NULL, argv, NULL,
+                            G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL,
+                            &(component->pid), &error);
+    g_strfreev (argv)
+    ;
     if (!retval) {
-        g_warning ("Can not execute component %s: %s", name, error->message);
+        g_warning ("Can not execute component %s: %s", component->name, error->message);
         g_error_free (error);
         return FALSE;
     }
 
-    g_child_watch_add (comp->pid, (GChildWatchFunc) _child_cb, component); 
+    g_child_watch_add (component->pid, (GChildWatchFunc) bus_component_child_cb, component); 
 
     return TRUE;
 }
 
 gboolean
-bus_component_kill_component (BusComponent *component,
-                             const gchar *name)
+bus_component_stop (BusComponent *component)
 {
-    IBusComponent *comp = bus_component_lookup_component_by_name (component, name);
-    if (comp == NULL)
-        return FALSE;
-    if (comp->pid == 0)
+    g_assert (BUS_IS_COMPONENT (component));
+    
+    if (component->pid == 0)
         return TRUE;
 
-    kill (comp->pid, SIGTERM);
+    kill (component->pid, SIGTERM);
     return TRUE;
+}
+
+gboolean
+bus_component_is_running (BusComponent *component)
+{
+    g_assert (BUS_IS_COMPONENT (component));
+
+    return (component->pid != 0);
+}
+
+
+gboolean
+bus_component_check_modification (BusComponent *component)
+{
+    g_assert (BUS_IS_COMPONENT (component));
+
+    GSList *p;
+
+    for (p = component->observed_paths; p != NULL; p = p->next) {
+        if (bus_observed_path_check_modification ((BusObservedPath *)p->data))
+            return TRUE;
+    }
+    return FALSE;
 }

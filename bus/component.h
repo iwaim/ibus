@@ -21,6 +21,8 @@
 #define __COMPONENT_H_
 
 #include <ibus.h>
+#include "engineinfo.h"
+#include "observedpath.h"
 
 /*
  * Type macros.
@@ -42,7 +44,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _BusComponent BusComponent;
+// typedef struct _BusComponent BusComponent;
 typedef struct _BusComponentClass BusComponentClass;
 
 struct _BusComponent {
@@ -64,11 +66,10 @@ struct _BusComponent {
     gchar *textdomain;
     
     /* engines */
-    gchar  *engine_exec;
-    IBusEngineInfo **engines;
+    GSList *engines;
     
     /* observed paths */
-    IBusObservedPath **observed_paths;
+    GSList *observed_paths;
     
     GPid     pid;
 };
@@ -80,14 +81,16 @@ struct _BusComponentClass {
 };
 
 GType            bus_component_get_type         (void);
-BusComponent    *bus_component_from_xml_node    (XMLNode        *node,
-                                                 gboolean       *access_fs);
+BusComponent    *bus_component_new_from_xml_node(XMLNode        *node);
+BusComponent    *bus_component_new_from_file    (const gchar    *filename);
 void             bus_component_output           (BusComponent   *component,
                                                  GString        *output,
                                                  gint            indent);
-gboolean         bus_component_check_update     (BusComponent   *component);
-gboolean         bus_component_exec             (BusComponent   *component);
-gboolean         bus_component_kill             (BusComponent   *component);
+gboolean         bus_component_check_modification
+                                                (BusComponent   *component);
+gboolean         bus_component_start            (BusComponent   *component);
+gboolean         bus_component_stop             (BusComponent   *component);
+gboolean         bus_component_is_running       (BusComponent   *component);
 
 G_END_DECLS
 #endif

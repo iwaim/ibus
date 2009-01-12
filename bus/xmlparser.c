@@ -184,6 +184,10 @@ xml_parse_file (const gchar *filename)
     gboolean retval;
     GError *error = NULL;
     FILE *pf = fopen (filename, "r");
+
+    if (pf == NULL) {
+        return NULL;
+    }
     
     GMarkupParseContext *context;
     XMLNode *node;

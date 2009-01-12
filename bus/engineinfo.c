@@ -190,8 +190,8 @@ bus_engine_info_parse_xml_node (BusEngineInfo *info,
 }
 
 BusEngineInfo *
-bus_engine_info_from_xml_node (BusComponent *component,
-                               XMLNode      *node)
+bus_engine_info_new_from_xml_node (BusComponent *component,
+                                   XMLNode      *node)
 {
     g_assert (component);
     g_assert (node);

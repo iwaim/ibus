@@ -46,14 +46,19 @@ typedef struct _BusRegistry BusRegistry;
 typedef struct _BusRegistryClass BusRegistryClass;
 
 struct _BusRegistry {
-  IBusObject parent;
-  /* instance members */
+    IBusObject parent;
+    
+    /* instance members */
+    GSList *observed_paths;
+    GSList *components;
+    GHashTable *engine_table;
+    GSList *active_engines;
 };
 
 struct _BusRegistryClass {
-  IBusObjectClass parent;
+    IBusObjectClass parent;
 
-  /* class members */
+    /* class members */
 };
 
 GType            bus_registry_get_type        (void);
