@@ -51,6 +51,7 @@ static void              bus_registry_load_in_dir       (BusRegistry        *reg
 static gboolean          bus_registry_save_cache        (BusRegistry        *registry);
 static gboolean          bus_registry_load_cache        (BusRegistry        *registry);
 static gboolean          bus_registry_check_modification(BusRegistry        *registry);
+static void              bus_registry_remove_all        (BusRegistry        *registry);
 
 static IBusObjectClass  *parent_class = NULL;
 
@@ -102,13 +103,14 @@ bus_registry_init (BusRegistry *registry)
     registry->components = NULL;
 
     if (bus_registry_load_cache (registry) == FALSE || bus_registry_check_modification (registry)) {
+        bus_registry_remove_all (registry);
         bus_registry_load (registry);
         bus_registry_save_cache (registry);
     }
 }
 
 static void
-bus_registry_destroy (BusRegistry *registry)
+bus_registry_remove_all (BusRegistry *registry)
 {
     GSList *p;
 
@@ -116,12 +118,20 @@ bus_registry_destroy (BusRegistry *registry)
         g_object_unref (p->data);
     }
     g_slist_free (registry->observed_paths);
+    registry->observed_paths = NULL;
 
     for (p = registry->components; p != NULL; p = p ->next) {
         g_object_unref (p->data);
     }
     g_slist_free (registry->components);
+    registry->components = NULL;
+   
+}
 
+static void
+bus_registry_destroy (BusRegistry *registry)
+{
+    bus_registry_remove_all (registry);
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (registry));
 }
 

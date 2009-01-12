@@ -133,12 +133,10 @@ bus_observed_path_check_modification (BusObservedPath *path)
     struct stat buf;
 
     if (g_stat (path->path, &buf) != 0) {
-        if (path->mtime != 0l)
-            return FALSE;
-        return TRUE;
+        buf.st_mtime = 0;
     }
 
-    if (path->mtime != buf.st_mtime)
+    if (path->mtime == buf.st_mtime)
         return FALSE;
     return TRUE;
 }
