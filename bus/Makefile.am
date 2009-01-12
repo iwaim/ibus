@@ -70,6 +70,10 @@ ibus_daemon_SOURCES = \
 	connection.h \
 	matchrule.c \
 	matchrule.h \
+	engineinfo.h \
+	engineinfo.c \
+	component.c \
+	component.h \
 	registry.c \
 	registry.h \
 	xmlparser.c \

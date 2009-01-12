@@ -112,7 +112,6 @@ struct _IBusComponent {
     /* observed paths */
     IBusObservedPath **observed_paths;
     
-    gboolean is_active;
     GPid     pid;
 };
 

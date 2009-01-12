@@ -22,6 +22,7 @@
 #include "dbusimpl.h"
 #include "server.h"
 #include "connection.h"
+#include "registry.h"
 #include "factoryproxy.h"
 #include "panelproxy.h"
 #include "inputcontext.h"
@@ -43,6 +44,8 @@ struct _BusIBusImplPrivate {
     GHashTable *factory_dict;
     GList *factory_list;
     GList *contexts;
+
+    BusRegistry     *registry;
 
     BusFactoryProxy *default_factory;
     BusInputContext *focused_context;
@@ -326,6 +329,8 @@ bus_ibus_impl_init (BusIBusImpl *ibus)
                                                 g_str_equal,
                                                 NULL,
                                                 (GDestroyNotify) g_object_unref);
+
+    priv->registry = bus_registry_new ();
     priv->factory_list = NULL;
     priv->contexts = NULL;
     priv->default_factory = NULL;

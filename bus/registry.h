@@ -39,8 +39,6 @@
     (G_TYPE_CHECK_CLASS_TYPE ((klass), BUS_TYPE_REGISTRY))
 #define BUS_REGISTRY_GET_CLASS(obj)   \
     (G_TYPE_INSTANCE_GET_CLASS ((obj), BUS_TYPE_REGISTRY, BusRegistryClass))
-#define BUS_DEFAULT_REGISTRY          \
-    (bus_registry_get_default ())
 
 G_BEGIN_DECLS
 
@@ -62,7 +60,10 @@ GType            bus_registry_get_type        (void);
 BusRegistry     *bus_registry_new             (void);
 GSList          *bus_registry_get_components  (BusRegistry  *registry);
 GSList          *bus_registry_get_engines     (BusRegistry  *registry);
-
+gboolean         bus_registry_exec_component  (BusRegistry  *registry,
+                                               const gchar  *name);
+gboolean         bus_registry_kill_component  (BusRegistry  *registry,
+                                               const gchar  *name);
 G_END_DECLS
 #endif
 
