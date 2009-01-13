@@ -50,7 +50,10 @@ enum {
     UPDATE_PROPERTY,
     ENABLED,
     DISABLED,
-    FACTORY_CHANGED,
+    ENGINE_CHANGED,
+    REQUEST_ENGINE,
+    REQUEST_NEXT_ENGINE,
+    REQUEST_PREV_ENGINE,
     LAST_SIGNAL,
 };
 
@@ -62,7 +65,6 @@ enum {
 /* IBusInputContextPriv */
 struct _BusInputContextPrivate {
     BusConnection *connection;
-    BusFactoryProxy *factory;
     BusEngineProxy *engine;
     gchar *client;
 
@@ -98,7 +100,7 @@ static gboolean bus_input_context_send_signal   (BusInputContext        *context
                                                  const gchar            *signal_name,
                                                  GType                   first_arg_type,
                                                  ...);
-static void     _factory_destroy_cb             (BusFactoryProxy        *factory,
+static void     _engine_destroy_cb              (BusEngineProxy         *factory,
                                                  BusInputContext        *context);
 
 static IBusServiceClass  *parent_class = NULL;
@@ -409,7 +411,7 @@ bus_input_context_class_init (BusInputContextClass *klass)
             G_TYPE_NONE,
             0);
 
-    context_signals[FACTORY_CHANGED] =
+    context_signals[ENGINE_CHANGED] =
         g_signal_new (I_("factory-changed"),
             G_TYPE_FROM_CLASS (klass),
             G_SIGNAL_RUN_LAST,
@@ -418,8 +420,37 @@ bus_input_context_class_init (BusInputContextClass *klass)
             ibus_marshal_VOID__VOID,
             G_TYPE_NONE,
             0);
-
-
+    
+    context_signals[REQUEST_ENGINE] =
+        g_signal_new (I_("request-engine"),
+            G_TYPE_FROM_CLASS (klass),
+            G_SIGNAL_RUN_LAST,
+            0,
+            NULL, NULL,
+            ibus_marshal_VOID__STRING,
+            G_TYPE_NONE,
+            G_TYPE_STRING,
+            0);
+    
+    context_signals[REQUEST_NEXT_ENGINE] =
+        g_signal_new (I_("request-next-engine"),
+            G_TYPE_FROM_CLASS (klass),
+            G_SIGNAL_RUN_LAST,
+            0,
+            NULL, NULL,
+            ibus_marshal_VOID__VOID,
+            G_TYPE_NONE,
+            0);
+    
+    context_signals[REQUEST_PREV_ENGINE] =
+        g_signal_new (I_("request-prev-engine"),
+            G_TYPE_FROM_CLASS (klass),
+            G_SIGNAL_RUN_LAST,
+            0,
+            NULL, NULL,
+            ibus_marshal_VOID__VOID,
+            G_TYPE_NONE,
+            0);
 }
 
 static void
@@ -430,7 +461,6 @@ bus_input_context_init (BusInputContext *context)
 
     priv->connection = NULL;
     priv->client = NULL;
-    priv->factory = NULL;
     priv->engine = NULL;
     priv->has_focus = FALSE;
     priv->enabled = FALSE;
@@ -455,16 +485,11 @@ bus_input_context_destroy (BusInputContext *context)
         priv->has_focus = FALSE;
     }
 
-    if (priv->factory) {
-        g_signal_handlers_disconnect_by_func (priv->factory,
-                                              G_CALLBACK (_factory_destroy_cb),
-                                              context);
-        g_object_unref (priv->factory);
-        priv->factory = NULL;
-    }
-
     if (priv->engine) {
-        ibus_object_destroy (IBUS_OBJECT (priv->engine));
+        g_signal_handlers_disconnect_by_func (priv->engine,
+                                              G_CALLBACK (_engine_destroy_cb),
+                                              context);
+        g_object_unref (priv->engine);
         priv->engine = NULL;
     }
 
@@ -523,9 +548,9 @@ _ibus_introspect (BusInputContext   *context,
 }
 
 static IBusMessage *
-_ic_process_key_event (BusInputContext  *context,
-                       IBusMessage      *message,
-                       BusConnection    *connection)
+_ic_process_key_event (BusInputContext *context,
+                       IBusMessage     *message,
+                       BusConnection   *connection)
 {
     g_assert (BUS_IS_INPUT_CONTEXT (context));
     g_assert (message != NULL);
@@ -574,7 +599,6 @@ _ic_process_key_event (BusInputContext  *context,
     ibus_message_append_args (reply,
                               G_TYPE_BOOLEAN, &retval,
                               G_TYPE_INVALID);
-
     return reply;
 }
 
@@ -758,7 +782,7 @@ _ic_is_enabled (BusInputContext *context,
 }
 
 static IBusMessage *
-_ic_set_factory (BusInputContext  *context,
+_ic_set_engine (BusInputContext  *context,
                  IBusMessage      *message,
                  BusConnection    *connection)
 {
@@ -769,15 +793,14 @@ _ic_set_factory (BusInputContext  *context,
     gboolean retval;
     IBusMessage *reply;
     IBusError *error;
-    BusFactoryProxy *factory;
-    gchar *factory_path;
+    gchar *engine_name;
 
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
 
     retval = ibus_message_get_args (message,
                                     &error,
-                                    IBUS_TYPE_OBJECT_PATH, &factory_path,
+                                    G_TYPE_STRING, &engine_name,
                                     G_TYPE_INVALID);
      if (!retval) {
         reply = ibus_message_new_error (message,
@@ -787,17 +810,16 @@ _ic_set_factory (BusInputContext  *context,
         return reply;
     }
 
-    factory = bus_ibus_impl_lookup_factory (BUS_DEFAULT_IBUS, factory_path);
+    g_signal_emit (context, context_signals[REQUEST_ENGINE], 0, engine_name);
 
-    if (factory == NULL) {
+    if (priv->engine == NULL) {
         reply = ibus_message_new_error_printf (message,
-                                               "org.freedesktop.IBus.NoFactory",
-                                               "can not find factory %s",
-                                               factory_path);
+                                               "org.freedesktop.IBus.NoEngine",
+                                               "can not find engine with name %s",
+                                               engine_name);
         return reply;
     }
 
-    bus_input_context_set_factory (context, factory);
     bus_input_context_enable (context);
 
     reply = ibus_message_new_method_return (message);
@@ -805,56 +827,26 @@ _ic_set_factory (BusInputContext  *context,
 }
 
 static IBusMessage *
-_ic_get_factory (BusInputContext  *context,
-                 IBusMessage      *message,
-                 BusConnection    *connection)
+_ic_get_engine_desc (BusInputContext  *context,
+                     IBusMessage      *message,
+                     BusConnection    *connection)
 {
     g_assert (BUS_IS_INPUT_CONTEXT (context));
     g_assert (message != NULL);
     g_assert (BUS_IS_CONNECTION (connection));
 
     IBusMessage *reply;
-    const gchar *factory_name = "";
-    const gchar *factory_path = "";
+    IBusEngineDesc *desc;
 
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-
-    if (priv->factory) {
-        factory_name = ibus_proxy_get_name ((IBusProxy *)priv->factory);
-        factory_path = ibus_proxy_get_path ((IBusProxy *)priv->factory);
-    }
-
-    reply = ibus_message_new_method_return (message);
-    ibus_message_append_args (reply,
-                              G_TYPE_STRING, &factory_name,
-                              IBUS_TYPE_OBJECT_PATH, &factory_path,
-                              G_TYPE_INVALID);
-
-    return reply;
-}
-
-static IBusMessage *
-_ic_get_factory_info (BusInputContext  *context,
-                      IBusMessage      *message,
-                      BusConnection    *connection)
-{
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-    g_assert (message != NULL);
-    g_assert (BUS_IS_CONNECTION (connection));
-
-    IBusMessage *reply;
-    IBusFactoryInfo *info;
-
-    BusInputContextPrivate *priv;
-    priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-
-    if (priv->factory) {
-        info = bus_factory_proxy_get_info (priv->factory);
-        if (info != NULL) {
+    
+    if (priv->engine) {
+        desc = bus_engine_proxy_get_desc (priv->engine);
+        if (desc != NULL) {
             reply = ibus_message_new_method_return (message);
             ibus_message_append_args (reply,
-                                      IBUS_TYPE_FACTORY_INFO, &info,
+                                      IBUS_TYPE_ENGINE_DESC, &desc,
                                       G_TYPE_INVALID);
             return reply;
         }
@@ -911,9 +903,8 @@ bus_input_context_ibus_message (BusInputContext *context,
         { IBUS_INTERFACE_INPUT_CONTEXT, "Reset",             _ic_reset },
         { IBUS_INTERFACE_INPUT_CONTEXT, "SetCapabilities",   _ic_set_capabilities },
         { IBUS_INTERFACE_INPUT_CONTEXT, "IsEnabled",         _ic_is_enabled },
-        { IBUS_INTERFACE_INPUT_CONTEXT, "SetFactory",        _ic_set_factory },
-        { IBUS_INTERFACE_INPUT_CONTEXT, "GetFactory",        _ic_get_factory },
-        { IBUS_INTERFACE_INPUT_CONTEXT, "GetFactoryInfo",    _ic_get_factory_info },
+        { IBUS_INTERFACE_INPUT_CONTEXT, "SetEngine",         _ic_set_engine },
+        { IBUS_INTERFACE_INPUT_CONTEXT, "GetEngineDesc",     _ic_get_engine_desc },
         { IBUS_INTERFACE_INPUT_CONTEXT, "Destroy",           _ic_destroy },
 
         { NULL, NULL, NULL }
@@ -1007,8 +998,8 @@ bus_input_context_focus_out (BusInputContext *context)
 }
 
 static void
-_engine_destroy_cb (BusEngineProxy      *engine,
-                    BusInputContext     *context)
+_engine_destroy_cb (BusEngineProxy  *engine,
+                    BusInputContext *context)
 {
     g_assert (BUS_IS_ENGINE_PROXY (engine));
     g_assert (BUS_IS_INPUT_CONTEXT (context));
@@ -1016,35 +1007,9 @@ _engine_destroy_cb (BusEngineProxy      *engine,
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
 
-    g_assert (engine == priv->engine);
-
-    priv->enabled = FALSE;
-
-    g_object_unref (priv->engine);
-    priv->engine = NULL;
-}
-
-static void
-_factory_destroy_cb (BusFactoryProxy    *factory,
-                     BusInputContext    *context)
-{
-    g_assert (BUS_IS_FACTORY_PROXY (factory));
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-
-    BusInputContextPrivate *priv;
-    priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-
-    g_assert (factory == priv->factory);
-
-    priv->enabled = FALSE;
-
-    g_object_unref (priv->factory);
-    priv->factory = NULL;
-
-    if (priv->engine != NULL) {
-        ibus_object_destroy (IBUS_OBJECT (priv->engine));
-        priv->engine = NULL;
-    }
+    g_assert (priv->engine == engine);
+    
+    bus_input_context_set_engine (context, NULL);
 }
 
 static void
@@ -1288,25 +1253,18 @@ bus_input_context_enable (BusInputContext *context)
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
 
-    g_return_if_fail (priv->enabled == FALSE);
-
     if (priv->engine == NULL)
         return;
 
     priv->enabled = TRUE;
     
-    if (priv->engine)
-        bus_engine_proxy_enable (priv->engine);
-    
+    bus_engine_proxy_enable (priv->engine);
     bus_input_context_send_signal (context,
                                    "Enabled",
                                    G_TYPE_INVALID);
-
-
     g_signal_emit (context,
                    context_signals[ENABLED],
                    0);
-
 }
 
 void
@@ -1317,12 +1275,11 @@ bus_input_context_disable (BusInputContext *context)
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
 
-    g_return_if_fail (priv->enabled == TRUE);
-
     priv->enabled = FALSE;
     
-    if (priv->engine)
+    if (priv->engine) {
         bus_engine_proxy_disable (priv->engine);
+    }
     
     bus_input_context_send_signal (context,
                                    "Disabled",
@@ -1332,106 +1289,71 @@ bus_input_context_disable (BusInputContext *context)
                    0);
 }
 
-void
-bus_input_context_enable_or_disable (BusInputContext *context)
-{
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-
-    BusInputContextPrivate *priv;
-    priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-
-    if (priv->factory == NULL) {
-        bus_input_context_set_factory (context,
-                                       bus_ibus_impl_get_default_factory (BUS_DEFAULT_IBUS));
-    }
-    
-    if (priv->factory == NULL || priv->engine == NULL)
-        return;
-
-    if (!priv->enabled)
-        bus_input_context_enable (context);
-    else
-        bus_input_context_disable (context);
-
-}
 
 void
-bus_input_context_set_factory (BusInputContext *context,
-                               BusFactoryProxy *factory)
+bus_input_context_set_engine (BusInputContext *context,
+                              BusEngineProxy  *engine)
 {
 
     g_assert (BUS_IS_INPUT_CONTEXT (context));
 
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-
-    if (priv->factory == factory)
-        return;
-
-    if (priv->factory != NULL) {
-        g_object_unref (priv->factory);
-        priv->factory = NULL;
-    }
 
     if (priv->engine != NULL) {
+        g_signal_handlers_disconnect_by_func (priv->engine, _engine_destroy_cb, context);
         ibus_object_destroy ((IBusObject *) priv->engine);
+        g_object_unref (priv->engine);
         priv->engine = NULL;
     }
 
-    if (priv->enabled) {
+    if (engine == NULL) {
         bus_input_context_disable (context);
+        g_signal_emit (context,
+                       context_signals[ENGINE_CHANGED],
+                       0);
+        return;
     }
 
-    priv->factory = factory;
+    priv->engine = engine;
+    g_object_ref (priv->engine);
 
-    g_signal_emit (context,
-                   context_signals[FACTORY_CHANGED],
-                   0);
+    gint i;
+    const static struct {
+        const gchar *name;
+        GCallback    callback;
+    } signals [] = {
+        { "commit-text",            G_CALLBACK (_engine_commit_text_cb) },
+        { "forward-key-event",      G_CALLBACK (_engine_forward_key_event_cb) },
+        { "update-preedit-text",    G_CALLBACK (_engine_update_preedit_text_cb) },
+        { "show-preedit-text",      G_CALLBACK (_engine_show_preedit_text_cb) },
+        { "hide-preedit-text",      G_CALLBACK (_engine_hide_preedit_text_cb) },
+        { "update-auxiliary-text",  G_CALLBACK (_engine_update_auxiliary_text_cb) },
+        { "show-auxiliary-text",    G_CALLBACK (_engine_show_auxiliary_text_cb) },
+        { "hide-auxiliary-text",    G_CALLBACK (_engine_hide_auxiliary_text_cb) },
+        { "update-lookup-table",    G_CALLBACK (_engine_update_lookup_table_cb) },
+        { "show-lookup-table",      G_CALLBACK (_engine_show_lookup_table_cb) },
+        { "hide-lookup-table",      G_CALLBACK (_engine_hide_lookup_table_cb) },
+        { "page-up-lookup-table",   G_CALLBACK (_engine_page_up_lookup_table_cb) },
+        { "page-down-lookup-table", G_CALLBACK (_engine_page_down_lookup_table_cb) },
+        { "cursor-up-lookup-table", G_CALLBACK (_engine_cursor_up_lookup_table_cb) },
+        { "cursor-down-lookup-table", G_CALLBACK (_engine_cursor_down_lookup_table_cb) },
+        { "register-properties",    G_CALLBACK (_engine_register_properties_cb) },
+        { "update-property",        G_CALLBACK (_engine_update_property_cb) },
+        { "destroy",                G_CALLBACK (_engine_destroy_cb) },
+        { NULL, 0 }
+    };
 
-    if (priv->factory) {
-        
-        g_object_ref (priv->factory);
-        
-        g_signal_connect (priv->factory,
-                          "destroy",
-                          G_CALLBACK (_factory_destroy_cb),
+    for (i = 0; signals[i].name != NULL; i++) {
+        g_signal_connect (priv->engine,
+                          signals[i].name,
+                          signals[i].callback,
                           context);
-
-        priv->engine = bus_factory_create_engine (priv->factory);
-
-        gint i;
-        const static struct {
-            const gchar *name;
-            GCallback    callback;
-        } signals [] = {
-            { "commit-text",            G_CALLBACK (_engine_commit_text_cb) },
-            { "forward-key-event",      G_CALLBACK (_engine_forward_key_event_cb) },
-            { "update-preedit-text",    G_CALLBACK (_engine_update_preedit_text_cb) },
-            { "show-preedit-text",      G_CALLBACK (_engine_show_preedit_text_cb) },
-            { "hide-preedit-text",      G_CALLBACK (_engine_hide_preedit_text_cb) },
-            { "update-auxiliary-text",  G_CALLBACK (_engine_update_auxiliary_text_cb) },
-            { "show-auxiliary-text",    G_CALLBACK (_engine_show_auxiliary_text_cb) },
-            { "hide-auxiliary-text",    G_CALLBACK (_engine_hide_auxiliary_text_cb) },
-            { "update-lookup-table",    G_CALLBACK (_engine_update_lookup_table_cb) },
-            { "show-lookup-table",      G_CALLBACK (_engine_show_lookup_table_cb) },
-            { "hide-lookup-table",      G_CALLBACK (_engine_hide_lookup_table_cb) },
-            { "page-up-lookup-table",   G_CALLBACK (_engine_page_up_lookup_table_cb) },
-            { "page-down-lookup-table", G_CALLBACK (_engine_page_down_lookup_table_cb) },
-            { "cursor-up-lookup-table", G_CALLBACK (_engine_cursor_up_lookup_table_cb) },
-            { "cursor-down-lookup-table", G_CALLBACK (_engine_cursor_down_lookup_table_cb) },
-            { "register-properties",    G_CALLBACK (_engine_register_properties_cb) },
-            { "update-property",        G_CALLBACK (_engine_update_property_cb) },
-            { "destroy",                G_CALLBACK (_engine_destroy_cb) },
-            { NULL, 0 }
-        };
-
-        for (i = 0; signals[i].name != NULL; i++) {
-            g_signal_connect (priv->engine,
-                              signals[i].name,
-                              signals[i].callback,
-                              context);
-        }
     }
+    
+    g_signal_emit (context,
+                   context_signals[ENGINE_CHANGED],
+                   0);
 }
 
 static gboolean
@@ -1441,6 +1363,9 @@ bus_input_context_filter_keyboard_shortcuts (BusInputContext    *context,
 {
     g_assert (BUS_IS_INPUT_CONTEXT (context));
 
+    BusInputContextPrivate *priv;
+    priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
+    
     static GQuark trigger;
     static GQuark next_factory;
     static GQuark prev_factory;
@@ -1459,7 +1384,18 @@ bus_input_context_filter_keyboard_shortcuts (BusInputContext    *context,
                                                   0);
 
     if (event == trigger) {
-        bus_input_context_enable_or_disable (context);
+        if (priv->engine == NULL) {
+            g_signal_emit (context, context_signals[REQUEST_ENGINE], 0, NULL);
+        }
+
+        if (priv->engine == NULL)
+            return FALSE;
+
+        if (priv->enabled)
+            bus_input_context_disable (context);
+        else
+            bus_input_context_enable (context);
+
         return TRUE;
     }
     else if (event == next_factory) {

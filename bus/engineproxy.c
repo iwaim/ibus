@@ -50,6 +50,7 @@ enum {
 /* BusEngineProxyPriv */
 struct _BusEngineProxyPrivate {
     gboolean enabled;
+    IBusEngineDesc *desc;
 
     IBusPropList *prop_list;
 };
@@ -95,11 +96,14 @@ bus_engine_proxy_get_type (void)
 }
 
 BusEngineProxy *
-bus_engine_proxy_new (const gchar       *path,
-                      BusConnection     *connection)
+bus_engine_proxy_new (const gchar    *path,
+                      IBusEngineDesc *desc,
+                      BusConnection  *connection)
 {
-    g_assert (path != NULL);
+    g_assert (path);
+    g_assert (IBUS_IS_ENGINE_DESC (desc));
     g_assert (BUS_IS_CONNECTION (connection));
+    
     GObject *obj;
 
     obj = g_object_new (BUS_TYPE_ENGINE_PROXY,
@@ -319,6 +323,7 @@ bus_engine_proxy_init (BusEngineProxy *engine)
 
     priv->enabled = FALSE;
     priv->prop_list = NULL;
+    priv->desc = NULL;
 }
 
 static void
@@ -335,6 +340,11 @@ bus_engine_proxy_real_destroy (BusEngineProxy *engine)
     ibus_proxy_call (IBUS_PROXY (engine),
                      "Destroy",
                      DBUS_TYPE_INVALID);
+
+    if (priv->desc) {
+        g_object_unref (priv->desc);
+        priv->desc = NULL;
+    }
 
     IBUS_OBJECT_CLASS(parent_class)->destroy (IBUS_OBJECT (engine));
 }
@@ -644,3 +654,15 @@ DEFINE_FUNCTION (Enable, enable)
 DEFINE_FUNCTION (Disable, disable)
 
 #undef DEFINE_FUNCTION
+
+
+IBusEngineDesc *
+bus_engine_proxy_get_desc (BusEngineProxy *engine)
+{
+    g_assert (BUS_IS_ENGINE_PROXY (engine));
+
+    BusEngineProxyPrivate *priv;
+    priv = BUS_ENGINE_PROXY_GET_PRIVATE (engine);
+
+    return priv->desc;
+}

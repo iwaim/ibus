@@ -67,8 +67,8 @@ void                 bus_input_context_focus_out        (BusInputContext    *con
 void                 bus_input_context_enable_or_disable(BusInputContext    *context);
 void                 bus_input_context_enable           (BusInputContext    *context);
 void                 bus_input_context_disable          (BusInputContext    *context);
-void                 bus_input_context_set_factory      (BusInputContext    *context,
-                                                         BusFactoryProxy    *factory);
+void                 bus_input_context_set_engine       (BusInputContext    *context,
+                                                         BusEngineProxy    *factory);
 
 G_END_DECLS
 #endif

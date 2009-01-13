@@ -446,21 +446,72 @@ _ibus_get_address (BusIBusImpl     *ibus,
 }
 
 static void
-_context_destroy_cb (BusInputContext    *context,
-                     BusIBusImpl        *ibus)
+_context_request_engine_cb (BusInputContext *context,
+                            gchar           *engine_name,
+                            BusIBusImpl     *ibus)
 {
-    g_assert (BUS_IS_IBUS_IMPL (ibus));
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-
+    
     BusIBusImplPrivate *priv;
     priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
 
-    if (context == priv->focused_context) {
-
+    IBusEngineDesc *desc;
+    BusComponent *comp;
+    BusFactoryProxy *factory;
+    BusEngineProxy *engine;
+    
+    if (engine_name == NULL) {
+        desc = priv->default_engine;
+    }
+    else {
+        desc = bus_registry_find_engine_by_name (priv->registry, engine_name);
     }
 
-    priv->contexts = g_list_remove (priv->contexts, context);
-    g_object_unref (context);
+    if (desc == NULL)
+        return;
+
+    comp = g_object_get_data ((GObject *)desc, "component");
+
+    if (comp == NULL)
+        return;
+
+    if (!bus_component_is_running (comp)) {
+        bus_component_start (comp);
+
+        if (g_main_context_pending (NULL)) {
+            g_main_context_iteration (NULL, FALSE);
+            g_usleep (500);
+        }
+    }
+
+    factory = g_object_get_data ((GObject *)comp, "factory");
+
+    if (factory == NULL) {
+        factory = bus_factory_proxy_new (comp);
+    }
+
+    if (factory == NULL)
+        return;
+    
+    engine = bus_factory_proxy_create_engine (factory, desc);
+
+    if (engine == NULL)
+        return;
+
+    bus_input_context_set_engine (context, engine);
+}
+
+static void
+_context_request_next_engine_cb (BusInputContext *context,
+                                 BusIBusImpl     *ibus)
+{
+    
+}
+
+static void
+_context_request_prev_engine_cb (BusInputContext *context,
+                                 BusIBusImpl     *ibus)
+{
+    
 }
 
 static void
@@ -510,6 +561,24 @@ _context_focus_out_cb (BusInputContext    *context,
     }
 }
 
+static void
+_context_destroy_cb (BusInputContext    *context,
+                     BusIBusImpl        *ibus)
+{
+    g_assert (BUS_IS_IBUS_IMPL (ibus));
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+
+    BusIBusImplPrivate *priv;
+    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
+
+    if (context == priv->focused_context) {
+
+    }
+
+    priv->contexts = g_list_remove (priv->contexts, context);
+    g_object_unref (context);
+}
+
 static IBusMessage *
 _ibus_create_input_context (BusIBusImpl     *ibus,
                             IBusMessage     *message,
@@ -547,9 +616,12 @@ _ibus_create_input_context (BusIBusImpl     *ibus,
         gchar *name;
         GCallback callback;
     } signals [] = {
-        { "focus-in",   G_CALLBACK (_context_focus_in_cb) },
-        { "focus-out",  G_CALLBACK (_context_focus_out_cb) },
-        { "destroy",    G_CALLBACK (_context_destroy_cb) },
+        { "request-engine",      G_CALLBACK (_context_request_engine_cb) },
+        { "request-next-engine", G_CALLBACK (_context_request_next_engine_cb) },
+        { "request-prev-engine", G_CALLBACK (_context_request_prev_engine_cb) },
+        { "focus-in",       G_CALLBACK (_context_focus_in_cb) },
+        { "focus-out",      G_CALLBACK (_context_focus_out_cb) },
+        { "destroy",        G_CALLBACK (_context_destroy_cb) },
         { NULL, NULL }
     };
 
@@ -593,6 +665,7 @@ _factory_destroy_cb (BusFactoryProxy    *factory,
     }
 }
 
+#if 0
 static int
 _factory_cmp (BusFactoryProxy   *a,
               BusFactoryProxy   *b)
@@ -608,12 +681,14 @@ _factory_cmp (BusFactoryProxy   *a,
     retval = g_strcmp0 (bus_factory_proxy_get_name (a), bus_factory_proxy_get_name (b));
     return retval;
 }
+#endif
 
 static IBusMessage *
 _ibus_register_factories (BusIBusImpl     *ibus,
                           IBusMessage     *message,
                           BusConnection   *connection)
 {
+#if 0
     IBusMessageIter iter, sub_iter;
     IBusMessage *reply;
     gboolean retval;
@@ -688,6 +763,8 @@ _out:
     g_array_free (info_array, TRUE);
 
     return reply;
+#endif
+    return NULL;
 }
 
 static IBusMessage *
@@ -695,6 +772,7 @@ _ibus_list_factories (BusIBusImpl     *ibus,
                      IBusMessage     *message,
                      BusConnection   *connection)
 {
+#if 0
     IBusMessage *reply;
     IBusMessageIter iter, sub_iter;
     GList *p;
@@ -717,6 +795,8 @@ _ibus_list_factories (BusIBusImpl     *ibus,
     }
     ibus_message_iter_close_container (&iter, &sub_iter);
     return reply;
+#endif
+    return NULL;
 }
 
 static IBusMessage *
@@ -761,7 +841,7 @@ _ibus_list_active_engines (BusIBusImpl   *ibus,
 {
     IBusMessage *reply;
     IBusMessageIter iter, sub_iter;
-    GList *engines, *p;
+    GList *p;
 
     BusIBusImplPrivate *priv;
     priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);

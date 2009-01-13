@@ -110,10 +110,13 @@ bus_registry_init (BusRegistry *registry)
     }
 
     for (p = registry->components; p != NULL; p = p->next) {
+        BusComponent *comp = (BusComponent *)p->data;
         GList *p1;
-        for (p1 = ((BusComponent *)p->data)->engines; p1 != NULL; p1 = p1->next) {
-            IBusEngineDesc *engine = (IBusEngineDesc *)p1->data;
-            g_hash_table_insert (registry->engine_table, engine->name, engine);
+        
+        for (p1 = comp->engines; p1 != NULL; p1 = p1->next) {
+            IBusEngineDesc *desc = (IBusEngineDesc *)p1->data;
+            g_hash_table_insert (registry->engine_table, desc->name, desc);
+            g_object_set_data (desc, "component", comp);
         }
     }
 }

@@ -58,7 +58,9 @@ struct _BusEngineProxyClass {
 
 GType            bus_engine_proxy_get_type          (void);
 BusEngineProxy  *bus_engine_proxy_new               (const gchar    *path,
+                                                     IBusEngineDesc *desc,
                                                      BusConnection  *connection);
+IBusEngineDesc  *bus_engine_proxy_get_desc          (BusEngineProxy *engine);
 gboolean         bus_engine_proxy_process_key_event (BusEngineProxy *engine,
                                                      guint           keyval,
                                                      guint           state);

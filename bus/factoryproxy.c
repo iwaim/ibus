@@ -20,6 +20,7 @@
 
 #include <ibusinternal.h>
 #include <ibusmarshalers.h>
+#include "dbusimpl.h"
 #include "factoryproxy.h"
 
 /* functions prototype */
@@ -57,20 +58,27 @@ bus_factory_proxy_get_type (void)
 }
 
 BusFactoryProxy *
-bus_factory_proxy_new (IBusFactoryInfo *info,
-                       BusConnection   *connection)
+bus_factory_proxy_new (BusComponent *component)
 {
-    g_assert (IBUS_IS_FACTORY_INFO (info));
-    g_assert (BUS_IS_CONNECTION (connection));
+    g_assert (BUS_IS_COMPONENT (component));
+    
     BusFactoryProxy *factory;
+    BusConnection *connection;
+
+    connection = bus_dbus_impl_get_connection_by_name (BUS_DEFAULT_DBUS, component->name);
+
+    if (connection == NULL) {
+        return NULL;
+    }
 
     factory = g_object_new (BUS_TYPE_FACTORY_PROXY,
                             "name", NULL,
-                            "path", info->path,
+                            "path", "/org/freedesktop/IBus/Factory",
                             "connection", connection,
                             NULL);
-    g_object_ref (info);
-    factory->info = info;
+    g_object_ref (component);
+    factory->component = component;
+    g_object_set_data ((GObject *)factory->component, "factory", factory);
 
     return factory;
 }
@@ -89,26 +97,28 @@ bus_factory_proxy_class_init (BusFactoryProxyClass *klass)
 static void
 bus_factory_proxy_init (BusFactoryProxy *factory)
 {
-    factory->info = NULL;
+    factory->component = NULL;
 }
 
 static void
 bus_factory_proxy_destroy (BusFactoryProxy *factory)
 {
-    if (factory->info) {
-        g_object_unref (factory->info);
-        factory->info = NULL;
+    if (factory->component) {
+        g_object_steal_data ((GObject *)factory->component, "factory");
+        g_object_unref (factory->component);
+        factory->component = NULL;
     }
 
     IBUS_OBJECT_CLASS(parent_class)->destroy (IBUS_OBJECT (factory));
 }
 
-IBusFactoryInfo *
-bus_factory_proxy_get_info (BusFactoryProxy *factory)
+BusComponent *
+bus_factory_proxy_get_component (BusFactoryProxy *factory)
 {
-    return factory->info;
+    return factory->component;
 }
 
+#if 0
 const gchar *
 bus_factory_proxy_get_name (BusFactoryProxy *factory)
 {
@@ -138,11 +148,14 @@ bus_factory_proxy_get_credits (BusFactoryProxy *factory)
 {
     return factory->info->credits;
 }
+#endif
 
 BusEngineProxy *
-bus_factory_create_engine (BusFactoryProxy  *factory)
+bus_factory_proxy_create_engine (BusFactoryProxy *factory,
+                                 IBusEngineDesc  *desc)
 {
     g_assert (BUS_IS_FACTORY_PROXY (factory));
+    g_assert (IBUS_IS_ENGINE_DESC (desc));
 
     IBusMessage *reply_message;
     IBusError *error;
@@ -153,6 +166,7 @@ bus_factory_create_engine (BusFactoryProxy  *factory)
                                                   "CreateEngine",
                                                   -1,
                                                   &error,
+                                                  G_TYPE_STRING, &(desc->name),
                                                   DBUS_TYPE_INVALID);
     if (reply_message == NULL) {
         g_warning ("%s: %s", error->name, error->message);
@@ -179,7 +193,7 @@ bus_factory_create_engine (BusFactoryProxy  *factory)
     }
 
     IBusConnection *connection = ibus_proxy_get_connection (IBUS_PROXY (factory));
-    engine = bus_engine_proxy_new (object_path, BUS_CONNECTION (connection));
+    engine = bus_engine_proxy_new (object_path, desc, BUS_CONNECTION (connection));
     ibus_message_unref (reply_message);
 
     return engine;
