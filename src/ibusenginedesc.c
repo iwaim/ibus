@@ -37,13 +37,19 @@ typedef struct _IBusEngineDescPrivate IBusEngineDescPrivate;
 // static guint            _signals[LAST_SIGNAL] = { 0 };
 
 /* functions prototype */
-static void         ibus_engine_desc_class_init      (IBusEngineDescClass     *klass);
-static void         ibus_engine_desc_init            (IBusEngineDesc          *desc);
-static void         ibus_engine_desc_destroy         (IBusEngineDesc          *desc);
-static gboolean     ibus_engine_desc_parse_xml_node  (IBusEngineDesc          *desc,
+static void         ibus_engine_desc_class_init     (IBusEngineDescClass    *klass);
+static void         ibus_engine_desc_init           (IBusEngineDesc         *desc);
+static void         ibus_engine_desc_destroy        (IBusEngineDesc         *desc);
+static gboolean     ibus_engine_desc_serialize      (IBusEngineDesc         *desc,
+                                                     IBusMessageIter        *iter);
+static gboolean     ibus_engine_desc_deserialize    (IBusEngineDesc         *desc,
+                                                     IBusMessageIter        *iter);
+static gboolean     ibus_engine_desc_copy           (IBusEngineDesc         *dest,
+                                                     const IBusEngineDesc   *src);
+static gboolean     ibus_engine_desc_parse_xml_node (IBusEngineDesc         *desc,
                                                      XMLNode                *node);
 
-static IBusObjectClass  *parent_class = NULL;
+static IBusSerializableClass  *parent_class = NULL;
 
 GType
 ibus_engine_desc_get_type (void)
@@ -63,7 +69,7 @@ ibus_engine_desc_get_type (void)
     };
 
     if (type == 0) {
-        type = g_type_register_static (IBUS_TYPE_OBJECT,
+        type = g_type_register_static (IBUS_TYPE_SERIALIZABLE,
                     "IBusEngineDesc",
                     &type_info,
                     (GTypeFlags)0);
@@ -76,13 +82,18 @@ ibus_engine_desc_get_type (void)
 static void
 ibus_engine_desc_class_init (IBusEngineDescClass *klass)
 {
-    IBusObjectClass *ibus_object_class = IBUS_OBJECT_CLASS (klass);
+    IBusObjectClass *object_class = IBUS_OBJECT_CLASS (klass);
+    IBusSerializableClass *serializable_class = IBUS_SERIALIZABLE_CLASS (klass);
 
-    parent_class = (IBusObjectClass *) g_type_class_peek_parent (klass);
+    parent_class = (IBusSerializableClass *) g_type_class_peek_parent (klass);
 
-    // g_type_class_add_private (klass, sizeof (IBusEngineDescPrivate));
-    ibus_object_class->destroy = (IBusObjectDestroyFunc) ibus_engine_desc_destroy;
+    object_class->destroy = (IBusObjectDestroyFunc) ibus_engine_desc_destroy;
+    
+    serializable_class->serialize   = (IBusSerializableSerializeFunc) ibus_engine_desc_serialize;
+    serializable_class->deserialize = (IBusSerializableDeserializeFunc) ibus_engine_desc_deserialize;
+    serializable_class->copy        = (IBusSerializableCopyFunc) ibus_engine_desc_copy;
 
+    g_string_append (serializable_class->signature, "ssssssss");
 }
 
 static void
@@ -111,9 +122,111 @@ ibus_engine_desc_destroy (IBusEngineDesc *desc)
     g_free (desc->icon);
     g_free (desc->layout);
 
-    g_object_unref (desc->component);
-
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (desc));
+}
+
+static gboolean
+ibus_engine_desc_serialize (IBusEngineDesc  *desc,
+                            IBusMessageIter *iter)
+{
+    gboolean retval;
+
+    retval = parent_class->serialize ((IBusSerializable *)desc, iter);
+    g_return_val_if_fail (retval, FALSE);
+
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->name);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->longname);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->description);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->language);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->license);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->author);
+    g_return_val_if_fail (retval, FALSE);
+
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->icon);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->layout);
+    g_return_val_if_fail (retval, FALSE);
+    
+    return TRUE;
+}
+
+static gboolean
+ibus_engine_desc_deserialize (IBusEngineDesc  *desc,
+                              IBusMessageIter *iter)
+{
+    gboolean retval;
+    gchar *str;
+
+    retval = parent_class->deserialize ((IBusSerializable *)desc, iter);
+    g_return_val_if_fail (retval, FALSE);
+
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    desc->name = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    desc->longname = g_strdup (str);
+
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    desc->description = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    desc->language = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    desc->license = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    desc->author = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    desc->icon = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    desc->layout = g_strdup (str);
+    
+    return TRUE;
+}
+
+static gboolean
+ibus_engine_desc_copy (IBusEngineDesc       *dest,
+                       const IBusEngineDesc *src)
+{
+    gboolean retval;
+
+    retval = parent_class->copy ((IBusSerializable *)dest,
+                                 (IBusSerializable *)src);
+    g_return_val_if_fail (retval, FALSE);
+
+
+    dest->name          = g_strdup (src->name);
+    dest->longname      = g_strdup (src->longname);
+    dest->description   = g_strdup (src->description);
+    dest->language      = g_strdup (src->language);
+    dest->license       = g_strdup (src->license);
+    dest->author        = g_strdup (src->author);
+    dest->icon          = g_strdup (src->icon);
+    dest->layout        = g_strdup (src->layout);
+
+    return TRUE;
 }
 
 #define g_string_append_indent(string, indent)  \
@@ -187,10 +300,8 @@ ibus_engine_desc_parse_xml_node (IBusEngineDesc *desc,
 }
 
 IBusEngineDesc *
-ibus_engine_desc_new_from_xml_node (BusComponent *component,
-                                   XMLNode      *node)
+ibus_engine_desc_new_from_xml_node (XMLNode      *node)
 {
-    g_assert (component);
     g_assert (node);
 
     IBusEngineDesc *desc;
@@ -204,10 +315,6 @@ ibus_engine_desc_new_from_xml_node (BusComponent *component,
     if (!ibus_engine_desc_parse_xml_node (desc, node)) {
         g_object_unref (desc);
         desc = NULL;
-    }
-    else {
-        desc->component = component;
-        g_object_ref (component);
     }
     
     return desc;

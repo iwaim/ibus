@@ -48,7 +48,7 @@ typedef struct _IBusEngineDescClass IBusEngineDescClass;
 typedef struct _BusComponent BusComponent;
 
 struct _IBusEngineDesc {
-    IBusObject parent;
+    IBusSerializable parent;
     /* instance members */
     
     gchar *name;
@@ -59,20 +59,17 @@ struct _IBusEngineDesc {
     gchar *author;
     gchar *icon;
     gchar *layout;
-    
-    struct _BusComponent *component;
 };
 
 struct _IBusEngineDescClass {
-    IBusObjectClass parent;
+    IBusSerializableClass parent;
     
     /* class members */
 };
 
 GType            ibus_engine_desc_get_type      (void);
 IBusEngineDesc  *ibus_engine_desc_new_from_xml_node
-                                                (BusComponent   *component,
-                                                 XMLNode        *node);
+                                                (XMLNode        *node);
 void             ibus_engine_desc_output        (IBusEngineDesc  *info,
                                                  GString        *output,
                                                  gint            indent);

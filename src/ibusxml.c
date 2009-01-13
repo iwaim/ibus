@@ -23,7 +23,7 @@
 static GMarkupParser parser;
 
 void
-xml_free_node (XMLNode *node)
+ibus_xml_free (XMLNode *node)
 {
     g_free (node->name);
 
@@ -31,7 +31,7 @@ xml_free_node (XMLNode *node)
    
     g_strfreev (node->attributes);
 
-    g_list_foreach (node->sub_nodes, (GFunc) xml_free_node, NULL);
+    g_list_foreach (node->sub_nodes, (GFunc) ibus_xml_free, NULL);
     g_list_free (node->sub_nodes);
 
     g_slice_free (XMLNode, node);
@@ -166,7 +166,7 @@ static GMarkupParser parser = {
 };
 
 XMLNode *
-xml_parse_file (const gchar *filename)
+ibus_xml_parse_file (const gchar *filename)
 {
     gboolean retval;
     GError *error = NULL;
