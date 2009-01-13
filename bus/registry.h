@@ -21,6 +21,8 @@
 #define __REGISTRY_H_
 
 #include <ibus.h>
+#include "component.h"
+#include "engineinfo.h"
 
 /*
  * Type macros.
@@ -62,14 +64,18 @@ struct _BusRegistryClass {
     /* class members */
 };
 
-GType            bus_registry_get_type        (void);
-BusRegistry     *bus_registry_new             (void);
-GList           *bus_registry_get_components  (BusRegistry  *registry);
-GList           *bus_registry_get_engines     (BusRegistry  *registry);
-gboolean         bus_registry_exec_component  (BusRegistry  *registry,
-                                               const gchar  *name);
-gboolean         bus_registry_kill_component  (BusRegistry  *registry,
-                                               const gchar  *name);
+GType            bus_registry_get_type          (void);
+BusRegistry     *bus_registry_new               (void);
+GList           *bus_registry_get_components    (BusRegistry    *registry);
+GList           *bus_registry_get_engines       (BusRegistry    *registry);
+gboolean         bus_registry_exec_component    (BusRegistry    *registry,
+                                                 const gchar    *name);
+gboolean         bus_registry_kill_component    (BusRegistry    *registry,
+                                                 const gchar    *name);
+BusEngineInfo   *bus_registry_find_engine_by_name
+                                                (BusRegistry    *registry,
+                                                 const gchar    *name);
+                                            
 G_END_DECLS
 #endif
 

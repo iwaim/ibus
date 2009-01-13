@@ -58,7 +58,6 @@ struct _BusComponent {
     gchar *author;
     gchar *license;
     gchar *homepage;
-    gchar *service_name;
     
     /* text domain for dgettext */
     gchar *textdomain;

@@ -1,5 +1,5 @@
 /* vim:set et sts=4: */
-/* ibus - The Input Bus
+/* bus - The Input Bus
  * Copyright (C) 2008-2009 Huang Peng <shawn.p.huang@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -9,7 +9,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.     See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -17,30 +17,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __IBUS_H_
-#define __IBUS_H_
+#ifndef __IBUS_XML_H__
+#define __IBUS_XML_H__
 
-#include <ibusshare.h>
-#include <ibusobject.h>
-#include <ibusserializable.h>
-#include <ibustext.h>
-#include <ibusconnection.h>
-#include <ibusserver.h>
-#include <ibusproxy.h>
-#include <ibusservice.h>
-#include <ibusfactory.h>
-#include <ibusengine.h>
-#include <ibusattribute.h>
-#include <ibusproperty.h>
-#include <ibuslookuptable.h>
-#include <ibusbus.h>
-#include <ibuskeysyms.h>
-#include <ibusmessage.h>
-#include <ibuserror.h>
-#include <ibusenumtypes.h>
-#include <ibushotkey.h>
-#include <ibusxml.h>
-#include <ibusenginedesc.h>
+#include <glib.h>
 
+typedef struct {
+    gchar  *name;
+    gchar  *text;
+    gchar  **attributes;
+    GList *sub_nodes;
+} XMLNode;
+
+XMLNode *ibus_xml_parse_file    (const gchar    *name);
+void     ibus_xml_free          (XMLNode        *node);
+void     ibus_xml_output        (const XMLNode  *node,
+                                 GString        *output);
 #endif
-

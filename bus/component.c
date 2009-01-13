@@ -109,7 +109,6 @@ bus_component_init (BusComponent *component)
     component->author = NULL;
     component->license = NULL;
     component->homepage = NULL;
-    component->service_name = NULL;
     component->textdomain = NULL;
     component->engines = NULL;
     component->observed_paths = NULL;
@@ -125,7 +124,6 @@ bus_component_destroy (BusComponent *component)
     g_free (component->author);
     g_free (component->license);
     g_free (component->homepage);
-    g_free (component->service_name);
     g_free (component->textdomain);
 
     g_list_foreach (component->observed_paths, (GFunc)g_object_unref, NULL);
@@ -173,7 +171,6 @@ bus_component_output (BusComponent *component,
     OUTPUT_ENTRY_1 (license);
     OUTPUT_ENTRY_1 (homepage);
     OUTPUT_ENTRY_1 (textdomain);
-    OUTPUT_ENTRY (service_name, "service-name");
 #undef OUTPUT_ENTRY
 #undef OUTPUT_ENTRY_1
 
@@ -244,7 +241,6 @@ bus_component_parse_xml_node (BusComponent   *component,
         PARSE_ENTRY_1 (license);
         PARSE_ENTRY_1 (homepage);
         PARSE_ENTRY_1 (textdomain);
-        PARSE_ENTRY (service_name, "service-name");
 #undef PARSE_ENTRY
 #undef PARSE_ENTRY_1
 

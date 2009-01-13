@@ -17,57 +17,54 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#include <glib/gstdio.h>
-#include <gio/gio.h>
-#include <stdlib.h>
-#include "xmlparser.h"
-#include "engineinfo.h"
+#include "ibusenginedesc.h"
+#include "ibusxml.h"
 
 enum {
     LAST_SIGNAL,
 };
 
 
-/* BusEngineInfoPriv */
-struct _BusEngineInfoPrivate {
+/* IBusEngineDescPriv */
+struct _IBusEngineDescPrivate {
     gpointer pad;
 };
-typedef struct _BusEngineInfoPrivate BusEngineInfoPrivate;
+typedef struct _IBusEngineDescPrivate IBusEngineDescPrivate;
 
-#define BUS_ENGINE_INFO_GET_PRIVATE(o)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((o), BUS_TYPE_ENGINE_INFO, BusEngineInfoPrivate))
+#define IBUS_ENGINE_DESC_GET_PRIVATE(o)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((o), BUS_TYPE_ENGINE_INFO, IBusEngineDescPrivate))
 
 // static guint            _signals[LAST_SIGNAL] = { 0 };
 
 /* functions prototype */
-static void         bus_engine_info_class_init      (BusEngineInfoClass     *klass);
-static void         bus_engine_info_init            (BusEngineInfo          *info);
-static void         bus_engine_info_destroy         (BusEngineInfo          *info);
-static gboolean     bus_engine_info_parse_xml_node  (BusEngineInfo          *info,
+static void         ibus_engine_desc_class_init      (IBusEngineDescClass     *klass);
+static void         ibus_engine_desc_init            (IBusEngineDesc          *desc);
+static void         ibus_engine_desc_destroy         (IBusEngineDesc          *desc);
+static gboolean     ibus_engine_desc_parse_xml_node  (IBusEngineDesc          *desc,
                                                      XMLNode                *node);
 
 static IBusObjectClass  *parent_class = NULL;
 
 GType
-bus_engine_info_get_type (void)
+ibus_engine_desc_get_type (void)
 {
     static GType type = 0;
 
     static const GTypeInfo type_info = {
-        sizeof (BusEngineInfoClass),
+        sizeof (IBusEngineDescClass),
         (GBaseInitFunc)     NULL,
         (GBaseFinalizeFunc) NULL,
-        (GClassInitFunc)    bus_engine_info_class_init,
+        (GClassInitFunc)    ibus_engine_desc_class_init,
         NULL,               /* class finalize */
         NULL,               /* class data */
-        sizeof (BusEngineInfo),
+        sizeof (IBusEngineDesc),
         0,
-        (GInstanceInitFunc) bus_engine_info_init,
+        (GInstanceInitFunc) ibus_engine_desc_init,
     };
 
     if (type == 0) {
         type = g_type_register_static (IBUS_TYPE_OBJECT,
-                    "BusEngineInfo",
+                    "IBusEngineDesc",
                     &type_info,
                     (GTypeFlags)0);
     }
@@ -77,46 +74,46 @@ bus_engine_info_get_type (void)
 
 
 static void
-bus_engine_info_class_init (BusEngineInfoClass *klass)
+ibus_engine_desc_class_init (IBusEngineDescClass *klass)
 {
     IBusObjectClass *ibus_object_class = IBUS_OBJECT_CLASS (klass);
 
     parent_class = (IBusObjectClass *) g_type_class_peek_parent (klass);
 
-    // g_type_class_add_private (klass, sizeof (BusEngineInfoPrivate));
-    ibus_object_class->destroy = (IBusObjectDestroyFunc) bus_engine_info_destroy;
+    // g_type_class_add_private (klass, sizeof (IBusEngineDescPrivate));
+    ibus_object_class->destroy = (IBusObjectDestroyFunc) ibus_engine_desc_destroy;
 
 }
 
 static void
-bus_engine_info_init (BusEngineInfo *info)
+ibus_engine_desc_init (IBusEngineDesc *desc)
 {
 
-    info->name = NULL;
-    info->longname = NULL;
-    info->description = NULL;
-    info->language = NULL;
-    info->license = NULL;
-    info->author = NULL;
-    info->icon = NULL;
-    info->layout = NULL;
+    desc->name = NULL;
+    desc->longname = NULL;
+    desc->description = NULL;
+    desc->language = NULL;
+    desc->license = NULL;
+    desc->author = NULL;
+    desc->icon = NULL;
+    desc->layout = NULL;
 }
 
 static void
-bus_engine_info_destroy (BusEngineInfo *info)
+ibus_engine_desc_destroy (IBusEngineDesc *desc)
 {
-    g_free (info->name);
-    g_free (info->longname);
-    g_free (info->description);
-    g_free (info->language);
-    g_free (info->license);
-    g_free (info->author);
-    g_free (info->icon);
-    g_free (info->layout);
+    g_free (desc->name);
+    g_free (desc->longname);
+    g_free (desc->description);
+    g_free (desc->language);
+    g_free (desc->license);
+    g_free (desc->author);
+    g_free (desc->icon);
+    g_free (desc->layout);
 
-    g_object_unref (info->component);
+    g_object_unref (desc->component);
 
-    IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (info));
+    IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (desc));
 }
 
 #define g_string_append_indent(string, indent)  \
@@ -128,7 +125,7 @@ bus_engine_info_destroy (BusEngineInfo *info)
     }
 
 void
-bus_engine_info_output (BusEngineInfo *info,
+ibus_engine_desc_output (IBusEngineDesc *desc,
                         GString       *output,
                         gint           indent)
 {
@@ -136,7 +133,7 @@ bus_engine_info_output (BusEngineInfo *info,
     g_string_append (output, "<engine>\n");
 #define OUTPUT_ENTRY(field, element)                                    \
     {                                                                   \
-        gchar *escape_text = g_markup_escape_text (info->field, -1);    \
+        gchar *escape_text = g_markup_escape_text (desc->field, -1);    \
         g_string_append_indent (output, indent + 1);                    \
         g_string_append_printf (output, "<"element">%s</"element">\n",  \
                                 escape_text);                           \
@@ -158,7 +155,7 @@ bus_engine_info_output (BusEngineInfo *info,
 }
 
 static gboolean
-bus_engine_info_parse_xml_node (BusEngineInfo *info,
+ibus_engine_desc_parse_xml_node (IBusEngineDesc *desc,
                                 XMLNode       *node)
 {
     GList *p;
@@ -167,10 +164,10 @@ bus_engine_info_parse_xml_node (BusEngineInfo *info,
 
 #define PARSE_ENTRY(field_name, element_name)                   \
         if (g_strcmp0 (sub_node->name, element_name) == 0) {    \
-            if (info->field_name != NULL) {                     \
-                g_free (info->field_name);                      \
+            if (desc->field_name != NULL) {                     \
+                g_free (desc->field_name);                      \
             }                                                   \
-            info->field_name = g_strdup (sub_node->text);       \
+            desc->field_name = g_strdup (sub_node->text);       \
             continue;                                           \
         }
 #define PARSE_ENTRY_1(name) PARSE_ENTRY(name, #name)
@@ -189,30 +186,30 @@ bus_engine_info_parse_xml_node (BusEngineInfo *info,
     return TRUE;
 }
 
-BusEngineInfo *
-bus_engine_info_new_from_xml_node (BusComponent *component,
+IBusEngineDesc *
+ibus_engine_desc_new_from_xml_node (BusComponent *component,
                                    XMLNode      *node)
 {
     g_assert (component);
     g_assert (node);
 
-    BusEngineInfo *info;
+    IBusEngineDesc *desc;
 
     if (G_UNLIKELY (g_strcmp0 (node->name, "engine") != 0)) {
         return NULL;
     }
 
-    info = (BusEngineInfo *)g_object_new (BUS_TYPE_ENGINE_INFO, NULL);
+    desc = (IBusEngineDesc *)g_object_new (IBUS_TYPE_ENGINE_DESC, NULL);
     
-    if (!bus_engine_info_parse_xml_node (info, node)) {
-        g_object_unref (info);
-        info = NULL;
+    if (!ibus_engine_desc_parse_xml_node (desc, node)) {
+        g_object_unref (desc);
+        desc = NULL;
     }
     else {
-        info->component = component;
+        desc->component = component;
         g_object_ref (component);
     }
     
-    return info;
+    return desc;
 }
 

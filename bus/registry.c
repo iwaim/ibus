@@ -386,3 +386,15 @@ bus_registry_get_engines (BusRegistry *registry)
 
     return g_hash_table_get_values (registry->engine_table);
 }
+
+
+BusEngineInfo *
+bus_registry_find_engine_by_name (BusRegistry *registry,
+                                  const gchar *name)
+{
+    g_assert (BUS_IS_REGISTRY (registry));
+    g_assert (name);
+    
+    return (BusEngineInfo *) g_hash_table_lookup (registry->engine_table, name);
+}
+

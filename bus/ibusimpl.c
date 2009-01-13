@@ -26,6 +26,7 @@
 #include "factoryproxy.h"
 #include "panelproxy.h"
 #include "inputcontext.h"
+#include "engineinfo.h"
 
 #define BUS_IBUS_IMPL_GET_PRIVATE(o)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((o), BUS_TYPE_IBUS_IMPL, BusIBusImplPrivate))
@@ -44,6 +45,9 @@ struct _BusIBusImplPrivate {
     GHashTable *factory_dict;
     GList *factory_list;
     GList *contexts;
+    
+    BusEngineInfo *default_engine;
+    GList *engine_list;
 
     BusRegistry     *registry;
 
@@ -331,6 +335,8 @@ bus_ibus_impl_init (BusIBusImpl *ibus)
                                                 (GDestroyNotify) g_object_unref);
 
     priv->registry = bus_registry_new ();
+    priv->engine_list = NULL;
+    priv->default_engine = NULL;
     priv->factory_list = NULL;
     priv->contexts = NULL;
     priv->default_factory = NULL;
@@ -346,7 +352,6 @@ bus_ibus_impl_init (BusIBusImpl *ibus)
                       "name-owner-changed",
                       G_CALLBACK (_dbus_name_owner_changed_cb),
                       ibus);
-
 }
 
 static void
@@ -357,15 +362,13 @@ bus_ibus_impl_destroy (BusIBusImpl *ibus)
     BusIBusImplPrivate *priv;
     priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
 
-    if (priv->factory_list) {
-        for (p = priv->factory_list; p != NULL; p = p->next) {
-            g_signal_handlers_disconnect_by_func (p->data,
-                                                  G_CALLBACK (_factory_destroy_cb),
-                                                  ibus);
-        }
-        g_list_free (priv->factory_list);
-        priv->factory_list = NULL;
+    for (p = priv->factory_list; p != NULL; p = p->next) {
+        g_signal_handlers_disconnect_by_func (p->data,
+                                              G_CALLBACK (_factory_destroy_cb),
+                                              ibus);
     }
+    g_list_free (priv->factory_list);
+    priv->factory_list = NULL;
 
     if (priv->factory_dict != NULL) {
         g_hash_table_destroy (priv->factory_dict);
@@ -726,6 +729,22 @@ _ibus_set_factory (BusIBusImpl      *ibus,
 }
 
 static IBusMessage *
+_ibus_list_engines (BusIBusImpl   *ibus,
+                    IBusMessage   *message,
+                    BusConnection *connection)
+{
+    return NULL;
+}
+
+static IBusMessage *
+_ibus_list_active_engines (BusIBusImpl   *ibus,
+                           IBusMessage   *message,
+                           BusConnection *connection)
+{
+    return NULL;
+}
+
+static IBusMessage *
 _ibus_kill (BusIBusImpl     *ibus,
             IBusMessage     *message,
             BusConnection   *connection)
@@ -770,6 +789,8 @@ bus_ibus_impl_ibus_message (BusIBusImpl     *ibus,
         { IBUS_INTERFACE_IBUS, "RegisterFactories",     _ibus_register_factories },
         { IBUS_INTERFACE_IBUS, "ListFactories",         _ibus_list_factories },
         { IBUS_INTERFACE_IBUS, "SetFactory",            _ibus_set_factory },
+        { IBUS_INTERFACE_IBUS, "ListEngines",           _ibus_list_engines },
+        { IBUS_INTERFACE_IBUS, "ListActiveEngines",     _ibus_list_active_engines },
 #if 0
         { IBUS_INTERFACE_IBUS, "GetInputContextStates", _ibus_get_address },
 
@@ -899,7 +920,7 @@ bus_ibus_impl_lookup_factory (BusIBusImpl *ibus,
     BusIBusImplPrivate *priv;
     priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
 
-    factory = (BusFactoryProxy *)g_hash_table_lookup (priv->factory_dict, path);
+    factory = (BusFactoryProxy *) g_hash_table_lookup (priv->factory_dict, path);
 
     return factory;
 }

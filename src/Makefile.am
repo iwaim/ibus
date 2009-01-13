@@ -61,6 +61,8 @@ ibus_public_h_sources = \
 	ibustypes.h \
 	ibusbus.h \
 	ibushotkey.h \
+	ibusxml.h \
+	ibusenginedesc.h \
 	$(NULL)
 ibus_h_sources = \
 	ibusinternal.h \
@@ -90,6 +92,8 @@ ibus_c_sources = \
 	ibusbus.c \
 	ibuskeynames.c \
 	ibushotkey.c \
+	ibusxml.c \
+	ibusenginedesc.c \
 	$(ibus_built_c_sources) \
 	$(NULL)
 

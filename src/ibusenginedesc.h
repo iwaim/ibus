@@ -17,36 +17,37 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __ENGINE_INFO_H_
-#define __ENGINE_INFO_H_
+#ifndef __ENGINE_DESC_H_
+#define __ENGINE_DESC_H_
 
-#include <ibus.h>
+#include "ibusserializable.h"
+#include "ibusxml.h"
 
 /*
  * Type macros.
  */
 
 /* define GOBJECT macros */
-#define BUS_TYPE_ENGINE_INFO             \
-    (bus_engine_info_get_type ())
-#define BUS_ENGINE_INFO(obj)             \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), BUS_TYPE_ENGINE_INFO, BusEngineInfo))
-#define BUS_ENGINE_INFO_CLASS(klass)     \
-    (G_TYPE_CHECK_CLASS_CAST ((klass), BUS_TYPE_ENGINE_INFO, BusEngineInfoClass))
-#define BUS_IS_ENGINE_INFO(obj)          \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), BUS_TYPE_ENGINE_INFO))
-#define BUS_IS_ENGINE_INFO_CLASS(klass)  \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), BUS_TYPE_ENGINE_INFO))
-#define BUS_ENGINE_INFO_GET_CLASS(obj)   \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj), BUS_TYPE_ENGINE_INFO, BusEngineInfoClass))
+#define IBUS_TYPE_ENGINE_DESC             \
+    (ibus_engine_desc_get_type ())
+#define IBUS_ENGINE_DESC(obj)             \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), IBUS_TYPE_ENGINE_DESC, IBusEngineDesc))
+#define IBUS_ENGINE_DESC_CLASS(klass)     \
+    (G_TYPE_CHECK_CLASS_CAST ((klass), IBUS_TYPE_ENGINE_DESC, IBusEngineDescClass))
+#define IBUS_IS_ENGINE_DESC(obj)          \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), IBUS_TYPE_ENGINE_DESC))
+#define IBUS_IS_ENGINE_DESC_CLASS(klass)  \
+    (G_TYPE_CHECK_CLASS_TYPE ((klass), IBUS_TYPE_ENGINE_DESC))
+#define IBUS_ENGINE_DESC_GET_CLASS(obj)   \
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), IBUS_TYPE_ENGINE_DESC, IBusEngineDescClass))
 
 G_BEGIN_DECLS
 
-typedef struct _BusEngineInfo BusEngineInfo;
-typedef struct _BusEngineInfoClass BusEngineInfoClass;
+typedef struct _IBusEngineDesc IBusEngineDesc;
+typedef struct _IBusEngineDescClass IBusEngineDescClass;
 typedef struct _BusComponent BusComponent;
 
-struct _BusEngineInfo {
+struct _IBusEngineDesc {
     IBusObject parent;
     /* instance members */
     
@@ -62,20 +63,19 @@ struct _BusEngineInfo {
     struct _BusComponent *component;
 };
 
-struct _BusEngineInfoClass {
-  IBusObjectClass parent;
-
-  /* class members */
+struct _IBusEngineDescClass {
+    IBusObjectClass parent;
+    
+    /* class members */
 };
 
-GType            bus_engine_info_get_type       (void);
-BusEngineInfo   *bus_engine_info_new_from_xml_node
+GType            ibus_engine_desc_get_type      (void);
+IBusEngineDesc  *ibus_engine_desc_new_from_xml_node
                                                 (BusComponent   *component,
                                                  XMLNode        *node);
-void             bus_engine_info_output         (BusEngineInfo  *info,
+void             ibus_engine_desc_output        (IBusEngineDesc  *info,
                                                  GString        *output,
                                                  gint            indent);
-
 G_END_DECLS
 #endif
 
