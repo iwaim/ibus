@@ -128,15 +128,10 @@ bus_component_destroy (BusComponent *component)
     g_free (component->service_name);
     g_free (component->textdomain);
 
-    GList *p;
-    for (p = component->observed_paths; p != NULL; p = p->next) {
-        g_object_unref (p->data);
-    }
+    g_list_foreach (component->observed_paths, (GFunc)g_object_unref, NULL);
     g_list_free (component->observed_paths);
 
-    for (p = component->engines; p != NULL; p = p->next) {
-        g_object_unref (p->data);
-    }
+    g_list_foreach (component->engines, (GFunc)g_object_unref, NULL);
     g_list_free (component->engines);
 
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (component));

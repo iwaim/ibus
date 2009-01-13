@@ -39,11 +39,7 @@ xml_free_node (XMLNode *node)
     }
 
     if (node->sub_nodes) {
-        GList *p;
-
-        for (p = node->sub_nodes; p != NULL; p = p->next)
-            xml_free_node (p->data);
-
+        g_list_foreach (node->sub_nodes, (GFunc) xml_free_node, NULL);
         g_list_free (node->sub_nodes);
     }
 
@@ -75,7 +71,7 @@ _start_root_element_cb (GMarkupParseContext *context,
         g_array_append_val (attributes, p);
     }
     
-    p->attributes = (gchar **)g_array_free (attributes, FALSE);
+    p->attributes = (gchar **) g_array_free (attributes, FALSE);
     
     g_markup_parse_context_push (context, &parser, p);
     *node = p;

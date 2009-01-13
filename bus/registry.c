@@ -122,17 +122,11 @@ bus_registry_init (BusRegistry *registry)
 static void
 bus_registry_remove_all (BusRegistry *registry)
 {
-    GList *p;
-
-    for (p = registry->observed_paths; p != NULL; p = p->next) {
-        g_object_unref (p->data);
-    }
+    g_list_foreach (registry->observed_paths, (GFunc) g_object_unref, NULL);
     g_list_free (registry->observed_paths);
     registry->observed_paths = NULL;
 
-    for (p = registry->components; p != NULL; p = p ->next) {
-        g_object_unref (p->data);
-    }
+    g_list_foreach (registry->components, (GFunc) g_object_unref, NULL);
     g_list_free (registry->components);
     registry->components = NULL;
 
