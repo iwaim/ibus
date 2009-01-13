@@ -110,7 +110,6 @@ bus_component_init (BusComponent *component)
     component->license = NULL;
     component->homepage = NULL;
     component->service_name = NULL;
-    component->filename = NULL;
     component->textdomain = NULL;
     component->engines = NULL;
     component->observed_paths = NULL;
@@ -127,7 +126,6 @@ bus_component_destroy (BusComponent *component)
     g_free (component->license);
     g_free (component->homepage);
     g_free (component->service_name);
-    g_free (component->filename);
     g_free (component->textdomain);
 
     GList *p;
@@ -174,9 +172,6 @@ bus_component_output (BusComponent *component,
 #define OUTPUT_ENTRY_1(name) OUTPUT_ENTRY(name, #name)
     OUTPUT_ENTRY_1 (name);
     OUTPUT_ENTRY_1 (description);
-    OUTPUT_ENTRY_1 (filename);
-    g_string_append_indent (output, indent + 1);
-    g_string_append_printf (output, "<mtime>%ld</mtime>\n", component->mtime);
     OUTPUT_ENTRY_1 (exec);
     OUTPUT_ENTRY_1 (version);
     OUTPUT_ENTRY_1 (author);
@@ -248,7 +243,6 @@ bus_component_parse_xml_node (BusComponent   *component,
 #define PARSE_ENTRY_1(name) PARSE_ENTRY (name, #name)
         PARSE_ENTRY_1 (name);
         PARSE_ENTRY_1 (description);
-        PARSE_ENTRY_1 (filename);
         PARSE_ENTRY_1 (exec);
         PARSE_ENTRY_1 (version);
         PARSE_ENTRY_1 (author);
@@ -258,11 +252,6 @@ bus_component_parse_xml_node (BusComponent   *component,
         PARSE_ENTRY (service_name, "service-name");
 #undef PARSE_ENTRY
 #undef PARSE_ENTRY_1
-
-        if (g_strcmp0 (sub_node->name, "mtime") == 0) {
-            component->mtime = atol (sub_node->text);
-            continue;
-        }
 
         if (g_strcmp0 (sub_node->name, "engines") == 0) {
             bus_component_parse_engines (component, sub_node);
@@ -374,9 +363,11 @@ bus_component_new_from_file (const gchar *filename)
         g_object_unref (component);
         component = NULL;
     }
-
-    component->filename = g_strdup (filename);
-    component->mtime = buf.st_mtime;
+    else {
+        BusObservedPath *path;
+        path = bus_observed_path_new_from_path (filename);
+        component->observed_paths = g_list_prepend (component->observed_paths, path);
+    }
 
     return component;
 }
