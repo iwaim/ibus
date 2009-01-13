@@ -20,7 +20,6 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <stdlib.h>
-#include "xmlparser.h"
 #include "component.h"
 
 enum {
@@ -196,7 +195,7 @@ bus_component_output (BusComponent *component,
         g_string_append (output, "<engines>\n");
 
         for (p = component->engines; p != NULL; p = p->next) {
-            bus_engine_info_output ((BusEngineInfo *)p->data, output, indent + 2);
+            ibus_engine_desc_output ((IBusEngineDesc *)p->data, output, indent + 2);
         }
 
         g_string_append_indent (output, indent + 1);
@@ -274,8 +273,8 @@ bus_component_parse_engines (BusComponent *component,
 
     GList *p;
     for (p = node->sub_nodes; p != NULL; p = p->next) {
-        BusEngineInfo *engine;
-        engine = bus_engine_info_new_from_xml_node (component, (XMLNode *)p->data);
+        IBusEngineDesc *engine;
+        engine = ibus_engine_desc_new_from_xml_node ((XMLNode *)p->data);
 
         if (G_UNLIKELY (engine == NULL))
             continue;
@@ -340,7 +339,7 @@ bus_component_new_from_file (const gchar *filename)
         return NULL;
     }
 
-    node = xml_parse_file (filename);
+    node = ibus_xml_parse_file (filename);
 
     if (!node) {
         return NULL;
@@ -348,7 +347,7 @@ bus_component_new_from_file (const gchar *filename)
 
     component = (BusComponent *)g_object_new (BUS_TYPE_COMPONENT, NULL);
     retval = bus_component_parse_xml_node (component, node, TRUE);
-    xml_free_node (node);
+    ibus_xml_free (node);
 
     if (!retval) {
         g_object_unref (component);

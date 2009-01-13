@@ -70,16 +70,12 @@ ibus_daemon_SOURCES = \
 	connection.h \
 	matchrule.c \
 	matchrule.h \
-	engineinfo.c \
-	engineinfo.h \
 	observedpath.c \
 	observedpath.h \
 	component.c \
 	component.h \
 	registry.c \
 	registry.h \
-	xmlparser.c \
-	xmlparser.h \
 	$(NULL)
 ibus_daemon_CFLAGS = \
 	@X11_CFLAGS@ \
@@ -97,16 +93,12 @@ ibus_daemon_LDADD = \
 	$(NULL)
 
 test_registry_SOURCES = \
-	engineinfo.c \
-	engineinfo.h \
 	observedpath.c \
 	observedpath.h \
 	component.c \
 	component.h \
 	registry.c \
 	registry.h \
-	xmlparser.c \
-	xmlparser.h \
 	test-registry.c \
 	$(NULL)
 

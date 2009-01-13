@@ -20,7 +20,6 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <stdlib.h>
-#include "xmlparser.h"
 #include "observedpath.h"
 
 enum {

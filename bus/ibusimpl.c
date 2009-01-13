@@ -26,7 +26,6 @@
 #include "factoryproxy.h"
 #include "panelproxy.h"
 #include "inputcontext.h"
-#include "engineinfo.h"
 
 #define BUS_IBUS_IMPL_GET_PRIVATE(o)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((o), BUS_TYPE_IBUS_IMPL, BusIBusImplPrivate))
@@ -46,7 +45,7 @@ struct _BusIBusImplPrivate {
     GList *factory_list;
     GList *contexts;
     
-    BusEngineInfo *default_engine;
+    IBusEngineDesc *default_engine;
     GList *engine_list;
 
     BusRegistry     *registry;
@@ -733,7 +732,26 @@ _ibus_list_engines (BusIBusImpl   *ibus,
                     IBusMessage   *message,
                     BusConnection *connection)
 {
-    return NULL;
+    IBusMessage *reply;
+    IBusMessageIter iter, sub_iter;
+    GList *engines, *p;
+
+    BusIBusImplPrivate *priv;
+    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
+
+    reply = ibus_message_new_method_return (message);
+
+    ibus_message_iter_init_append (reply, &iter);
+    ibus_message_iter_open_container (&iter, IBUS_TYPE_ARRAY, "v", &sub_iter);
+
+    engines = bus_registry_get_engines (priv->registry);
+    for (p = engines; p != NULL; p = p->next) {
+        ibus_message_iter_append (&sub_iter, IBUS_TYPE_ENGINE_DESC, &(p->data));
+    }
+    g_list_free (engines);
+    ibus_message_iter_close_container (&iter, &sub_iter);
+
+    return reply;
 }
 
 static IBusMessage *
@@ -741,7 +759,24 @@ _ibus_list_active_engines (BusIBusImpl   *ibus,
                            IBusMessage   *message,
                            BusConnection *connection)
 {
-    return NULL;
+    IBusMessage *reply;
+    IBusMessageIter iter, sub_iter;
+    GList *engines, *p;
+
+    BusIBusImplPrivate *priv;
+    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
+
+    reply = ibus_message_new_method_return (message);
+
+    ibus_message_iter_init_append (reply, &iter);
+    ibus_message_iter_open_container (&iter, IBUS_TYPE_ARRAY, "v", &sub_iter);
+
+    for (p = priv->engine_list; p != NULL; p = p->next) {
+        ibus_message_iter_append (&sub_iter, IBUS_TYPE_ENGINE_DESC, &(p->data));
+    }
+    ibus_message_iter_close_container (&iter, &sub_iter);
+
+    return reply;
 }
 
 static IBusMessage *

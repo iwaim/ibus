@@ -22,7 +22,6 @@
 
 #include <ibus.h>
 #include "component.h"
-#include "engineinfo.h"
 
 /*
  * Type macros.
@@ -72,7 +71,7 @@ gboolean         bus_registry_exec_component    (BusRegistry    *registry,
                                                  const gchar    *name);
 gboolean         bus_registry_kill_component    (BusRegistry    *registry,
                                                  const gchar    *name);
-BusEngineInfo   *bus_registry_find_engine_by_name
+IBusEngineDesc  *bus_registry_find_engine_by_name
                                                 (BusRegistry    *registry,
                                                  const gchar    *name);
                                             

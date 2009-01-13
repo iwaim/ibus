@@ -20,7 +20,6 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <stdlib.h>
-#include "xmlparser.h"
 #include "registry.h"
 #include "component.h"
 #include "observedpath.h"
@@ -113,7 +112,7 @@ bus_registry_init (BusRegistry *registry)
     for (p = registry->components; p != NULL; p = p->next) {
         GList *p1;
         for (p1 = ((BusComponent *)p->data)->engines; p1 != NULL; p1 = p1->next) {
-            BusEngineInfo *engine = (BusEngineInfo *)p1->data;
+            IBusEngineDesc *engine = (IBusEngineDesc *)p1->data;
             g_hash_table_insert (registry->engine_table, engine->name, engine);
         }
     }
@@ -195,7 +194,7 @@ bus_registry_load_cache (BusRegistry *registry)
     GList *p;
 
     filename = g_build_filename (g_get_user_cache_dir (), "ibus", "registry.xml", NULL);
-    node = xml_parse_file (filename);
+    node = ibus_xml_parse_file (filename);
     g_free (filename);
 
     if (node == NULL) {
@@ -203,7 +202,7 @@ bus_registry_load_cache (BusRegistry *registry)
     }
 
     if (g_strcmp0 (node->name, "ibus-registry") != 0) {
-        xml_free_node (node);
+        ibus_xml_free (node);
         return FALSE;
     }
 
@@ -236,7 +235,7 @@ bus_registry_load_cache (BusRegistry *registry)
         g_warning ("Unknown element <%s>", sub_node->name);
     }
 
-    xml_free_node (node);
+    ibus_xml_free (node);
     return TRUE;
 }
 
@@ -388,13 +387,13 @@ bus_registry_get_engines (BusRegistry *registry)
 }
 
 
-BusEngineInfo *
+IBusEngineDesc *
 bus_registry_find_engine_by_name (BusRegistry *registry,
                                   const gchar *name)
 {
     g_assert (BUS_IS_REGISTRY (registry));
     g_assert (name);
     
-    return (BusEngineInfo *) g_hash_table_lookup (registry->engine_table, name);
+    return (IBusEngineDesc *) g_hash_table_lookup (registry->engine_table, name);
 }
 

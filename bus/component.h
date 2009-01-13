@@ -21,7 +21,6 @@
 #define __COMPONENT_H_
 
 #include <ibus.h>
-#include "engineinfo.h"
 #include "observedpath.h"
 
 /*
