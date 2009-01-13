@@ -51,8 +51,8 @@ class IEngineFactory(dbus.service.Object):
 
     # Create an input context and return the id of the context.
     # If failed, it will return "" or None.
-    @method(out_signature="o")
-    def CreateEngine(self): pass
+    @method(in_signature="s" out_signature="o")
+    def CreateEngine(self, engine_name): pass
 
     # Destroy the engine
     @method()

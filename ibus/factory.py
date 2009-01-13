@@ -29,18 +29,10 @@ import interface
 from serializable import *
 
 class EngineFactoryBase(object.Object):
-    def __init__(self, info, engine_class, engine_path, bus, object_path):
+    def __init__(self, bus):
         super(EngineFactoryBase, self).__init__()
-        self.__proxy = EngineFactoryProxy (self, bus.get_dbusconn(), object_path)
-        self.__info = info
+        self.__proxy = EngineFactoryProxy (self, bus.get_dbusconn(), "/org/freedesktop/IBus/Factory")
         self.__bus = bus
-        self.__engine_class = engine_class
-        self.__engine_path = engine_path
-        self.__engine_id = 1
-        self.__object_path = object_path
-
-    def get_info(self):
-        return self.__info
 
     def initialize(self):
         pass
@@ -48,21 +40,13 @@ class EngineFactoryBase(object.Object):
     def uninitialize(self):
         pass
 
-    def register(self):
-        self.__bus.register_factories([self.__info])
-
-    def create_engine(self):
-        engine = self.__engine_class(self.__bus, self.__engine_path + str(self.__engine_id))
-        self.__engine_id += 1
-        return engine.get_dbus_object()
+    def create_engine(self, engine_name):
+        return None
 
     def do_destroy(self):
         self.__proxy = None
         self.__bus = None
-        self.__info = None
-        self.__engine_class = None
-        self.__engine_path = None
-        super(EngineFactoryBase,self).do_destroy()
+        super(EngineFactoryBase, self).do_destroy()
 
 
 class EngineFactoryProxy(interface.IEngineFactory):
@@ -79,8 +63,8 @@ class EngineFactoryProxy(interface.IEngineFactory):
     def Uninitialize(self):
         return self.__factory.uninitialize()
 
-    def CreateEngine(self):
-        return self.__factory.create_engine()
+    def CreateEngine(self, engine_name):
+        return self.__factory.create_engine(engine_name)
 
     def Destroy(self):
         self.__factory.destroy()

@@ -678,6 +678,7 @@ ibus_bus_get_connection (IBusBus *bus)
     return priv->connection;
 }
 
+#if 0
 gboolean
 ibus_bus_register_factory (IBusBus     *bus,
                            IBusFactory *factory)
@@ -757,6 +758,7 @@ ibus_bus_register_factories (IBusBus *bus,
     return TRUE;
 }
 
+#endif
 
 #if 0
 IBusConfig *

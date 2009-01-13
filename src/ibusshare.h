@@ -28,6 +28,7 @@
 #define IBUS_SERVICE_NOTIFICATIONS    "org.freedesktop.IBus.Notifications"
 
 #define IBUS_PATH_IBUS          "/org/freedesktop/IBus"
+#define IBUS_PATH_FACTORY       "/org/freedesktop/IBus/Factory"
 #define IBUS_PATH_PANEL         "/org/freedesktop/IBus/Panel"
 #define IBUS_PATH_CONFIG        "/org/freedesktop/IBus/Config"
 #define IBUS_PATH_NOTIFICATIONS "/org/freedesktop/IBus/Notifications"

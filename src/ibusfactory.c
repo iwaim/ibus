@@ -34,10 +34,8 @@ enum {
 struct _IBusFactoryPrivate {
     guint id;
     IBusConnection *connection;
-    IBusFactoryInfo *info;
-    gchar *engine_path;
-    GType engine_type;
-    GList *engine_list;
+    GList          *engine_list;
+    GHashTable     *engine_table;
 };
 typedef struct _IBusFactoryPrivate IBusFactoryPrivate;
 
@@ -92,29 +90,17 @@ ibus_factory_get_type (void)
 }
 
 IBusFactory *
-ibus_factory_new (const gchar    *path,
-                  IBusConnection *connection,
-                  const gchar    *name,
-                  const gchar    *lang,
-                  const gchar    *icon,
-                  const gchar    *authors,
-                  const gchar    *credits,
-                  const gchar    *engine_path,
-                  GType           engine_type)
+ibus_factory_new (IBusConnection *connection)
 {
-    g_assert (g_type_is_a (engine_type, IBUS_TYPE_ENGINE));
+    g_assert (IBUS_IS_CONNECTION (connection));
 
     IBusFactory *factory;
     IBusFactoryPrivate *priv;
 
     factory = (IBusFactory *) g_object_new (IBUS_TYPE_FACTORY,
-                                            "path", path,
+                                            "path", IBUS_PATH_FACTORY,
                                             0);
     priv = IBUS_FACTORY_GET_PRIVATE (factory);
-
-    priv->info = ibus_factory_info_new (path, name, lang, icon, authors, credits);
-    priv->engine_path = g_strdup (engine_path);
-    priv->engine_type = engine_type;
 
     priv->connection = g_object_ref (connection);
     ibus_service_add_to_connection ((IBusService *)factory, connection);
@@ -146,36 +132,25 @@ ibus_factory_init (IBusFactory *factory)
 
     priv->id = 0;
     priv->connection = NULL;
-    priv->info = NULL;
-    priv->engine_path = NULL;
-    priv->engine_type = G_TYPE_INVALID;
-    priv->engine_list = NULL;
+    priv->engine_table = g_hash_table_new (g_str_hash, g_str_equal);
+    priv->engine_list =  NULL;
 }
 
 static void
 ibus_factory_destroy (IBusFactory *factory)
 {
-    GList *p;
+    GList *list;
     IBusFactoryPrivate *priv;
     priv = IBUS_FACTORY_GET_PRIVATE (factory);
 
-    for (p = priv->engine_list; p != NULL; p = p->next) {
-        g_signal_handlers_disconnect_by_func (p->data,
-                                              G_CALLBACK (_engine_destroy_cb),
-                                              factory);
-        g_object_unref (p->data);
-    }
+    list = g_list_copy (priv->engine_list);
+    g_list_foreach (list, (GFunc) ibus_object_destroy, NULL);
     g_list_free (priv->engine_list);
+    g_list_free (list);
     priv->engine_list = NULL;
 
-    if (priv->info) {
-        g_object_unref (priv->info);
-        priv->info = NULL;
-    }
-
-    if (priv->engine_path != NULL) {
-        g_free (priv->engine_path);
-        priv->engine_path = NULL;
+    if (priv->engine_table) {
+        g_hash_table_destroy (priv->engine_table);
     }
 
     if (priv->connection) {
@@ -195,11 +170,11 @@ _engine_destroy_cb (IBusEngine  *engine,
     IBusFactoryPrivate *priv;
     priv = IBUS_FACTORY_GET_PRIVATE (factory);
 
-    list = g_list_find (priv->engine_list, factory);
+    list = g_list_remove (priv->engine_list, engine);
 
     if (list) {
         g_object_unref (engine);
-        priv->engine_list = g_list_remove_link (priv->engine_list, list);
+        g_list_free_1 (list);
     }
 }
 
@@ -221,12 +196,42 @@ ibus_factory_ibus_message (IBusFactory    *factory,
     if (ibus_message_is_method_call (message,
                                      IBUS_INTERFACE_FACTORY,
                                      "CreateEngine")) {
+        gchar *engine_name;
         gchar *path;
+        IBusError *error;
         IBusEngine *engine;
+        gboolean retval;
+        GType engine_type;
 
-        path = g_strdup_printf ("%s/%d", priv->engine_path, ++priv->id);
+        retval = ibus_message_get_args (message,
+                                        &error,
+                                        G_TYPE_STRING, &engine_name,
+                                        G_TYPE_INVALID);
 
-        engine = g_object_new (priv->engine_type,
+        if (!retval) {
+            reply_message = ibus_message_new_error_printf (message,
+                                        DBUS_ERROR_INVALID_ARGS,
+                                        "The 1st arg should be engine name");
+            ibus_connection_send (connection, reply_message);
+            ibus_message_unref (reply_message);
+            return TRUE;
+        }
+
+        engine_type = (GType )g_hash_table_lookup (priv->engine_table, engine_name);
+
+        if (engine_type == G_TYPE_INVALID) {
+             reply_message = ibus_message_new_error_printf (message,
+                                        DBUS_ERROR_FAILED,
+                                        "Can not create engine %s", engine_name);
+            ibus_connection_send (connection, reply_message);
+            ibus_message_unref (reply_message);
+            return TRUE;
+           
+        }
+
+        path = g_strdup_printf ("/org/freedesktop/IBus/Engine/%s/%d", engine_name, ++priv->id);
+
+        engine = g_object_new (engine_type,
                                "path", path,
                                "connection", priv->connection,
                                0);
@@ -252,6 +257,22 @@ ibus_factory_ibus_message (IBusFactory    *factory,
                                                message);
 }
 
+void
+ibus_factory_add_engine (IBusFactory *factory,
+                         const gchar *engine_name,
+                         GType        engine_type)
+{
+    g_assert (IBUS_IS_FACTORY (factory));
+    g_assert (engine_name);
+    g_assert (g_type_is_a (engine_type, IBUS_TYPE_ENGINE));
+    
+    IBusFactoryPrivate *priv;
+    priv = IBUS_FACTORY_GET_PRIVATE (factory);
+
+    g_hash_table_insert (priv->engine_table, g_strdup (engine_name), (gpointer) engine_type);
+}
+
+#if 0
 IBusFactoryInfo *
 ibus_factory_get_info (IBusFactory *factory)
 {
@@ -260,7 +281,7 @@ ibus_factory_get_info (IBusFactory *factory)
 
     return priv->info;
 }
-
+#endif
 
 GType
 ibus_factory_info_get_type (void)

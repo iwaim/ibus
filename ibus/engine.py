@@ -23,10 +23,11 @@ __all__ = (
         "EngineBase",
     )
 
-import ibus
-from ibus import interface
+import object
+import serializable
+import interface
 
-class EngineBase(ibus.Object):
+class EngineBase(object.Object):
     def __init__(self, bus, object_path):
         super(EngineBase, self).__init__()
         self.__proxy = EngineProxy (self, bus.get_dbusconn(), object_path)
@@ -74,14 +75,14 @@ class EngineBase(ibus.Object):
         pass
 
     def commit_text(self, text):
-        text = ibus.serialize_object(text)
+        text = serializable.serialize_object(text)
         return self.__proxy.CommitText(text)
 
     def forward_key_event(self, keyval, state):
         return self.__proxy.ForwardKeyEvent(keyval, state)
 
     def update_preedit_text(self, text, cursor_pos, visible):
-        text = ibus.serialize_object(text)
+        text = serializable.serialize_object(text)
         return self.__proxy.UpdatePreeditText(text, cursor_pos, visible)
 
     def show_preedit_text(self):
@@ -91,7 +92,7 @@ class EngineBase(ibus.Object):
         return self.__proxy.HidePreeditText()
 
     def update_auxiliary_text(self, text, visible):
-        text = ibus.serialize_object(text)
+        text = serializable.serialize_object(text)
         return self.__proxy.UpdateAuxiliaryText(text, visible)
 
     def show_auxiliary_text(self):
@@ -103,7 +104,7 @@ class EngineBase(ibus.Object):
     def update_lookup_table(self, lookup_table, visible, just_current_page = False):
         if just_current_page:
             lookup_table = lookup_table.get_current_page_as_lookup_table()
-        dbus_values = ibus.serialize_object(lookup_table)
+        dbus_values = serializable.serialize_object(lookup_table)
         return self.__proxy.UpdateLookupTable(dbus_values, visible)
 
     def show_lookup_table(self):
@@ -125,11 +126,11 @@ class EngineBase(ibus.Object):
         return self.__proxy.CursorDownLookupTable()
 
     def register_properties(self, props):
-        dbus_values = ibus.serialize_object(props)
+        dbus_values = serializable.serialize_object(props)
         return self.__proxy.RegisterProperties(dbus_values)
 
     def update_property(self, prop):
-        dbus_values = ibus.serialize_object(prop)
+        dbus_values = serializable.serialize_object(prop)
         return self.__proxy.UpdateProperty(dbus_values)
 
     def get_dbus_object(self):

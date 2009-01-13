@@ -102,14 +102,9 @@ struct _IBusFactoryInfoClass {
 };
 
 GType            ibus_factory_get_type          (void);
-IBusFactory     *ibus_factory_new               (const gchar    *path,
-                                                 IBusConnection *connection,
-                                                 const gchar    *name,
-                                                 const gchar    *lang,
-                                                 const gchar    *icon,
-                                                 const gchar    *authors,
-                                                 const gchar    *credits,
-                                                 const gchar    *engine_path,
+IBusFactory     *ibus_factory_new               (IBusConnection *connection);
+void             ibus_factory_add_engine        (IBusFactory    *factory,
+                                                 const gchar    *engine_name,
                                                  GType           engine_type);
 IBusFactoryInfo *ibus_factory_get_info          (IBusFactory    *factory);
 GType            ibus_factory_info_get_type     (void);
