@@ -455,7 +455,7 @@ _context_request_engine_cb (BusInputContext *context,
     priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
 
     IBusEngineDesc *desc;
-    BusComponent *comp;
+    IBusComponent *comp;
     BusFactoryProxy *factory;
     BusEngineProxy *engine;
     
@@ -476,8 +476,8 @@ _context_request_engine_cb (BusInputContext *context,
     if (comp == NULL)
         return;
 
-    if (!bus_component_is_running (comp)) {
-        bus_component_start (comp);
+    if (!ibus_component_is_running (comp)) {
+        ibus_component_start (comp);
 
         if (g_main_context_pending (NULL)) {
             g_main_context_iteration (NULL, FALSE);

@@ -30,18 +30,18 @@
  */
 
 /* define GOBJECT macros */
-#define BUS_TYPE_COMPONENT             \
+#define IBUS_TYPE_COMPONENT             \
     (ibus_component_get_type ())
 #define IBUS_COMPONENT(obj)             \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), BUS_TYPE_COMPONENT, IBusComponent))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), IBUS_TYPE_COMPONENT, IBusComponent))
 #define IBUS_COMPONENT_CLASS(klass)     \
-    (G_TYPE_CHECK_CLASS_CAST ((klass), BUS_TYPE_COMPONENT, IBusComponentClass))
-#define BUS_IS_COMPONENT(obj)          \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), BUS_TYPE_COMPONENT))
-#define BUS_IS_COMPONENT_CLASS(klass)  \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), BUS_TYPE_COMPONENT))
+    (G_TYPE_CHECK_CLASS_CAST ((klass), IBUS_TYPE_COMPONENT, IBusComponentClass))
+#define IBUS_IS_COMPONENT(obj)          \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), IBUS_TYPE_COMPONENT))
+#define IBUS_IS_COMPONENT_CLASS(klass)  \
+    (G_TYPE_CHECK_CLASS_TYPE ((klass), IBUS_TYPE_COMPONENT))
 #define IBUS_COMPONENT_GET_CLASS(obj)   \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj), BUS_TYPE_COMPONENT, IBusComponentClass))
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), IBUS_TYPE_COMPONENT, IBusComponentClass))
 
 G_BEGIN_DECLS
 
@@ -54,11 +54,11 @@ struct _IBusComponent {
     
     gchar *name;
     gchar *description;
-    gchar *exec;
     gchar *version;
-    gchar *author;
     gchar *license;
+    gchar *author;
     gchar *homepage;
+    gchar *exec;
     
     /* text domain for dgettext */
     gchar *textdomain;
@@ -79,16 +79,16 @@ struct _IBusComponentClass {
 };
 
 GType            ibus_component_get_type         (void);
-IBusComponent   *ibus_component_new_from_xml_node(XMLNode        *node);
-IBusComponent   *ibus_component_new_from_file    (const gchar    *filename);
-void             ibus_component_output           (IBusComponent   *component,
-                                                 GString        *output,
-                                                 gint            indent);
+IBusComponent   *ibus_component_new_from_xml_node(XMLNode       *node);
+IBusComponent   *ibus_component_new_from_file    (const gchar   *filename);
+void             ibus_component_output           (IBusComponent *component,
+                                                  GString       *output,
+                                                  gint          indent);
 gboolean         ibus_component_check_modification
-                                                (IBusComponent   *component);
-gboolean         ibus_component_start            (IBusComponent   *component);
-gboolean         ibus_component_stop             (IBusComponent   *component);
-gboolean         ibus_component_is_running       (IBusComponent   *component);
+                                                 (IBusComponent *component);
+gboolean         ibus_component_start            (IBusComponent *component);
+gboolean         ibus_component_stop             (IBusComponent *component);
+gboolean         ibus_component_is_running       (IBusComponent *component);
 
 G_END_DECLS
 #endif

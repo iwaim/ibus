@@ -19,8 +19,6 @@
  */
 
 #include <glib/gstdio.h>
-// #include <gio/gio.h>
-// #include <stdlib.h>
 #include "ibuscomponent.h"
 
 enum {
@@ -40,21 +38,28 @@ typedef struct _IBusComponentPrivate IBusComponentPrivate;
 // static guint            _signals[LAST_SIGNAL] = { 0 };
 
 /* functions prototype */
-static void              ibus_component_class_init        (IBusComponentClass       *klass);
-static void              ibus_component_init              (IBusComponent            *component);
-static void              ibus_component_destroy           (IBusComponent            *component);
-static gboolean          ibus_component_parse_xml_node   (IBusComponent           *component,
-                                                         XMLNode                *node,
-                                                         gboolean                access_fs);
+static void         ibus_component_class_init   (IBusComponentClass     *klass);
+static void         ibus_component_init         (IBusComponent          *component);
+static void         ibus_component_destroy      (IBusComponent          *component);
+static gboolean     ibus_component_serialize    (IBusComponent          *component,
+                                                 IBusMessageIter        *iter);
+static gboolean     ibus_component_deserialize  (IBusComponent          *component,
+                                                 IBusMessageIter        *iter);
+static gboolean     ibus_component_copy         (IBusComponent          *dest,
+                                                 const IBusComponent    *src);
+static gboolean     ibus_component_parse_xml_node
+                                                (IBusComponent          *component,
+                                                 XMLNode                *node,
+                                                 gboolean                access_fs);
 
-static void              ibus_component_parse_engines    (IBusComponent           *component,
-                                                         XMLNode                *node);
-static void              ibus_component_parse_observed_paths
-                                                        (IBusComponent           *component,
-                                                         XMLNode                *node,
-                                                         gboolean                access_fs);
+static void         ibus_component_parse_engines(IBusComponent          *component,
+                                                 XMLNode                *node);
+static void         ibus_component_parse_observed_paths
+                                                (IBusComponent          *component,
+                                                 XMLNode                *node,
+                                                 gboolean                access_fs);
 
-static IBusObjectClass  *parent_class = NULL;
+static IBusSerializableClass  *parent_class = NULL;
 
 GType
 ibus_component_get_type (void)
@@ -74,7 +79,7 @@ ibus_component_get_type (void)
     };
 
     if (type == 0) {
-        type = g_type_register_static (IBUS_TYPE_OBJECT,
+        type = g_type_register_static (IBUS_TYPE_SERIALIZABLE,
                     "IBusComponent",
                     &type_info,
                     (GTypeFlags)0);
@@ -87,14 +92,18 @@ ibus_component_get_type (void)
 static void
 ibus_component_class_init (IBusComponentClass *klass)
 {
-    IBusObjectClass *ibus_object_class = IBUS_OBJECT_CLASS (klass);
+    IBusObjectClass *object_class = IBUS_OBJECT_CLASS (klass);
+    IBusSerializableClass *serializable_class = IBUS_SERIALIZABLE_CLASS (klass);
 
-    parent_class = (IBusObjectClass *) g_type_class_peek_parent (klass);
+    parent_class = (IBusSerializableClass *) g_type_class_peek_parent (klass);
 
-    g_type_class_add_private (klass, sizeof (IBusComponentPrivate));
+    object_class->destroy = (IBusObjectDestroyFunc) ibus_component_destroy;
+    
+    serializable_class->serialize   = (IBusSerializableSerializeFunc) ibus_component_serialize;
+    serializable_class->deserialize = (IBusSerializableDeserializeFunc) ibus_component_deserialize;
+    serializable_class->copy        = (IBusSerializableCopyFunc) ibus_component_copy;
 
-    ibus_object_class->destroy = (IBusObjectDestroyFunc) ibus_component_destroy;
-
+    g_string_append (serializable_class->signature, "ssssssssavav");
 }
 
 
@@ -104,11 +113,11 @@ ibus_component_init (IBusComponent *component)
 {
     component->name = NULL;
     component->description = NULL;
-    component->exec = NULL;
     component->version = NULL;
-    component->author = NULL;
     component->license = NULL;
+    component->author = NULL;
     component->homepage = NULL;
+    component->exec = NULL;
     component->textdomain = NULL;
     component->engines = NULL;
     component->observed_paths = NULL;
@@ -119,11 +128,11 @@ ibus_component_destroy (IBusComponent *component)
 {
     g_free (component->name);
     g_free (component->description);
-    g_free (component->exec);
     g_free (component->version);
-    g_free (component->author);
     g_free (component->license);
+    g_free (component->author);
     g_free (component->homepage);
+    g_free (component->exec);
     g_free (component->textdomain);
 
     g_list_foreach (component->observed_paths, (GFunc)g_object_unref, NULL);
@@ -134,6 +143,157 @@ ibus_component_destroy (IBusComponent *component)
 
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (component));
 }
+
+static gboolean
+ibus_component_serialize (IBusComponent   *component,
+                          IBusMessageIter *iter)
+{
+    gboolean retval;
+    IBusMessageIter array_iter;
+    GList *p;
+
+    retval = parent_class->serialize ((IBusSerializable *)component, iter);
+    g_return_val_if_fail (retval, FALSE);
+
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &component->name);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &component->description);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &component->license);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &component->author);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &component->homepage);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &component->exec);
+    g_return_val_if_fail (retval, FALSE);
+    
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &component->textdomain);
+    g_return_val_if_fail (retval, FALSE);
+
+    /* serialize observed paths */
+    retval = ibus_message_iter_open_container (iter, IBUS_TYPE_ARRAY, "v", &array_iter);
+    g_return_val_if_fail (retval, FALSE);
+
+    for (p = component->observed_paths; p != NULL; p = p->next) {
+        retval = ibus_message_iter_append (&array_iter, IBUS_TYPE_OBSERVED_PATH, &(p->data));
+        g_return_val_if_fail (retval, FALSE);
+    }
+    retval = ibus_message_iter_close_container (iter, &array_iter);
+    g_return_val_if_fail (retval, FALSE);
+     
+    /* serialize engine desc */
+    retval = ibus_message_iter_open_container (iter, IBUS_TYPE_ARRAY, "v", &array_iter);
+    g_return_val_if_fail (retval, FALSE);
+
+    for (p = component->engines; p != NULL; p = p->next) {
+        retval = ibus_message_iter_append (&array_iter, IBUS_TYPE_ENGINE_DESC, &(p->data));
+        g_return_val_if_fail (retval, FALSE);
+    }
+    retval = ibus_message_iter_close_container (iter, &array_iter);
+    g_return_val_if_fail (retval, FALSE);
+    
+    return TRUE;
+}
+
+static gboolean
+ibus_component_deserialize (IBusComponent   *component,
+                            IBusMessageIter *iter)
+{
+    gboolean retval;
+    gchar *str;
+    IBusMessageIter array_iter;
+
+    retval = parent_class->deserialize ((IBusSerializable *)component, iter);
+    g_return_val_if_fail (retval, FALSE);
+
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    component->name = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    component->description = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    component->version = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    component->license = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    component->author = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    component->homepage = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    component->exec = g_strdup (str);
+    
+    retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
+    g_return_val_if_fail (retval, FALSE);
+    component->textdomain = g_strdup (str);
+
+    retval = ibus_message_iter_recurse (iter, IBUS_TYPE_ARRAY, &array_iter);
+    g_return_val_if_fail (retval, FALSE);
+    while (ibus_message_iter_get_arg_type (&array_iter) != G_TYPE_INVALID) {
+        IBusObservedPath *path;
+        retval = ibus_message_iter_get (&array_iter, IBUS_TYPE_OBSERVED_PATH, &path);
+        component->observed_paths = g_list_append (component->observed_paths, path);
+    }
+    ibus_message_iter_next (iter);
+    
+    retval = ibus_message_iter_recurse (iter, IBUS_TYPE_ARRAY, &array_iter);
+    g_return_val_if_fail (retval, FALSE);
+    while (ibus_message_iter_get_arg_type (&array_iter) != G_TYPE_INVALID) {
+        IBusEngineDesc *desc;
+        retval = ibus_message_iter_get (&array_iter, IBUS_TYPE_ENGINE_DESC, &desc);
+        component->engines = g_list_append (component->engines, desc);
+    }
+    ibus_message_iter_next (iter);
+    
+    return TRUE;
+}
+
+static gboolean
+ibus_component_copy (IBusComponent       *dest,
+                     const IBusComponent *src)
+{
+    gboolean retval;
+
+    retval = parent_class->copy ((IBusSerializable *)dest,
+                                 (IBusSerializable *)src);
+    g_return_val_if_fail (retval, FALSE);
+
+
+    dest->name          = g_strdup (src->name);
+    dest->description   = g_strdup (src->description);
+    dest->version       = g_strdup (src->version);
+    dest->license       = g_strdup (src->license);
+    dest->author        = g_strdup (src->author);
+    dest->homepage      = g_strdup (src->homepage);
+    dest->exec          = g_strdup (src->exec);
+    dest->textdomain    = g_strdup (src->textdomain);
+
+    dest->observed_paths = g_list_copy (src->observed_paths);
+    g_list_foreach (dest->observed_paths, (GFunc) g_object_ref, NULL);
+    
+    dest->engines = g_list_copy (src->engines);
+    g_list_foreach (dest->engines, (GFunc) g_object_ref, NULL);
+
+    return TRUE;
+}
+
 
 #define g_string_append_indent(string, indent)  \
     {                                           \
@@ -148,7 +308,7 @@ ibus_component_output (IBusComponent *component,
                       GString      *output,
                       gint          indent)
 {
-    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (IBUS_IS_COMPONENT (component));
     GList *p;
 
     g_string_append_indent (output, indent);
@@ -165,11 +325,11 @@ ibus_component_output (IBusComponent *component,
 #define OUTPUT_ENTRY_1(name) OUTPUT_ENTRY(name, #name)
     OUTPUT_ENTRY_1 (name);
     OUTPUT_ENTRY_1 (description);
-    OUTPUT_ENTRY_1 (exec);
     OUTPUT_ENTRY_1 (version);
-    OUTPUT_ENTRY_1 (author);
     OUTPUT_ENTRY_1 (license);
+    OUTPUT_ENTRY_1 (author);
     OUTPUT_ENTRY_1 (homepage);
+    OUTPUT_ENTRY_1 (exec);
     OUTPUT_ENTRY_1 (textdomain);
 #undef OUTPUT_ENTRY
 #undef OUTPUT_ENTRY_1
@@ -235,11 +395,11 @@ ibus_component_parse_xml_node (IBusComponent   *component,
 #define PARSE_ENTRY_1(name) PARSE_ENTRY (name, #name)
         PARSE_ENTRY_1 (name);
         PARSE_ENTRY_1 (description);
-        PARSE_ENTRY_1 (exec);
         PARSE_ENTRY_1 (version);
-        PARSE_ENTRY_1 (author);
         PARSE_ENTRY_1 (license);
+        PARSE_ENTRY_1 (author);
         PARSE_ENTRY_1 (homepage);
+        PARSE_ENTRY_1 (exec);
         PARSE_ENTRY_1 (textdomain);
 #undef PARSE_ENTRY
 #undef PARSE_ENTRY_1
@@ -265,7 +425,7 @@ static void
 ibus_component_parse_engines (IBusComponent *component,
                              XMLNode      *node)
 {
-    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (IBUS_IS_COMPONENT (component));
     g_assert (node);
 
     if (g_strcmp0 (node->name, "engines") != 0) {
@@ -288,7 +448,7 @@ ibus_component_parse_observed_paths (IBusComponent    *component,
                                     XMLNode         *node,
                                     gboolean         access_fs)
 {
-    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (IBUS_IS_COMPONENT (component));
     g_assert (node);
 
     if (g_strcmp0 (node->name, "observed-paths") != 0) {
@@ -316,7 +476,7 @@ ibus_component_new_from_xml_node (XMLNode  *node)
 
     IBusComponent *component;
 
-    component = (IBusComponent *)g_object_new (BUS_TYPE_COMPONENT, NULL);
+    component = (IBusComponent *)g_object_new (IBUS_TYPE_COMPONENT, NULL);
     if (!ibus_component_parse_xml_node (component, node, FALSE)) {
         g_object_unref (component);
         component = NULL;
@@ -346,7 +506,7 @@ ibus_component_new_from_file (const gchar *filename)
         return NULL;
     }
 
-    component = (IBusComponent *)g_object_new (BUS_TYPE_COMPONENT, NULL);
+    component = (IBusComponent *)g_object_new (IBUS_TYPE_COMPONENT, NULL);
     retval = ibus_component_parse_xml_node (component, node, TRUE);
     ibus_xml_free (node);
 
@@ -356,7 +516,7 @@ ibus_component_new_from_file (const gchar *filename)
     }
     else {
         IBusObservedPath *path;
-        path = ibus_observed_path_new_from_path (filename, TRUE);
+        path = ibus_observed_path_new (filename, TRUE);
         component->observed_paths = g_list_prepend (component->observed_paths, path);
     }
 
@@ -368,7 +528,7 @@ ibus_component_child_cb (GPid          pid,
            gint          status,
            IBusComponent  *component)
 {
-    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (IBUS_IS_COMPONENT (component));
     g_assert (component->pid == pid);
     
     g_spawn_close_pid (pid);
@@ -378,7 +538,7 @@ ibus_component_child_cb (GPid          pid,
 gboolean
 ibus_component_start (IBusComponent *component)
 {
-    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (IBUS_IS_COMPONENT (component));
 
     if (component->pid != 0)
         return TRUE;
@@ -413,7 +573,7 @@ ibus_component_start (IBusComponent *component)
 gboolean
 ibus_component_stop (IBusComponent *component)
 {
-    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (IBUS_IS_COMPONENT (component));
     
     if (component->pid == 0)
         return TRUE;
@@ -425,7 +585,7 @@ ibus_component_stop (IBusComponent *component)
 gboolean
 ibus_component_is_running (IBusComponent *component)
 {
-    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (IBUS_IS_COMPONENT (component));
 
     return (component->pid != 0);
 }
@@ -434,7 +594,7 @@ ibus_component_is_running (IBusComponent *component)
 gboolean
 ibus_component_check_modification (IBusComponent *component)
 {
-    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (IBUS_IS_COMPONENT (component));
 
     GList *p;
 

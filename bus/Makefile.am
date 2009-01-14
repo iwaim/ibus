@@ -70,10 +70,6 @@ ibus_daemon_SOURCES = \
 	connection.h \
 	matchrule.c \
 	matchrule.h \
-	observedpath.c \
-	observedpath.h \
-	component.c \
-	component.h \
 	registry.c \
 	registry.h \
 	$(NULL)
@@ -93,10 +89,6 @@ ibus_daemon_LDADD = \
 	$(NULL)
 
 test_registry_SOURCES = \
-	observedpath.c \
-	observedpath.h \
-	component.c \
-	component.h \
 	registry.c \
 	registry.h \
 	test-registry.c \

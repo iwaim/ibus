@@ -21,8 +21,6 @@
 #include <gio/gio.h>
 #include <stdlib.h>
 #include "registry.h"
-#include "component.h"
-#include "observedpath.h"
 
 enum {
     LAST_SIGNAL,
@@ -110,13 +108,13 @@ bus_registry_init (BusRegistry *registry)
     }
 
     for (p = registry->components; p != NULL; p = p->next) {
-        BusComponent *comp = (BusComponent *)p->data;
+        IBusComponent *comp = (IBusComponent *)p->data;
         GList *p1;
         
         for (p1 = comp->engines; p1 != NULL; p1 = p1->next) {
             IBusEngineDesc *desc = (IBusEngineDesc *)p1->data;
             g_hash_table_insert (registry->engine_table, desc->name, desc);
-            g_object_set_data (desc, "component", comp);
+            g_object_set_data ((GObject *)desc, "component", comp);
         }
     }
 }
@@ -154,11 +152,11 @@ bus_registry_load (BusRegistry *registry)
 
     gchar *dirname;
     gchar *homedir;
-    BusObservedPath *path;
+    IBusObservedPath *path;
 
     dirname = g_build_filename (PKGDATADIR, "component", NULL);
     
-    path = bus_observed_path_new_from_path (dirname);
+    path = ibus_observed_path_new (dirname, TRUE);
     registry->observed_paths = g_list_append (registry->observed_paths, path);
     
     bus_registry_load_in_dir (registry, dirname);
@@ -170,7 +168,7 @@ bus_registry_load (BusRegistry *registry)
         homedir = (gchar *) g_get_home_dir ();
     dirname = g_build_filename (homedir, ".ibus", "component", NULL);
     
-    path = bus_observed_path_new_from_path (dirname);
+    path = ibus_observed_path_new (dirname, TRUE);
     registry->observed_paths = g_list_append (registry->observed_paths, path);
     
     bus_registry_load_in_dir (registry, dirname);
@@ -215,8 +213,8 @@ bus_registry_load_cache (BusRegistry *registry)
         if (g_strcmp0 (sub_node->name, "observed-paths") == 0) {
             GList *pp;
             for (pp = sub_node->sub_nodes; pp != NULL; pp = pp->next) {
-                BusObservedPath *path;
-                path = bus_observed_path_new_from_xml_node (pp->data, FALSE);
+                IBusObservedPath *path;
+                path = ibus_observed_path_new_from_xml_node (pp->data, FALSE);
                 if (path) {
                     registry->observed_paths = g_list_append (registry->observed_paths, path);
                 }
@@ -226,8 +224,8 @@ bus_registry_load_cache (BusRegistry *registry)
         if (g_strcmp0 (sub_node->name, "components") == 0) {
             GList *pp;
             for (pp = sub_node->sub_nodes; pp != NULL; pp = pp->next) {
-                BusComponent *component;
-                component = bus_component_new_from_xml_node (pp->data);
+                IBusComponent *component;
+                component = ibus_component_new_from_xml_node (pp->data);
                 if (component) {
                     registry->components = g_list_append (registry->components, component);
                 }
@@ -248,12 +246,12 @@ bus_registry_check_modification (BusRegistry *registry)
     GList *p;
 
     for (p = registry->observed_paths; p != NULL; p = p->next) {
-        if (bus_observed_path_check_modification ((BusObservedPath *)p->data))
+        if (ibus_observed_path_check_modification ((IBusObservedPath *)p->data))
             return TRUE;
     }
 
     for (p = registry->components; p != NULL; p = p->next) {
-        if (bus_component_check_modification ((BusComponent *)p->data))
+        if (ibus_component_check_modification ((IBusComponent *)p->data))
             return TRUE;
     }
 
@@ -294,7 +292,7 @@ bus_registry_save_cache (BusRegistry *registry)
         g_string_append_indent (output, 1);
         g_string_append (output, "<observed-paths>\n");
         for (p = registry->observed_paths; p != NULL; p = p->next) {
-            bus_observed_path_output ((BusObservedPath *)p->data,
+            ibus_observed_path_output ((IBusObservedPath *)p->data,
                                       output, 2);
         }
         g_string_append_indent (output, 1);
@@ -305,7 +303,7 @@ bus_registry_save_cache (BusRegistry *registry)
         g_string_append_indent (output, 1);
         g_string_append (output, "<components>\n");
         for (p = registry->components; p != NULL; p = p->next) {
-            bus_component_output ((BusComponent *)p->data,
+            ibus_component_output ((IBusComponent *)p->data,
                                       output, 2);
         }
         g_string_append_indent (output, 1);
@@ -348,7 +346,7 @@ bus_registry_load_in_dir (BusRegistry *registry,
             continue;
 
         path = g_build_filename (dirname, filename, NULL);
-        component = bus_component_new_from_file (path);
+        component = ibus_component_new_from_file (path);
         registry->components = g_list_append (registry->components, component);
         
         g_free (path);

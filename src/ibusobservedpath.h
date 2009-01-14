@@ -66,7 +66,7 @@ struct _IBusObservedPathClass {
 GType                ibus_observed_path_get_type            (void);
 IBusObservedPath    *ibus_observed_path_new_from_xml_node   (XMLNode            *node,
                                                              gboolean            fill_stat);
-IBusObservedPath    *ibus_observed_path_new_from_path       (const gchar        *path,
+IBusObservedPath    *ibus_observed_path_new                 (const gchar        *path,
                                                              gboolean            fill_stat);
 GList               *ibus_observed_path_traverse            (IBusObservedPath   *path);
 gboolean             ibus_observed_path_check_modification  (IBusObservedPath   *path);

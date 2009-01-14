@@ -21,7 +21,6 @@
 #define __REGISTRY_H_
 
 #include <ibus.h>
-#include "component.h"
 
 /*
  * Type macros.

@@ -23,7 +23,6 @@
 #include <ibus.h>
 #include "connection.h"
 #include "engineproxy.h"
-#include "component.h"
 
 /*
  * Type macros.
@@ -52,7 +51,7 @@ struct _BusFactoryProxy {
     IBusProxy parent;
     /* instance members */
 
-    BusComponent *component;
+    IBusComponent *component;
 };
 
 struct _BusFactoryProxyClass {
@@ -61,8 +60,8 @@ struct _BusFactoryProxyClass {
 };
 
 GType            bus_factory_proxy_get_type     (void);
-BusFactoryProxy *bus_factory_proxy_new          (BusComponent       *component);
-BusComponent    *bus_factory_proxy_get_component(BusFactoryProxy    *factory);
+BusFactoryProxy *bus_factory_proxy_new          (IBusComponent      *component);
+IBusComponent   *bus_factory_proxy_get_component(BusFactoryProxy    *factory);
 BusEngineProxy  *bus_factory_proxy_create_engine(BusFactoryProxy    *factory,
                                                  IBusEngineDesc     *desc);
 

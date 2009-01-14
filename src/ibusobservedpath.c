@@ -316,8 +316,8 @@ ibus_observed_path_new_from_xml_node (XMLNode *node,
 }
 
 IBusObservedPath *
-ibus_observed_path_new_from_path (const gchar *path,
-                                  gboolean     fill_stat)
+ibus_observed_path_new (const gchar *path,
+                        gboolean     fill_stat)
 {
     g_assert (path);
     

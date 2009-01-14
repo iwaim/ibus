@@ -26,7 +26,7 @@
 /* functions prototype */
 static void      bus_factory_proxy_class_init   (BusFactoryProxyClass   *klass);
 static void      bus_factory_proxy_init         (BusFactoryProxy        *factory);
-static void      bus_factory_proxy_destroy     (BusFactoryProxy        *factory);
+static void      bus_factory_proxy_destroy      (BusFactoryProxy        *factory);
 
 
 static IBusProxyClass  *parent_class = NULL;
@@ -58,9 +58,9 @@ bus_factory_proxy_get_type (void)
 }
 
 BusFactoryProxy *
-bus_factory_proxy_new (BusComponent *component)
+bus_factory_proxy_new (IBusComponent *component)
 {
-    g_assert (BUS_IS_COMPONENT (component));
+    g_assert (IBUS_IS_COMPONENT (component));
     
     BusFactoryProxy *factory;
     BusConnection *connection;
@@ -112,7 +112,7 @@ bus_factory_proxy_destroy (BusFactoryProxy *factory)
     IBUS_OBJECT_CLASS(parent_class)->destroy (IBUS_OBJECT (factory));
 }
 
-BusComponent *
+IBusComponent *
 bus_factory_proxy_get_component (BusFactoryProxy *factory)
 {
     return factory->component;
