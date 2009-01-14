@@ -64,6 +64,7 @@ ibus_public_h_sources = \
 	ibusxml.h \
 	ibusenginedesc.h \
 	ibusobservedpath.h \
+	ibuscomponent.h \
 	$(NULL)
 ibus_h_sources = \
 	ibusinternal.h \
@@ -96,6 +97,7 @@ ibus_c_sources = \
 	ibusxml.c \
 	ibusenginedesc.c \
 	ibusobservedpath.c \
+	ibuscomponent.c \
 	$(ibus_built_c_sources) \
 	$(NULL)
 

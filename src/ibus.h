@@ -42,6 +42,7 @@
 #include <ibusxml.h>
 #include <ibusenginedesc.h>
 #include <ibusobservedpath.h>
+#include <ibuscomponent.h>
 
 #endif
 
