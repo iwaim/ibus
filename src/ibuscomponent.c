@@ -470,6 +470,33 @@ ibus_component_parse_observed_paths (IBusComponent    *component,
 }
 
 IBusComponent *
+ibus_component_new (const gchar *name,
+                    const gchar *descritpion,
+                    const gchar *version,
+                    const gchar *license,
+                    const gchar *author,
+                    const gchar *homepage,
+                    const gchar *exec,
+                    const gchar *textdomain)
+{
+
+    IBusComponent *component;
+    component = (IBusComponent *)g_object_new (IBUS_TYPE_COMPONENT, NULL);
+
+    component->name         = g_strdup (name);
+    component->description  = g_strdup (descritpion);
+    component->version      = g_strdup (version);
+    component->license      = g_strdup (license);
+    component->author       = g_strdup (author);
+    component->homepage     = g_strdup (homepage);
+    component->exec         = g_strdup (exec);
+    component->textdomain   = g_strdup (textdomain);
+
+    return component;
+}
+
+
+IBusComponent *
 ibus_component_new_from_xml_node (XMLNode  *node)
 {
     g_assert (node);
@@ -523,10 +550,33 @@ ibus_component_new_from_file (const gchar *filename)
     return component;
 }
 
+void
+ibus_component_add_observed_path (IBusComponent *component,
+                                  const gchar   *path,
+                                  gboolean       access_fs)
+{
+    IBusObservedPath *p;
+
+    path = ibus_observed_path_new (path, access_fs);
+    component->observed_paths = g_list_append (component->observed_paths, p);
+
+    if (access_fs && p->is_dir && p->is_exist) {
+        component->observed_paths = g_list_concat (component->observed_paths,
+                                                   ibus_observed_path_traverse (p));
+    }
+}
+
+void
+ibus_component_add_engine (IBusComponent  *component,
+                           IBusEngineDesc *desc)
+{
+    component->engines = g_list_append (component->engines, desc);
+}
+
 static void
-ibus_component_child_cb (GPid          pid,
-           gint          status,
-           IBusComponent  *component)
+ibus_component_child_cb (GPid            pid,
+                         gint            status,
+                         IBusComponent  *component)
 {
     g_assert (IBUS_IS_COMPONENT (component));
     g_assert (component->pid == pid);

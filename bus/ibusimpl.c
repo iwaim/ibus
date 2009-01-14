@@ -770,9 +770,38 @@ _out:
 }
 
 static IBusMessage *
+_ibus_register_component (BusIBusImpl     *ibus,
+                          IBusMessage     *message,
+                          BusConnection   *connection)
+{
+    BusIBusImplPrivate *priv;
+    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
+    
+    IBusMessage *reply;
+    IBusError *error;
+    gboolean retval;
+
+    retval = ibus_message_get_args (message, &error,
+                                    IBUS_TYPE_COMPONENT, &component,
+                                    G_TYPE_INVALID);
+
+    if (!retval) {
+        reply = ibus_message_new_error_printf (message,
+                                               DBUS_ERROR_INVALID_ARGS,
+                                               "1st Argument must be IBusComponent: %s",
+                                               error->message);
+        ibus_error_free (error);
+        return reply;
+    }
+
+    reply = ibus_message_new_method_return (message);
+    return reply;
+}
+
+static IBusMessage *
 _ibus_list_factories (BusIBusImpl     *ibus,
-                     IBusMessage     *message,
-                     BusConnection   *connection)
+                      IBusMessage     *message,
+                      BusConnection   *connection)
 {
 #if 0
     IBusMessage *reply;
@@ -904,6 +933,7 @@ bus_ibus_impl_ibus_message (BusIBusImpl     *ibus,
         { IBUS_INTERFACE_IBUS, "GetAddress",            _ibus_get_address },
         { IBUS_INTERFACE_IBUS, "CreateInputContext",    _ibus_create_input_context },
         { IBUS_INTERFACE_IBUS, "RegisterFactories",     _ibus_register_factories },
+        { IBUS_INTERFACE_IBUS, "RegisterComponent",     _ibus_register_component },
         { IBUS_INTERFACE_IBUS, "ListFactories",         _ibus_list_factories },
         { IBUS_INTERFACE_IBUS, "SetFactory",            _ibus_set_factory },
         { IBUS_INTERFACE_IBUS, "ListEngines",           _ibus_list_engines },

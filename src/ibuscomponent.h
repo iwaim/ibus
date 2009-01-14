@@ -78,17 +78,32 @@ struct _IBusComponentClass {
   /* class members */
 };
 
-GType            ibus_component_get_type         (void);
-IBusComponent   *ibus_component_new_from_xml_node(XMLNode       *node);
-IBusComponent   *ibus_component_new_from_file    (const gchar   *filename);
-void             ibus_component_output           (IBusComponent *component,
-                                                  GString       *output,
-                                                  gint          indent);
+GType            ibus_component_get_type        (void);
+IBusComponent   *ibus_component_new             (const gchar    *name,
+                                                 const gchar    *descritpion,
+                                                 const gchar    *version,
+                                                 const gchar    *license,
+                                                 const gchar    *author,
+                                                 const gchar    *homepage,
+                                                 const gchar    *exec,
+                                                 const gchar    *textdomain);
+IBusComponent   *ibus_component_new_from_xml_node
+                                                (XMLNode        *node);
+IBusComponent   *ibus_component_new_from_file   (const gchar    *filename);
+void             ibus_component_add_observed_path
+                                                (IBusComponent  *component,
+                                                 const gchar    *path,
+                                                 gboolean        access_fs);
+void             ibus_component_add_engine      (IBusComponent  *component,
+                                                 IBusEngineDesc *desc);
+void             ibus_component_output          (IBusComponent  *component,
+                                                 GString        *output,
+                                                 gint            indent);
 gboolean         ibus_component_check_modification
-                                                 (IBusComponent *component);
-gboolean         ibus_component_start            (IBusComponent *component);
-gboolean         ibus_component_stop             (IBusComponent *component);
-gboolean         ibus_component_is_running       (IBusComponent *component);
+                                                (IBusComponent  *component);
+gboolean         ibus_component_start           (IBusComponent  *component);
+gboolean         ibus_component_stop            (IBusComponent  *component);
+gboolean         ibus_component_is_running      (IBusComponent  *component);
 
 G_END_DECLS
 #endif
