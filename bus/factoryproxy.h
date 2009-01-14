@@ -63,13 +63,16 @@ struct _BusFactoryProxyClass {
 GType            bus_factory_proxy_get_type     (void);
 BusFactoryProxy *bus_factory_proxy_new          (BusComponent       *component);
 BusComponent    *bus_factory_proxy_get_component(BusFactoryProxy    *factory);
+BusEngineProxy  *bus_factory_proxy_create_engine(BusFactoryProxy    *factory,
+                                                 IBusEngineDesc     *desc);
+
+#if 0
 const gchar     *bus_factory_proxy_get_name     (BusFactoryProxy    *factory);
 const gchar     *bus_factory_proxy_get_lang     (BusFactoryProxy    *factory);
 const gchar     *bus_factory_proxy_get_icon     (BusFactoryProxy    *factory);
 const gchar     *bus_factory_proxy_get_authors  (BusFactoryProxy    *factory);
 const gchar     *bus_factory_proxy_get_credits  (BusFactoryProxy    *factory);
-BusEngineProxy  *bus_factory_proxy_create_engine(BusFactoryProxy    *factory,
-                                                 IBusEngineDesc     *desc);
+#endif
 
 G_END_DECLS
 #endif

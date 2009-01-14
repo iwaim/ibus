@@ -469,6 +469,8 @@ _context_request_engine_cb (BusInputContext *context,
     if (desc == NULL)
         return;
 
+    factory = g_object_get_data ((GObject *)desc, "factory");
+    
     comp = g_object_get_data ((GObject *)desc, "component");
 
     if (comp == NULL)

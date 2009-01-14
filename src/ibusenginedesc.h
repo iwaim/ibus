@@ -68,6 +68,14 @@ struct _IBusEngineDescClass {
 };
 
 GType            ibus_engine_desc_get_type      (void);
+IBusEngineDesc  *ibus_engine_desc_new           (const gchar    *name,
+                                                 const gchar    *longname,
+                                                 const gchar    *description,
+                                                 const gchar    *language,
+                                                 const gchar    *license,
+                                                 const gchar    *author,
+                                                 const gchar    *icon,
+                                                 const gchar    *layout);
 IBusEngineDesc  *ibus_engine_desc_new_from_xml_node
                                                 (XMLNode        *node);
 void             ibus_engine_desc_output        (IBusEngineDesc  *info,

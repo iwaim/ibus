@@ -300,6 +300,40 @@ ibus_engine_desc_parse_xml_node (IBusEngineDesc *desc,
 }
 
 IBusEngineDesc *
+ibus_engine_desc_new (const gchar *name,
+                      const gchar *longname,
+                      const gchar *description,
+                      const gchar *language,
+                      const gchar *license,
+                      const gchar *author,
+                      const gchar *icon,
+                      const gchar *layout)
+{
+    g_assert (name);
+    g_assert (longname);
+    g_assert (description);
+    g_assert (language);
+    g_assert (license);
+    g_assert (author);
+    g_assert (icon);
+    g_assert (layout);
+
+    IBusEngineDesc *desc;
+    desc = (IBusEngineDesc *)g_object_new (IBUS_TYPE_ENGINE_DESC, NULL);
+
+    desc->name          = g_strdup (name);
+    desc->longname      = g_strdup (longname);
+    desc->description   = g_strdup (description);
+    desc->language      = g_strdup (language);
+    desc->license       = g_strdup (license);
+    desc->author        = g_strdup (author);
+    desc->icon          = g_strdup (icon);
+    desc->layout        = g_strdup (layout);
+
+    return desc;
+}
+
+IBusEngineDesc *
 ibus_engine_desc_new_from_xml_node (XMLNode      *node)
 {
     g_assert (node);

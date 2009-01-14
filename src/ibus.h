@@ -41,6 +41,7 @@
 #include <ibushotkey.h>
 #include <ibusxml.h>
 #include <ibusenginedesc.h>
+#include <ibusobservedpath.h>
 
 #endif
 
