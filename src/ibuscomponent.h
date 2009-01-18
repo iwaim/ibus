@@ -96,6 +96,7 @@ void             ibus_component_add_observed_path
                                                  gboolean        access_fs);
 void             ibus_component_add_engine      (IBusComponent  *component,
                                                  IBusEngineDesc *desc);
+GList           *ibus_component_get_engines     (IBusComponent  *component);
 void             ibus_component_output          (IBusComponent  *component,
                                                  GString        *output,
                                                  gint            indent);

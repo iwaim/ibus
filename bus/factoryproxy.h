@@ -60,10 +60,12 @@ struct _BusFactoryProxyClass {
 };
 
 GType            bus_factory_proxy_get_type     (void);
-BusFactoryProxy *bus_factory_proxy_new          (IBusComponent      *component);
+BusFactoryProxy *bus_factory_proxy_new          (IBusComponent      *component,
+                                                 BusConnection      *connection);
 IBusComponent   *bus_factory_proxy_get_component(BusFactoryProxy    *factory);
 BusEngineProxy  *bus_factory_proxy_create_engine(BusFactoryProxy    *factory,
                                                  IBusEngineDesc     *desc);
+BusFactoryProxy *bus_component_get_factory      (IBusComponent      *component);
 
 #if 0
 const gchar     *bus_factory_proxy_get_name     (BusFactoryProxy    *factory);

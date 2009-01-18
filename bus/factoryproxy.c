@@ -58,14 +58,16 @@ bus_factory_proxy_get_type (void)
 }
 
 BusFactoryProxy *
-bus_factory_proxy_new (IBusComponent *component)
+bus_factory_proxy_new (IBusComponent *component,
+                       BusConnection *connection)
 {
     g_assert (IBUS_IS_COMPONENT (component));
     
     BusFactoryProxy *factory;
-    BusConnection *connection;
 
-    connection = bus_dbus_impl_get_connection_by_name (BUS_DEFAULT_DBUS, component->name);
+    if (connection == NULL) {
+        connection = bus_dbus_impl_get_connection_by_name (BUS_DEFAULT_DBUS, component->name);
+    }
 
     if (connection == NULL) {
         return NULL;
@@ -118,6 +120,18 @@ bus_factory_proxy_get_component (BusFactoryProxy *factory)
     return factory->component;
 }
 
+BusFactoryProxy *
+bus_component_get_factory (IBusComponent *component)
+{
+    IBUS_IS_COMPONENT (component);
+
+    BusFactoryProxy *factory;
+
+    factory = (BusFactoryProxy *) g_object_get_data ((GObject *)component, "factory");
+
+    return factory;
+}
+
 #if 0
 const gchar *
 bus_factory_proxy_get_name (BusFactoryProxy *factory)
@@ -161,6 +175,10 @@ bus_factory_proxy_create_engine (BusFactoryProxy *factory,
     IBusError *error;
     BusEngineProxy *engine;
     gchar *object_path;
+
+    if (g_list_find (factory->component->engines, desc) == NULL) {
+        return NULL;
+    }
 
     reply_message = ibus_proxy_call_with_reply_and_block (IBUS_PROXY (factory),
                                                   "CreateEngine",

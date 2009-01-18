@@ -138,6 +138,7 @@ ibus_component_destroy (IBusComponent *component)
     g_list_foreach (component->observed_paths, (GFunc)g_object_unref, NULL);
     g_list_free (component->observed_paths);
 
+    g_list_foreach (component->engines, (GFunc)ibus_object_destroy, NULL);
     g_list_foreach (component->engines, (GFunc)g_object_unref, NULL);
     g_list_free (component->engines);
 
@@ -571,6 +572,12 @@ ibus_component_add_engine (IBusComponent  *component,
                            IBusEngineDesc *desc)
 {
     component->engines = g_list_append (component->engines, desc);
+}
+
+GList *
+ibus_component_get_engines (IBusComponent *component)
+{
+    return g_list_copy (component->engines);
 }
 
 static void

@@ -339,7 +339,7 @@ bus_registry_load_in_dir (BusRegistry *registry,
     while ((filename = g_dir_read_name (dir)) != NULL) {
         glong size;
         gchar *path;
-        BusComponent *component;
+        IBusComponent *component;
 
         size = g_utf8_strlen (filename, -1);
         if (g_strcmp0 (MAX (filename, filename + size -4), ".xml" ) != 0)
@@ -364,7 +364,7 @@ bus_registry_new (void)
     return registry;
 }
 
-static BusComponent *
+static IBusComponent *
 bus_registry_lookup_component_by_name (BusRegistry *registry,
                                        const gchar *name)
 {
