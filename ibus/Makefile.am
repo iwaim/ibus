@@ -46,6 +46,7 @@ ibus_PYTHON = \
 	text.py \
 	component.py \
 	enginedesc.py \
+	observedpath.py \
 	utility.py \
 	config.py \
 	_config.py \

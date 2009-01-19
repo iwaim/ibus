@@ -502,6 +502,18 @@ ibus_message_iter_append (IBusMessageIter *iter,
             v = * (guint *)value;
             return dbus_message_iter_append_basic (iter, DBUS_TYPE_UINT32, &v);
         }
+    case G_TYPE_ULONG:
+        {
+            dbus_uint64_t v;
+            v = * (gulong *)value;
+            return dbus_message_iter_append_basic (iter, DBUS_TYPE_UINT64, &v);
+        }
+    case G_TYPE_LONG:
+        {
+            dbus_int64_t v;
+            v = * (glong *)value;
+            return dbus_message_iter_append_basic (iter, DBUS_TYPE_INT64, &v);
+        }
     case G_TYPE_BOOLEAN:
         {
             dbus_bool_t v;

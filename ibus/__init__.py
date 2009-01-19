@@ -37,6 +37,7 @@ from notifications import *
 from config import *
 from serializable import *
 from text import *
+from observedpath import *
 from enginedesc import *
 from component import *
 from _config import *

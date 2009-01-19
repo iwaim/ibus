@@ -20,7 +20,7 @@
 # Boston, MA  02111-1307  USA
 
 __all__ = (
-        "Text",
+        "Component",
     )
 
 import dbus
