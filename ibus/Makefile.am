@@ -44,6 +44,8 @@ ibus_PYTHON = \
 	property.py \
 	serializable.py \
 	text.py \
+	component.py \
+	enginedesc.py \
 	utility.py \
 	config.py \
 	_config.py \
