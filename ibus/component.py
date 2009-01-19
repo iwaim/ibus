@@ -29,22 +29,24 @@ from serializable import *
 
 class Component(Serializable):
     __NAME__ = "IBusComponent"
-    def __init__ (self, name, description, version, license, author, homepage, _exec, textdomain):
-        super(Text, self).__init__()
+    def __init__ (self, name="", description="", version="", license="", author="", homepage="", _exec="", textdomain=""):
+        super(Component, self).__init__()
         self.__name = name
-        self.__descritpion = descritpion
+        self.__description = description
         self.__version = version
         self.__license = license
         self.__author = author
         self.__homepage = homepage
         self.__exec = _exec
         self.__textdomain = textdomain
+        self.__observed_paths = []
+        self.__engines = []
 
     def get_name(self):
         return self.__name
 
-    def get_descritpion(self):
-        return self.__descritpion
+    def get_description(self):
+        return self.__description
 
     def get_version(self):
         return self.__version
@@ -57,32 +59,56 @@ class Component(Serializable):
         
     def get_homepage(self):
         return self.__homepage
+    
+    def get_exec(self):
+        return self.__exec
 
     def get_textdomain(self):
         return self.__textdomain
 
-    text        = property(get_text)
-    attributes  = property(get_attributes)
+    name        = property(get_name)
+    description = property(get_description)
+    version     = property(get_version)
+    license     = property(get_license)
+    author      = property(get_author)
+    homepage    = property(get_homepage)
+    _exec       = property(get_exec)
+    textdomain  = property(get_textdomain)
 
     def serialize(self, struct):
-        super(Text, self).serialize(struct)
-        struct.append (dbus.String(self.__text))
-        if self.__attrs == None:
-            self.__attrs = AttrList()
-        struct.append (serialize_object(self.__attrs))
+        super(Component, self).serialize(struct)
+        struct.append (dbus.String(self.__name))
+        struct.append (dbus.String(self.__description))
+        struct.append (dbus.String(self.__version))
+        struct.append (dbus.String(self.__license))
+        struct.append (dbus.String(self.__author))
+        struct.append (dbus.String(self.__homepage))
+        struct.append (dbus.String(self.__exec))
+        struct.append (dbus.String(self.__textdomain))
+        struct.append (map(serialize_object,self.__observed_paths))
+        struct.append (map(serialize_object,self.__engines))
 
     def deserialize(self, struct):
-        super(Text, self).deserialize(struct)
+        super(Component, self).deserialize(struct)
 
-        self.__text = struct.pop(0)
-        self.__attrs = deserialize_object(struct.pop(0))
+        self.__name = struct.pop(0)
+        self.__description = struct.pop(0)
+        self.__version = struct.pop(0)
+        self.__license = struct.pop(0)
+        self.__author = struct.pop(0)
+        self.__homepage = struct.pop(0)
+        self.__exec = struct.pop(0)
+        self.__textdomain = struct.pop(0)
+        
+        self.__observed_paths = map(deserialize_object, struct.pop(0))
+        self.__engines = map(deserialize_object, struct.pop(0))
 
-serializable_register(Text)
+serializable_register(Component)
 
 def test():
-    text = Text("Hello")
+    text = Component("Hello", "", "", "", "", "", "", "")
     value = serialize_object(text)
-    text = deserialize_object(value)
+    text=  deserialize_object(value)
 
 if __name__ == "__main__":
     test()
