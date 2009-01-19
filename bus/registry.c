@@ -26,16 +26,6 @@ enum {
     LAST_SIGNAL,
 };
 
-
-/* BusRegistryPriv */
-struct _BusRegistryPrivate {
-    gpointer pad;
-};
-typedef struct _BusRegistryPrivate BusRegistryPrivate;
-
-#define BUS_REGISTRY_GET_PRIVATE(o)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((o), BUS_TYPE_REGISTRY, BusRegistryPrivate))
-
 // static guint            _signals[LAST_SIGNAL] = { 0 };
 
 /* functions prototype */
@@ -87,10 +77,7 @@ bus_registry_class_init (BusRegistryClass *klass)
 
     parent_class = (IBusObjectClass *) g_type_class_peek_parent (klass);
 
-    // g_type_class_add_private (klass, sizeof (BusRegistryPrivate));
-
     ibus_object_class->destroy = (IBusObjectDestroyFunc) bus_registry_destroy;
-
 }
 
 static void
@@ -364,11 +351,33 @@ bus_registry_new (void)
     return registry;
 }
 
+static gint
+_component_is_name (IBusComponent *component,
+                    const gchar   *name)
+{
+    g_assert (IBUS_IS_COMPONENT (component));
+    g_assert (name);
+
+    return g_strcmp0 (component->name, name);
+}
+
 static IBusComponent *
 bus_registry_lookup_component_by_name (BusRegistry *registry,
                                        const gchar *name)
 {
-    return NULL;
+    g_assert (BUS_IS_REGISTRY (registry));
+    g_assert (name);
+
+    GList *p;
+    p = g_list_find_custom (registry->components, 
+                            name,
+                            (GCompareFunc)_component_is_name);
+    if (p) {
+        return (IBusComponent *)p->data;
+    }
+    else {
+        return NULL;
+    }
 }
 
 GList *
@@ -398,3 +407,39 @@ bus_registry_find_engine_by_name (BusRegistry *registry,
     return (IBusEngineDesc *) g_hash_table_lookup (registry->engine_table, name);
 }
 
+
+BusFactoryProxy *
+bus_registry_name_owner_changed (BusRegistry *registry,
+                                 const gchar *name,
+                                 const gchar *old_name,
+                                 const gchar *new_name)
+{
+    g_assert (BUS_IS_REGISTRY (registry));
+    g_assert (name);
+    g_assert (old_name);
+    g_assert (new_name);
+
+    IBusComponent *component;
+    BusFactoryProxy *factory;
+
+    component = bus_registry_lookup_component_by_name (registry, name);
+
+    if (component == NULL) {
+        return NULL;
+    }
+
+    if (g_strcmp0 (old_name, "") != 0) {
+        factory = bus_factory_proxy_get_from_component (component);
+        
+        if (factory != NULL) {
+            ibus_object_destroy ((IBusObject *)factory);
+        }
+    }
+
+    if (g_strcmp0 (new_name, "") != 0) {
+        factory = bus_factory_proxy_new (component, NULL);
+        return factory;
+    }
+
+    return NULL;
+}

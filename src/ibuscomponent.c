@@ -256,10 +256,11 @@ ibus_component_deserialize (IBusComponent   *component,
     
     retval = ibus_message_iter_recurse (iter, IBUS_TYPE_ARRAY, &array_iter);
     g_return_val_if_fail (retval, FALSE);
+
     while (ibus_message_iter_get_arg_type (&array_iter) != G_TYPE_INVALID) {
-        IBusEngineDesc *desc;
-        retval = ibus_message_iter_get (&array_iter, IBUS_TYPE_ENGINE_DESC, &desc);
-        component->engines = g_list_append (component->engines, desc);
+        IBusEngineDesc *engine;
+        retval = ibus_message_iter_get (&array_iter, IBUS_TYPE_ENGINE_DESC, &engine);
+        ibus_component_add_engine (component, engine);
     }
     ibus_message_iter_next (iter);
     
@@ -440,7 +441,7 @@ ibus_component_parse_engines (IBusComponent *component,
 
         if (G_UNLIKELY (engine == NULL))
             continue;
-        component->engines = g_list_append(component->engines, engine);
+        ibus_component_add_engine (component, engine);
     }
 }
 
@@ -558,7 +559,7 @@ ibus_component_add_observed_path (IBusComponent *component,
 {
     IBusObservedPath *p;
 
-    path = ibus_observed_path_new (path, access_fs);
+    p = ibus_observed_path_new (path, access_fs);
     component->observed_paths = g_list_append (component->observed_paths, p);
 
     if (access_fs && p->is_dir && p->is_exist) {
@@ -569,9 +570,13 @@ ibus_component_add_observed_path (IBusComponent *component,
 
 void
 ibus_component_add_engine (IBusComponent  *component,
-                           IBusEngineDesc *desc)
+                           IBusEngineDesc *engine)
 {
-    component->engines = g_list_append (component->engines, desc);
+    g_assert (IBUS_IS_COMPONENT (component));
+    g_assert (IBUS_IS_ENGINE_DESC (engine));
+
+    component->engines = g_list_append (component->engines, engine);
+    g_object_set_data ((GObject *)engine, "component", component);
 }
 
 GList *
@@ -660,4 +665,16 @@ ibus_component_check_modification (IBusComponent *component)
             return TRUE;
     }
     return FALSE;
+}
+
+
+IBusComponent *
+ibus_component_get_from_engine (IBusEngineDesc *engine)
+{
+    g_assert (IBUS_IS_ENGINE_DESC (engine));
+
+    IBusComponent *component;
+    
+    component = (IBusComponent *)g_object_get_data ((GObject *)engine, "component");
+    return component;
 }

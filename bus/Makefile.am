@@ -41,7 +41,6 @@ AM_LDFLAGS = \
 	$(NULL)
 
 TESTS = \
-	test-registry \
 	test-matchrule \
 	$(NULL)
 
@@ -91,6 +90,8 @@ ibus_daemon_LDADD = \
 test_registry_SOURCES = \
 	registry.c \
 	registry.h \
+	factoryproxy.c \
+	factoryproxy.h \
 	test-registry.c \
 	$(NULL)
 

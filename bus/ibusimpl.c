@@ -48,9 +48,11 @@ static gboolean bus_ibus_impl_ibus_message      (BusIBusImpl        *ibus,
 
 static void     bus_ibus_impl_set_default_engine(BusIBusImpl        *ibus,
                                                  IBusEngineDesc     *engine);
+static void     bus_ibus_impl_add_factory       (BusIBusImpl        *ibus,
+                                                 BusFactoryProxy    *factory); 
 #if 0
-static void     _factory_destroy_cb           (BusFactoryProxy      *factory,
-                                               BusIBusImpl          *ibus);
+static void     _factory_destroy_cb             (BusFactoryProxy      *factory,
+                                                 BusIBusImpl          *ibus);
 #endif
 
 static IBusServiceClass  *parent_class = NULL;
@@ -227,6 +229,8 @@ _dbus_name_owner_changed_cb (BusDBusImpl *dbus,
     g_assert (new_name != NULL);
     g_assert (BUS_IS_IBUS_IMPL (ibus));
 
+    BusFactoryProxy *factory;
+
     if (g_strcmp0 (name, IBUS_SERVICE_PANEL) == 0) {
         if (g_strcmp0 (new_name, "") != 0) {
             BusConnection *connection;
@@ -281,6 +285,12 @@ _dbus_name_owner_changed_cb (BusDBusImpl *dbus,
 
             bus_ibus_impl_reload_config (ibus);
         }
+    }
+    
+    factory = bus_registry_name_owner_changed (ibus->registry, name, old_name, new_name);
+
+    if (factory) {
+        bus_ibus_impl_add_factory (ibus, factory);   
     }
 }
 
@@ -452,26 +462,22 @@ _context_request_engine_cb (BusInputContext *context,
     if (engine_desc == NULL)
         return;
 
-    factory = g_object_get_data ((GObject *)engine_desc, "factory");
-    
-    comp = g_object_get_data ((GObject *)engine_desc, "component");
+    factory = bus_factory_proxy_get_from_engine (engine_desc);
+    comp = ibus_component_get_from_engine (engine_desc);
 
     if (comp == NULL)
         return;
 
-    if (!ibus_component_is_running (comp)) {
-        ibus_component_start (comp);
-
-        if (g_main_context_pending (NULL)) {
-            g_main_context_iteration (NULL, FALSE);
-            g_usleep (500);
-        }
-    }
-
-    factory = bus_component_get_factory (comp);
-
     if (factory == NULL) {
-        factory = bus_factory_proxy_new (comp, NULL);
+        if (!ibus_component_is_running (comp)) {
+            ibus_component_start (comp);
+
+            if (g_main_context_pending (NULL)) {
+                g_main_context_iteration (NULL, FALSE);
+                g_usleep (50);
+            }
+        }
+        factory = bus_factory_proxy_get_from_engine (engine_desc);
     }
 
     if (factory == NULL)
@@ -617,24 +623,7 @@ _ibus_create_input_context (BusIBusImpl     *ibus,
 }
 
 #if 0
-static void
-_factory_destroy_cb (BusFactoryProxy    *factory,
-                     BusIBusImpl        *ibus)
-{
-    g_assert (BUS_IS_IBUS_IMPL (ibus));
-    g_assert (BUS_IS_FACTORY_PROXY (factory));
 
-    g_hash_table_remove (ibus->factory_dict,
-                         ibus_proxy_get_path (IBUS_PROXY (factory)));
-
-    ibus->factory_list = g_list_remove (ibus->factory_list, factory);
-    g_object_unref (factory);
-
-    if (ibus->default_factory == factory) {
-        g_object_unref (ibus->default_factory);
-        ibus->default_factory = NULL;
-    }
-}
 
 #endif
 
@@ -737,6 +726,29 @@ _out:
     return NULL;
 }
 
+static void
+_factory_destroy_cb (BusFactoryProxy    *factory,
+                     BusIBusImpl        *ibus)
+{
+    g_assert (BUS_IS_IBUS_IMPL (ibus));
+    g_assert (BUS_IS_FACTORY_PROXY (factory));
+
+    ibus->factory_list = g_list_remove (ibus->factory_list, factory);
+    g_object_unref (factory);
+
+}
+
+static void
+bus_ibus_impl_add_factory (BusIBusImpl     *ibus,
+                           BusFactoryProxy *factory)
+{
+    g_assert (BUS_IS_IBUS_IMPL (ibus));
+    g_assert (BUS_IS_FACTORY_PROXY (factory));
+
+    ibus->factory_list = g_list_append (ibus->factory_list, factory);
+}
+
+
 static IBusMessage *
 _ibus_register_component (BusIBusImpl     *ibus,
                           IBusMessage     *message,
@@ -772,10 +784,11 @@ _ibus_register_component (BusIBusImpl     *ibus,
         return reply;
     }
 
+    bus_ibus_impl_add_factory (ibus, factory);
+
     engines = ibus_component_get_engines (component);
     g_list_foreach (engines, (GFunc) g_object_ref, NULL);
     ibus->engine_list = g_list_concat (ibus->engine_list, engines);
-    ibus->factory_list = g_list_append (ibus->factory_list, factory);
 
     reply = ibus_message_new_method_return (message);
     return reply;

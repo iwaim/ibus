@@ -52,6 +52,7 @@ struct _BusFactoryProxy {
     /* instance members */
 
     IBusComponent *component;
+    GList *engine_list;
 };
 
 struct _BusFactoryProxyClass {
@@ -65,7 +66,10 @@ BusFactoryProxy *bus_factory_proxy_new          (IBusComponent      *component,
 IBusComponent   *bus_factory_proxy_get_component(BusFactoryProxy    *factory);
 BusEngineProxy  *bus_factory_proxy_create_engine(BusFactoryProxy    *factory,
                                                  IBusEngineDesc     *desc);
-BusFactoryProxy *bus_component_get_factory      (IBusComponent      *component);
+BusFactoryProxy *bus_factory_proxy_get_from_component
+                                                (IBusComponent      *component);
+BusFactoryProxy *bus_factory_proxy_get_from_engine
+                                                (IBusEngineDesc     *desc);
 
 #if 0
 const gchar     *bus_factory_proxy_get_name     (BusFactoryProxy    *factory);

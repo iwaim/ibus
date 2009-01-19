@@ -95,7 +95,7 @@ void             ibus_component_add_observed_path
                                                  const gchar    *path,
                                                  gboolean        access_fs);
 void             ibus_component_add_engine      (IBusComponent  *component,
-                                                 IBusEngineDesc *desc);
+                                                 IBusEngineDesc *engine);
 GList           *ibus_component_get_engines     (IBusComponent  *component);
 void             ibus_component_output          (IBusComponent  *component,
                                                  GString        *output,
@@ -105,6 +105,7 @@ gboolean         ibus_component_check_modification
 gboolean         ibus_component_start           (IBusComponent  *component);
 gboolean         ibus_component_stop            (IBusComponent  *component);
 gboolean         ibus_component_is_running      (IBusComponent  *component);
+IBusComponent   *ibus_component_get_from_engine (IBusEngineDesc *engine);
 
 G_END_DECLS
 #endif

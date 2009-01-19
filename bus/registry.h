@@ -21,6 +21,7 @@
 #define __REGISTRY_H_
 
 #include <ibus.h>
+#include "factoryproxy.h"
 
 /*
  * Type macros.
@@ -73,6 +74,10 @@ gboolean         bus_registry_kill_component    (BusRegistry    *registry,
 IBusEngineDesc  *bus_registry_find_engine_by_name
                                                 (BusRegistry    *registry,
                                                  const gchar    *name);
+BusFactoryProxy *bus_registry_name_owner_changed(BusRegistry    *registry,
+                                                 const gchar    *name,
+                                                 const gchar    *old_name,
+                                                 const gchar    *new_name);
                                             
 G_END_DECLS
 #endif

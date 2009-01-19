@@ -27,23 +27,6 @@
 #include "dbusimpl.h"
 #include "ibusimpl.h"
 
-#define BUS_SERVER_GET_PRIVATE(o)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((o), BUS_TYPE_SERVER, BusServerPrivate))
-
-enum {
-    NEW_CONNECTION,
-    LAST_SIGNAL,
-};
-
-
-/* BusServerPriv */
-struct _BusServerPrivate {
-    GMainLoop   *loop;
-};
-typedef struct _BusServerPrivate BusServerPrivate;
-
-// static guint            _signals[LAST_SIGNAL] = { 0 };
-
 /* functions prototype */
 static void      bus_server_class_init  (BusServerClass     *klass);
 static void      bus_server_init        (BusServer          *server);
@@ -118,10 +101,7 @@ bus_server_run (BusServer *server)
 {
     g_assert (BUS_IS_SERVER (server));
 
-    BusServerPrivate *priv;
-    priv = BUS_SERVER_GET_PRIVATE (server);
-
-    g_main_loop_run (priv->loop);
+    g_main_loop_run (server->loop);
 }
 
 void
@@ -129,10 +109,7 @@ bus_server_quit (BusServer *server)
 {
     g_assert (BUS_IS_SERVER (server));
 
-    BusServerPrivate *priv;
-    priv = BUS_SERVER_GET_PRIVATE (server);
-
-    g_main_loop_quit (priv->loop);
+    g_main_loop_quit (server->loop);
 }
 
 static void
@@ -142,8 +119,6 @@ bus_server_class_init (BusServerClass *klass)
 
     parent_class = (IBusObjectClass *) g_type_class_peek_parent (klass);
 
-    g_type_class_add_private (klass, sizeof (BusServerPrivate));
-
     ibus_object_class->destroy = (IBusObjectDestroyFunc) bus_server_destroy;
 
     IBUS_SERVER_CLASS (klass)->new_connection = (IBusNewConnectionFunc) bus_server_new_connection;
@@ -152,29 +127,26 @@ bus_server_class_init (BusServerClass *klass)
 static void
 bus_server_init (BusServer *server)
 {
-    BusServerPrivate *priv;
-    priv = BUS_SERVER_GET_PRIVATE (server);
-
-    priv->loop = g_main_loop_new (NULL, FALSE);
+    server->loop = g_main_loop_new (NULL, FALSE);
 }
 
 static void
 bus_server_new_connection (BusServer     *server,
                            BusConnection *connection)
 {
+    g_assert (BUS_IS_SERVER (server));
     bus_dbus_impl_new_connection (BUS_DEFAULT_DBUS, connection);
 }
 
 static void
 bus_server_destroy (BusServer *server)
 {
-    BusServerPrivate *priv;
-    priv = BUS_SERVER_GET_PRIVATE (server);
-
-    while (g_main_loop_is_running (priv->loop)) {
-        g_main_loop_quit (priv->loop);
+    g_assert (BUS_IS_SERVER (server));
+    
+    while (g_main_loop_is_running (server->loop)) {
+        g_main_loop_quit (server->loop);
     }
-    g_main_loop_unref (priv->loop);
+    g_main_loop_unref (server->loop);
 
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (server));
 }

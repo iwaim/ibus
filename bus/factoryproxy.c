@@ -64,6 +64,7 @@ bus_factory_proxy_new (IBusComponent *component,
     g_assert (IBUS_IS_COMPONENT (component));
     
     BusFactoryProxy *factory;
+    GList *p;
 
     if (connection == NULL) {
         connection = bus_dbus_impl_get_connection_by_name (BUS_DEFAULT_DBUS, component->name);
@@ -78,9 +79,18 @@ bus_factory_proxy_new (IBusComponent *component,
                             "path", "/org/freedesktop/IBus/Factory",
                             "connection", connection,
                             NULL);
+    
     g_object_ref (component);
     factory->component = component;
     g_object_set_data ((GObject *)factory->component, "factory", factory);
+
+    factory->engine_list = ibus_component_get_engines (factory->component);
+
+    for (p = factory->engine_list; p != NULL; p = p->next) {
+        IBusEngineDesc *desc = (IBusEngineDesc *)p->data;
+        g_object_ref (desc);
+        g_object_set_data ((GObject *)desc, "factory", factory);
+    }
 
     return factory;
 }
@@ -105,6 +115,16 @@ bus_factory_proxy_init (BusFactoryProxy *factory)
 static void
 bus_factory_proxy_destroy (BusFactoryProxy *factory)
 {
+    GList *p;
+
+    for (p = factory->engine_list; p != NULL ; p = p->next) {
+        IBusEngineDesc *desc = (IBusEngineDesc *)p->data;
+        g_object_steal_data ((GObject *)desc, "factory");
+        g_object_unref (desc);
+    }
+    g_list_free (factory->engine_list);
+    factory->engine_list = NULL;
+
     if (factory->component) {
         g_object_steal_data ((GObject *)factory->component, "factory");
         g_object_unref (factory->component);
@@ -121,13 +141,26 @@ bus_factory_proxy_get_component (BusFactoryProxy *factory)
 }
 
 BusFactoryProxy *
-bus_component_get_factory (IBusComponent *component)
+bus_factory_proxy_get_from_component (IBusComponent *component)
 {
     IBUS_IS_COMPONENT (component);
 
     BusFactoryProxy *factory;
 
     factory = (BusFactoryProxy *) g_object_get_data ((GObject *)component, "factory");
+
+    return factory;
+}
+
+BusFactoryProxy *
+bus_factory_proxy_get_from_engine (IBusEngineDesc *desc)
+{
+
+    IBUS_IS_ENGINE_DESC (desc);
+
+    BusFactoryProxy *factory;
+
+    factory = (BusFactoryProxy *) g_object_get_data ((GObject *)desc, "factory");
 
     return factory;
 }
