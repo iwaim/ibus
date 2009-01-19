@@ -27,8 +27,6 @@
 #include "panelproxy.h"
 #include "inputcontext.h"
 
-#define BUS_IBUS_IMPL_GET_PRIVATE(o)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((o), BUS_TYPE_IBUS_IMPL, BusIBusImplPrivate))
 
 enum {
     LAST_SIGNAL,
@@ -37,27 +35,6 @@ enum {
 enum {
     PROP_0,
 };
-
-
-/* IBusIBusImplPriv */
-struct _BusIBusImplPrivate {
-    GHashTable *factory_dict;
-    GList *factory_list;
-    GList *contexts;
- 
-    IBusEngineDesc *default_engine;
-    GList *engine_list;
-    GList *component_list;
-
-    BusRegistry     *registry;
-
-    BusInputContext *focused_context;
-    BusPanelProxy   *panel;
-    IBusConfig      *config;
-    IBusHotkeyProfile *hotkey_profile;
-};
-
-typedef struct _BusIBusImplPrivate BusIBusImplPrivate;
 
 // static guint            _signals[LAST_SIGNAL] = { 0 };
 
@@ -126,8 +103,6 @@ bus_ibus_impl_class_init (BusIBusImplClass *klass)
 
     parent_class = (IBusServiceClass *) g_type_class_peek_parent (klass);
 
-    g_type_class_add_private (klass, sizeof (BusIBusImplPrivate));
-
     ibus_object_class->destroy = (IBusObjectDestroyFunc) bus_ibus_impl_destroy;
 
     IBUS_SERVICE_CLASS (klass)->ibus_message = (ServiceIBusMessageFunc) bus_ibus_impl_ibus_message;
@@ -141,12 +116,9 @@ _panel_destroy_cb (BusPanelProxy *panel,
     g_assert (BUS_IS_PANEL_PROXY (panel));
     g_assert (BUS_IS_IBUS_IMPL (ibus));
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
+    g_return_if_fail (ibus->panel == panel);
 
-    g_return_if_fail (priv->panel == panel);
-
-    priv->panel = NULL;
+    ibus->panel = NULL;
     g_object_unref (panel);
 }
 
@@ -159,14 +131,11 @@ bus_ibus_impl_set_trigger (BusIBusImpl *ibus,
     GValueArray *array;
     gint i;
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    ibus_hotkey_profile_remove_hotkey_by_event (priv->hotkey_profile,
+    ibus_hotkey_profile_remove_hotkey_by_event (ibus->hotkey_profile,
                                                 g_quark_from_static_string ("trigger"));
 
     if (value == NULL) {
-        ibus_hotkey_profile_add_hotkey (priv->hotkey_profile,
+        ibus_hotkey_profile_add_hotkey (ibus->hotkey_profile,
                                         IBUS_space,
                                         IBUS_CONTROL_MASK,
                                         g_quark_from_static_string ("trigger"));
@@ -182,7 +151,7 @@ bus_ibus_impl_set_trigger (BusIBusImpl *ibus,
        str = g_value_array_get_nth (array, i);
        g_return_if_fail (G_VALUE_TYPE (str) == G_TYPE_STRING);
 
-       ibus_hotkey_profile_add_hotkey_from_string (priv->hotkey_profile,
+       ibus_hotkey_profile_add_hotkey_from_string (ibus->hotkey_profile,
                                                    g_value_get_string (str),
                                                    g_quark_from_static_string ("trigger"));
    }
@@ -195,15 +164,12 @@ bus_ibus_impl_reload_config (BusIBusImpl *ibus)
 
     GValue value = { 0 };
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    if (priv->config == NULL) {
+    if (ibus->config == NULL) {
         bus_ibus_impl_set_trigger (ibus, NULL);
         return;
     }
 
-    if (ibus_config_get_value (priv->config, "general/hotkey", "trigger", &value)) {
+    if (ibus_config_get_value (ibus->config, "general/hotkey", "trigger", &value)) {
         bus_ibus_impl_set_trigger (ibus, &value);
         g_value_unset (&value);
     }
@@ -226,9 +192,6 @@ _config_value_changed_cb (IBusConfig  *config,
     g_assert (value);
     g_assert (BUS_IS_IBUS_IMPL (ibus));
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
     if (g_strcmp0 (section, "general/hotkey") != 0) {
         return;
     }
@@ -245,12 +208,9 @@ _config_destroy_cb (IBusConfig  *config,
     g_assert (IBUS_IS_CONFIG (config));
     g_assert (BUS_IS_IBUS_IMPL (ibus));
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
+    g_assert (ibus->config == config);
 
-    g_assert (priv->config == config);
-
-    priv->config = NULL;
+    ibus->config = NULL;
     g_object_unref (config);
 }
 
@@ -267,30 +227,27 @@ _dbus_name_owner_changed_cb (BusDBusImpl *dbus,
     g_assert (new_name != NULL);
     g_assert (BUS_IS_IBUS_IMPL (ibus));
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
     if (g_strcmp0 (name, IBUS_SERVICE_PANEL) == 0) {
         if (g_strcmp0 (new_name, "") != 0) {
             BusConnection *connection;
 
-            if (priv->panel != NULL) {
-                ibus_object_destroy (IBUS_OBJECT (priv->panel));
-                priv->panel = NULL;
+            if (ibus->panel != NULL) {
+                ibus_object_destroy (IBUS_OBJECT (ibus->panel));
+                ibus->panel = NULL;
             }
 
             connection = bus_dbus_impl_get_connection_by_name (BUS_DEFAULT_DBUS, new_name);
             g_return_if_fail (connection != NULL);
 
-            priv->panel = bus_panel_proxy_new (connection);
+            ibus->panel = bus_panel_proxy_new (connection);
 
-            g_signal_connect (priv->panel,
+            g_signal_connect (ibus->panel,
                               "destroy",
                               G_CALLBACK (_panel_destroy_cb),
                               ibus);
 
-            if (priv->focused_context != NULL) {
-                bus_panel_proxy_focus_in (priv->panel, priv->focused_context);
+            if (ibus->focused_context != NULL) {
+                bus_panel_proxy_focus_in (ibus->panel, ibus->focused_context);
             }
         }
     }
@@ -298,26 +255,26 @@ _dbus_name_owner_changed_cb (BusDBusImpl *dbus,
         if (g_strcmp0 (new_name, "") != 0) {
             BusConnection *connection;
 
-            if (priv->config != NULL) {
-                ibus_object_destroy (IBUS_OBJECT (priv->config));
-                priv->config = NULL;
+            if (ibus->config != NULL) {
+                ibus_object_destroy (IBUS_OBJECT (ibus->config));
+                ibus->config = NULL;
             }
 
             connection = bus_dbus_impl_get_connection_by_name (BUS_DEFAULT_DBUS, new_name);
             g_return_if_fail (connection != NULL);
 
-            priv->config = g_object_new (IBUS_TYPE_CONFIG,
+            ibus->config = g_object_new (IBUS_TYPE_CONFIG,
                                          "name", NULL,
                                          "path", IBUS_PATH_CONFIG,
                                          "connection", connection,
                                          NULL);
 
-            g_signal_connect (priv->config,
+            g_signal_connect (ibus->config,
                               "value-changed",
                               G_CALLBACK (_config_value_changed_cb),
                               ibus);
 
-            g_signal_connect (priv->config,
+            g_signal_connect (ibus->config,
                               "destroy",
                               G_CALLBACK (_config_destroy_cb),
                               ibus);
@@ -330,23 +287,20 @@ _dbus_name_owner_changed_cb (BusDBusImpl *dbus,
 static void
 bus_ibus_impl_init (BusIBusImpl *ibus)
 {
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    priv->factory_dict = g_hash_table_new_full (g_str_hash,
+    ibus->factory_dict = g_hash_table_new_full (g_str_hash,
                                                 g_str_equal,
                                                 NULL,
                                                 (GDestroyNotify) g_object_unref);
 
-    priv->registry = bus_registry_new ();
-    priv->engine_list = NULL;
-    priv->default_engine = NULL;
-    priv->contexts = NULL;
-    priv->focused_context = NULL;
-    priv->panel = NULL;
-    priv->config = NULL;
+    ibus->registry = bus_registry_new ();
+    ibus->engine_list = NULL;
+    ibus->default_engine = NULL;
+    ibus->contexts = NULL;
+    ibus->focused_context = NULL;
+    ibus->panel = NULL;
+    ibus->config = NULL;
 
-    priv->hotkey_profile = ibus_hotkey_profile_new ();
+    ibus->hotkey_profile = ibus_hotkey_profile_new ();
 
     bus_ibus_impl_reload_config (ibus);
 
@@ -359,31 +313,28 @@ bus_ibus_impl_init (BusIBusImpl *ibus)
 static void
 bus_ibus_impl_destroy (BusIBusImpl *ibus)
 {
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
 #if 0
-    for (p = priv->factory_list; p != NULL; p = p->next) {
+    for (p = ibus->factory_list; p != NULL; p = p->next) {
         g_signal_handlers_disconnect_by_func (p->data,
                                               G_CALLBACK (_factory_destroy_cb),
                                               ibus);
     }
-    g_list_free (priv->factory_list);
-    priv->factory_list = NULL;
+    g_list_free (ibus->factory_list);
+    ibus->factory_list = NULL;
 #endif
 
-    g_list_foreach (priv->engine_list, (GFunc) g_object_unref, NULL);
-    g_list_free (priv->engine_list);
-    priv->engine_list = NULL;
+    g_list_foreach (ibus->engine_list, (GFunc) g_object_unref, NULL);
+    g_list_free (ibus->engine_list);
+    ibus->engine_list = NULL;
 
-    if (priv->factory_dict != NULL) {
-        g_hash_table_destroy (priv->factory_dict);
-        priv->factory_dict = NULL;
+    if (ibus->factory_dict != NULL) {
+        g_hash_table_destroy (ibus->factory_dict);
+        ibus->factory_dict = NULL;
     }
 
-    if (priv->hotkey_profile != NULL) {
-        g_object_unref (priv->hotkey_profile);
-        priv->hotkey_profile = NULL;
+    if (ibus->hotkey_profile != NULL) {
+        g_object_unref (ibus->hotkey_profile);
+        ibus->hotkey_profile = NULL;
     }
 
     bus_server_quit (BUS_DEFAULT_SERVER);
@@ -439,9 +390,6 @@ _ibus_get_address (BusIBusImpl     *ibus,
     const gchar *address;
     IBusMessage *reply;
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
     address = ibus_server_get_address (IBUS_SERVER (BUS_DEFAULT_SERVER));
 
     reply = ibus_message_new_method_return (message);
@@ -456,10 +404,7 @@ static void
 _engine_destroy_cb (IBusEngineDesc *engine,
                     BusIBusImpl    *ibus)
 {
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    if (engine == priv->default_engine) {
+    if (engine == ibus->default_engine) {
        bus_ibus_impl_set_default_engine (ibus, NULL); 
     }
 }
@@ -469,19 +414,16 @@ static void
 bus_ibus_impl_set_default_engine (BusIBusImpl    *ibus,
                                   IBusEngineDesc *engine)
 {
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    if (priv->default_engine != NULL) {
-        g_signal_handlers_disconnect_by_func (priv->default_engine, _engine_destroy_cb, ibus);
-        g_object_unref (priv->default_engine);
-        priv->default_engine = NULL;
+    if (ibus->default_engine != NULL) {
+        g_signal_handlers_disconnect_by_func (ibus->default_engine, _engine_destroy_cb, ibus);
+        g_object_unref (ibus->default_engine);
+        ibus->default_engine = NULL;
     }
 
     if (engine != NULL) {
-        priv->default_engine = engine;
-        g_object_ref (priv->default_engine);
-        g_signal_connect (priv->default_engine, "destroy", G_CALLBACK (_engine_destroy_cb), ibus);
+        ibus->default_engine = engine;
+        g_object_ref (ibus->default_engine);
+        g_signal_connect (ibus->default_engine, "destroy", G_CALLBACK (_engine_destroy_cb), ibus);
     }
 }
 
@@ -490,25 +432,21 @@ _context_request_engine_cb (BusInputContext *context,
                             gchar           *engine_name,
                             BusIBusImpl     *ibus)
 {
-    
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
     IBusEngineDesc *engine_desc;
     IBusComponent *comp;
     BusFactoryProxy *factory;
     BusEngineProxy *engine;
     
     if (engine_name == NULL) {
-        if (priv->default_engine == NULL) {
-            if (priv->engine_list) {
-                bus_ibus_impl_set_default_engine (ibus, (IBusEngineDesc *)priv->engine_list->data);
+        if (ibus->default_engine == NULL) {
+            if (ibus->engine_list) {
+                bus_ibus_impl_set_default_engine (ibus, (IBusEngineDesc *)ibus->engine_list->data);
             }
         }
-        engine_desc = priv->default_engine;
+        engine_desc = ibus->default_engine;
     }
     else {
-        engine_desc = bus_registry_find_engine_by_name (priv->registry, engine_name);
+        engine_desc = bus_registry_find_engine_by_name (ibus->registry, engine_name);
     }
 
     if (engine_desc == NULL)
@@ -568,19 +506,16 @@ _context_focus_in_cb (BusInputContext *context,
     g_assert (BUS_IS_IBUS_IMPL (ibus));
     g_assert (BUS_IS_INPUT_CONTEXT (context));
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    if (priv->focused_context) {
-        bus_input_context_focus_out (priv->focused_context);
-        g_object_unref (priv->focused_context);
+    if (ibus->focused_context) {
+        bus_input_context_focus_out (ibus->focused_context);
+        g_object_unref (ibus->focused_context);
     }
 
     g_object_ref (context);
-    priv->focused_context = context;
+    ibus->focused_context = context;
 
-    if (priv->panel != NULL) {
-        bus_panel_proxy_focus_in (priv->panel, priv->focused_context);
+    if (ibus->panel != NULL) {
+        bus_panel_proxy_focus_in (ibus->panel, ibus->focused_context);
     }
 
 }
@@ -592,19 +527,16 @@ _context_focus_out_cb (BusInputContext    *context,
     g_assert (BUS_IS_IBUS_IMPL (ibus));
     g_assert (BUS_IS_INPUT_CONTEXT (context));
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    if (priv->focused_context != context)
+    if (ibus->focused_context != context)
         return;
 
-    if (priv->panel != NULL) {
-        bus_panel_proxy_focus_out (priv->panel, priv->focused_context);
+    if (ibus->panel != NULL) {
+        bus_panel_proxy_focus_out (ibus->panel, ibus->focused_context);
     }
 
-    if (priv->focused_context) {
-        g_object_unref (priv->focused_context);
-        priv->focused_context = NULL;
+    if (ibus->focused_context) {
+        g_object_unref (ibus->focused_context);
+        ibus->focused_context = NULL;
     }
 }
 
@@ -615,14 +547,11 @@ _context_destroy_cb (BusInputContext    *context,
     g_assert (BUS_IS_IBUS_IMPL (ibus));
     g_assert (BUS_IS_INPUT_CONTEXT (context));
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    if (context == priv->focused_context) {
+    if (context == ibus->focused_context) {
 
     }
 
-    priv->contexts = g_list_remove (priv->contexts, context);
+    ibus->contexts = g_list_remove (ibus->contexts, context);
     g_object_unref (context);
 }
 
@@ -642,9 +571,6 @@ _ibus_create_input_context (BusIBusImpl     *ibus,
     BusInputContext *context;
     const gchar *path;
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
     if (!ibus_message_get_args (message,
                                 &error,
                                 G_TYPE_STRING, &client,
@@ -657,7 +583,7 @@ _ibus_create_input_context (BusIBusImpl     *ibus,
     }
 
     context = bus_input_context_new (connection, client);
-    priv->contexts = g_list_append (priv->contexts, context);
+    ibus->contexts = g_list_append (ibus->contexts, context);
 
     static const struct {
         gchar *name;
@@ -698,18 +624,15 @@ _factory_destroy_cb (BusFactoryProxy    *factory,
     g_assert (BUS_IS_IBUS_IMPL (ibus));
     g_assert (BUS_IS_FACTORY_PROXY (factory));
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    g_hash_table_remove (priv->factory_dict,
+    g_hash_table_remove (ibus->factory_dict,
                          ibus_proxy_get_path (IBUS_PROXY (factory)));
 
-    priv->factory_list = g_list_remove (priv->factory_list, factory);
+    ibus->factory_list = g_list_remove (ibus->factory_list, factory);
     g_object_unref (factory);
 
-    if (priv->default_factory == factory) {
-        g_object_unref (priv->default_factory);
-        priv->default_factory = NULL;
+    if (ibus->default_factory == factory) {
+        g_object_unref (ibus->default_factory);
+        ibus->default_factory = NULL;
     }
 }
 
@@ -747,9 +670,6 @@ _ibus_register_factories (BusIBusImpl     *ibus,
     IBusFactoryInfo *info;
     gint i;
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
     retval = ibus_message_iter_init (message, &iter);
     g_assert (retval);
 
@@ -772,7 +692,7 @@ _ibus_register_factories (BusIBusImpl     *ibus,
         g_array_append_val (info_array, info);
 
 
-        if (g_hash_table_lookup (priv->factory_dict, info->path) != NULL) {
+        if (g_hash_table_lookup (ibus->factory_dict, info->path) != NULL) {
             reply = ibus_message_new_error_printf (message,
                                                    DBUS_ERROR_FAILED,
                                                    "Factory %s has been registered!",
@@ -787,12 +707,12 @@ _ibus_register_factories (BusIBusImpl     *ibus,
 
         factory = bus_factory_proxy_new (info, connection);
 
-        g_hash_table_insert (priv->factory_dict,
+        g_hash_table_insert (ibus->factory_dict,
                              (gpointer) ibus_proxy_get_path (IBUS_PROXY (factory)),
                              factory);
 
         g_object_ref (factory);
-        priv->factory_list = g_list_append (priv->factory_list, factory);
+        ibus->factory_list = g_list_append (ibus->factory_list, factory);
 
         g_signal_connect (factory,
                           "destroy",
@@ -802,7 +722,7 @@ _ibus_register_factories (BusIBusImpl     *ibus,
 
     reply = ibus_message_new_method_return (message);
 
-    priv->factory_list = g_list_sort (priv->factory_list, (GCompareFunc) _factory_cmp);
+    ibus->factory_list = g_list_sort (ibus->factory_list, (GCompareFunc) _factory_cmp);
 
 _out:
     for (i = 0; i < info_array->len; i++) {
@@ -822,9 +742,6 @@ _ibus_register_component (BusIBusImpl     *ibus,
                           IBusMessage     *message,
                           BusConnection   *connection)
 {
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-    
     IBusMessage *reply;
     IBusError *error;
     gboolean retval;
@@ -857,8 +774,8 @@ _ibus_register_component (BusIBusImpl     *ibus,
 
     engines = ibus_component_get_engines (component);
     g_list_foreach (engines, (GFunc) g_object_ref, NULL);
-    priv->engine_list = g_list_concat (priv->engine_list, engines);
-    priv->factory_list = g_list_append (priv->factory_list, factory);
+    ibus->engine_list = g_list_concat (ibus->engine_list, engines);
+    ibus->factory_list = g_list_append (ibus->factory_list, factory);
 
     reply = ibus_message_new_method_return (message);
     return reply;
@@ -874,15 +791,12 @@ _ibus_list_factories (BusIBusImpl     *ibus,
     IBusMessageIter iter, sub_iter;
     GList *p;
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
     reply = ibus_message_new_method_return (message);
 
     ibus_message_iter_init_append (reply, &iter);
     ibus_message_iter_open_container (&iter, IBUS_TYPE_ARRAY, "v", &sub_iter);
 
-    for (p = priv->factory_list; p != NULL; p = p->next) {
+    for (p = ibus->factory_list; p != NULL; p = p->next) {
         BusFactoryProxy *factory;
         IBusFactoryInfo *info;
 
@@ -913,15 +827,12 @@ _ibus_list_engines (BusIBusImpl   *ibus,
     IBusMessageIter iter, sub_iter;
     GList *engines, *p;
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
     reply = ibus_message_new_method_return (message);
 
     ibus_message_iter_init_append (reply, &iter);
     ibus_message_iter_open_container (&iter, IBUS_TYPE_ARRAY, "v", &sub_iter);
 
-    engines = bus_registry_get_engines (priv->registry);
+    engines = bus_registry_get_engines (ibus->registry);
     for (p = engines; p != NULL; p = p->next) {
         ibus_message_iter_append (&sub_iter, IBUS_TYPE_ENGINE_DESC, &(p->data));
     }
@@ -940,15 +851,12 @@ _ibus_list_active_engines (BusIBusImpl   *ibus,
     IBusMessageIter iter, sub_iter;
     GList *p;
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
     reply = ibus_message_new_method_return (message);
 
     ibus_message_iter_init_append (reply, &iter);
     ibus_message_iter_open_container (&iter, IBUS_TYPE_ARRAY, "v", &sub_iter);
 
-    for (p = priv->engine_list; p != NULL; p = p->next) {
+    for (p = ibus->engine_list; p != NULL; p = p->next) {
         ibus_message_iter_append (&sub_iter, IBUS_TYPE_ENGINE_DESC, &(p->data));
     }
     ibus_message_iter_close_container (&iter, &sub_iter);
@@ -962,9 +870,6 @@ _ibus_kill (BusIBusImpl     *ibus,
             BusConnection   *connection)
 {
     IBusMessage *reply;
-
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
 
     reply = ibus_message_new_method_return (message);
     ibus_connection_send (IBUS_CONNECTION (connection), reply);
@@ -1052,19 +957,16 @@ bus_ibus_impl_get_default_factory (BusIBusImpl *ibus)
 {
     g_assert (BUS_IS_IBUS_IMPL (ibus));
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    if (priv->default_factory == NULL && priv->factory_list != NULL) {
-        priv->default_factory = BUS_FACTORY_PROXY (priv->factory_list->data);
-        g_object_ref (priv->default_factory);
+    if (ibus->default_factory == NULL && ibus->factory_list != NULL) {
+        ibus->default_factory = BUS_FACTORY_PROXY (ibus->factory_list->data);
+        g_object_ref (ibus->default_factory);
     }
 
-    if (priv->default_factory == NULL) {
+    if (ibus->default_factory == NULL) {
         /* TODO */
     }
 
-    return priv->default_factory;
+    return ibus->default_factory;
 }
 
 BusFactoryProxy *
@@ -1075,21 +977,19 @@ bus_ibus_impl_get_next_factory (BusIBusImpl     *ibus,
     g_assert (BUS_IS_FACTORY_PROXY (factory) || factory == NULL);
 
     GList *link;
-    BusIBusImplPrivate *priv;
 
     if (factory == NULL) {
         return bus_ibus_impl_get_default_factory (ibus);
     }
 
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-    link = g_list_find (priv->factory_list, factory);
+    link = g_list_find (ibus->factory_list, factory);
 
     g_assert (link != NULL);
 
     link = link->next;
 
     if (link != NULL) {
-        link = priv->factory_list;
+        link = ibus->factory_list;
     }
 
     return BUS_FACTORY_PROXY (link->data);
@@ -1103,21 +1003,19 @@ bus_ibus_impl_get_previous_factory (BusIBusImpl     *ibus,
     g_assert (BUS_IS_FACTORY_PROXY (factory) || factory == NULL);
 
     GList *link;
-    BusIBusImplPrivate *priv;
 
     if (factory == NULL) {
         return bus_ibus_impl_get_default_factory (ibus);
     }
 
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-    link = g_list_find (priv->factory_list, factory);
+    link = g_list_find (ibus->factory_list, factory);
 
     g_assert (link != NULL);
 
     link = link->prev;
 
     if (link != NULL) {
-        link = g_list_last (priv->factory_list);
+        link = g_list_last (ibus->factory_list);
     }
 
     return BUS_FACTORY_PROXY (link->data);
@@ -1132,10 +1030,7 @@ bus_ibus_impl_lookup_factory (BusIBusImpl *ibus,
 
     BusFactoryProxy *factory;
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    factory = (BusFactoryProxy *) g_hash_table_lookup (priv->factory_dict, path);
+    factory = (BusFactoryProxy *) g_hash_table_lookup (ibus->factory_dict, path);
 
     return factory;
 }
@@ -1145,8 +1040,5 @@ bus_ibus_impl_get_hotkey_profile (BusIBusImpl *ibus)
 {
     g_assert (BUS_IS_IBUS_IMPL (ibus));
 
-    BusIBusImplPrivate *priv;
-    priv = BUS_IBUS_IMPL_GET_PRIVATE (ibus);
-
-    return priv->hotkey_profile;
+    return ibus->hotkey_profile;
 }

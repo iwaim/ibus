@@ -22,7 +22,10 @@
 
 #include <ibus.h>
 #include "connection.h"
+#include "inputcontext.h"
+#include "registry.h"
 #include "factoryproxy.h"
+#include "panelproxy.h"
 
 /*
  * Type macros.
@@ -55,6 +58,22 @@ typedef struct _BusIBusImplClass BusIBusImplClass;
 struct _BusIBusImpl {
     IBusService parent;
     /* instance members */
+    
+    GHashTable *factory_dict;
+    GList *factory_list;
+    GList *contexts;
+ 
+    IBusEngineDesc *default_engine;
+    GList *engine_list;
+    GList *component_list;
+
+    BusRegistry     *registry;
+
+    BusInputContext *focused_context;
+    BusPanelProxy   *panel;
+    IBusConfig      *config;
+    IBusHotkeyProfile *hotkey_profile;
+
 };
 
 struct _BusIBusImplClass {
