@@ -747,9 +747,11 @@ ibus_bus_register_component (IBusBus       *bus,
 GList *
 ibus_bus_list_engines (IBusBus *bus)
 {
+    return NULL;
 }
 
 GList *
 ibus_bus_list_active_engines (IBusBus *bus)
 {
+    return NULL;
 }
