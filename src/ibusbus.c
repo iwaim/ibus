@@ -482,11 +482,16 @@ ibus_bus_call (IBusBus      *bus,
 
     while (type != G_TYPE_INVALID) {
         va_arg (args, gpointer);
-        type = va_arg (args, gint);
+        type = va_arg (args, GType);
     }
 
-    type = va_arg (args, gint);
-    retval = ibus_message_get_args_valist (reply, &error, type, args);
+    type = va_arg (args, GType);
+    if (type != G_TYPE_INVALID) {
+        retval = ibus_message_get_args_valist (reply, &error, type, args);
+    }
+    else {
+        retval = TRUE;
+    }
     va_end (args);
 
     ibus_message_unref (reply);
@@ -684,7 +689,22 @@ ibus_bus_register_component (IBusBus       *bus,
 {
     g_assert (IBUS_IS_BUS (bus));
     g_assert (IBUS_IS_COMPONENT (component));
+   
+    gboolean result;
+    
+    result = ibus_bus_call (bus,
+                            IBUS_SERVICE_IBUS,
+                            IBUS_PATH_IBUS,
+                            IBUS_INTERFACE_IBUS,
+                            "RegisterComponent",
+                            IBUS_TYPE_COMPONENT, &component,
+                            G_TYPE_INVALID,
+                            G_TYPE_INVALID);
 
+    return result;
+
+
+#if 0
     IBusMessage *message, *reply;
     IBusError *error;
 
@@ -721,5 +741,15 @@ ibus_bus_register_component (IBusBus       *bus,
     }
 
     return TRUE;
+#endif
 }
 
+GList *
+ibus_bus_list_engines (IBusBus *bus)
+{
+}
+
+GList *
+ibus_bus_list_active_engines (IBusBus *bus)
+{
+}

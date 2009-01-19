@@ -87,6 +87,9 @@ IBusInputContext
                                          const gchar    *client_name);
 gboolean     ibus_bus_register_component(IBusBus        *bus,
                                          IBusComponent  *component);
+GList       *ibus_bus_list_engines      (IBusBus        *bus);
+GList       *ibus_bus_list_active_engines
+                                        (IBusBus        *bus);
 
 G_END_DECLS
 #endif

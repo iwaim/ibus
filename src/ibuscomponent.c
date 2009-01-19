@@ -162,6 +162,9 @@ ibus_component_serialize (IBusComponent   *component,
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &component->description);
     g_return_val_if_fail (retval, FALSE);
     
+    retval = ibus_message_iter_append (iter, G_TYPE_STRING, &component->version);
+    g_return_val_if_fail (retval, FALSE);
+    
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &component->license);
     g_return_val_if_fail (retval, FALSE);
     

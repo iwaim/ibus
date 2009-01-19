@@ -420,8 +420,13 @@ ibus_message_get_args_valist (IBusMessage *message,
 
     retval = ibus_message_iter_init (message, &iter);
 
-    if (!retval)
+    if (!retval) {
+        if (error) {
+            *error = ibus_error_from_printf (DBUS_ERROR_INVALID_ARGS,
+                                             "Message does not have arguments!");
+        }
         return FALSE;
+    }
 
     va_copy (backup_args, va_args);
 

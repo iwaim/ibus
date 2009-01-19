@@ -658,7 +658,7 @@ _dbus_request_name (BusDBusImpl     *dbus,
                          (gpointer )bus_connection_add_name (connection, name),
                          connection);
     reply_message = ibus_message_new_method_return (message);
-    ibus_message_append_args (message,
+    ibus_message_append_args (reply_message,
                               G_TYPE_UINT, &retval,
                               G_TYPE_INVALID);
 
