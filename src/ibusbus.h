@@ -21,9 +21,10 @@
 #define __IBUS_BUS_H_
 
 #include <dbus/dbus.h>
-#include "ibusfactory.h"
 #include "ibusinputcontext.h"
 #include "ibusconfig.h"
+#include "ibuscomponent.h"
+
 
 /*
  * Type macros.
@@ -84,10 +85,8 @@ IBusInputContext
             *ibus_bus_create_input_context
                                         (IBusBus        *bus,
                                          const gchar    *client_name);
-gboolean     ibus_bus_register_factory  (IBusBus        *bus,
-                                         IBusFactory    *factory);
-gboolean     ibus_bus_register_factories(IBusBus        *bus,
-                                         GList          *factory_list);
+gboolean     ibus_bus_register_component(IBusBus        *bus,
+                                         IBusComponent  *component);
 
 G_END_DECLS
 #endif

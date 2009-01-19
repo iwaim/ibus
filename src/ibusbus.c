@@ -673,66 +673,32 @@ ibus_bus_get_connection (IBusBus *bus)
     g_assert (IBUS_IS_BUS (bus));
 
     IBusBusPrivate *priv;
-
     priv = IBUS_BUS_GET_PRIVATE (bus);
+
     return priv->connection;
 }
 
-#if 0
 gboolean
-ibus_bus_register_factory (IBusBus     *bus,
-                           IBusFactory *factory)
+ibus_bus_register_component (IBusBus       *bus,
+                             IBusComponent *component)
 {
     g_assert (IBUS_IS_BUS (bus));
-    g_assert (IBUS_IS_FACTORY (factory));
+    g_assert (IBUS_IS_COMPONENT (component));
 
-    GList *list = g_list_append (NULL, factory);
-    gboolean retval = ibus_bus_register_factories (bus, list);
-    g_list_free (list);
-
-    return retval;
-}
-
-gboolean
-ibus_bus_register_factories (IBusBus *bus,
-                             GList   *factory_list)
-{
-    g_assert (IBUS_IS_BUS (bus));
-    g_assert (factory_list);
+    IBusMessage *message, *reply;
+    IBusError *error;
 
     IBusBusPrivate *priv;
     priv = IBUS_BUS_GET_PRIVATE (bus);
-
-    GList *p;
-    IBusMessage *message, *reply;
-    IBusMessageIter iter, array_iter;
-    IBusError *error;
-    gboolean retval;
-
+    
     message = ibus_message_new_method_call (IBUS_SERVICE_IBUS,
                                             IBUS_PATH_IBUS,
                                             IBUS_INTERFACE_IBUS,
-                                            "RegisterFactories");
+                                            "RegisterComponent");
 
-    ibus_message_iter_init_append (message, &iter);
-    retval = ibus_message_iter_open_container (&iter,
-                                               IBUS_TYPE_ARRAY,
-                                               "v",
-                                               &array_iter);
-    if (!retval) {
-        ibus_message_unref (message);
-        return FALSE;
-    }
-
-    for (p = factory_list; p != NULL; p = p->next) {
-        IBusFactoryInfo *info = ibus_factory_get_info (IBUS_FACTORY (p->data));
-        retval = ibus_message_iter_append (&array_iter, IBUS_TYPE_FACTORY_INFO, &info);
-        if (!retval) {
-            ibus_message_unref (message);
-            return FALSE;
-        }
-    }
-    ibus_message_iter_close_container (&iter, &array_iter);
+    ibus_message_append_args (message,
+                              IBUS_TYPE_COMPONENT, &component,
+                              G_TYPE_INVALID);
 
     reply = ibus_connection_send_with_reply_and_block (
                                         priv->connection,
@@ -740,7 +706,7 @@ ibus_bus_register_factories (IBusBus *bus,
                                         -1,
                                         &error);
     ibus_message_unref (message);
-
+    
     if (reply == NULL) {
         g_warning ("%s : %s", error->name, error->message);
         ibus_error_free (error);
@@ -754,28 +720,6 @@ ibus_bus_register_factories (IBusBus *bus,
         return FALSE;
     }
 
-    ibus_message_unref (reply);
     return TRUE;
 }
 
-#endif
-
-#if 0
-IBusConfig *
-ibus_bus_get_config (IBusBus *bus)
-{
-    g_assert (IBUS_IS_BUS (bus));
-
-    IBusBusPrivate *priv;
-
-    priv = IBUS_BUS_GET_PRIVATE (bus);
-
-    if (priv->config == NULL) {
-        if (ibus_bus_is_connected (bus)) {
-
-        }
-    }
-
-    return priv->config;
-}
-#endif
