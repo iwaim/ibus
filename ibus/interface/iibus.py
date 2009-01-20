@@ -57,29 +57,14 @@ class IIBus(dbus.service.Object):
     def UnregisterFactories(self, object_paths, dbusconn): pass
 
     # general methods
+    @method(in_signature="av")
+    def RegisterComponent(self, components, dbusconn): pass
+
     @method(out_signature="av")
-    def ListFactories(self, dbusconn): pass
-
-    @method(in_signature="o", out_signature="av")
-    def GetFactoryInfo(self, factory_path, dbusconn): pass
-
-    @method(in_signature="o")
-    def SetFactory(self, factory_path, dbusconn): pass
-
-    @method(out_signature="a(sssssssb)")
-    def RegisterListEngines(self, dbusconn): pass
-
-    @method()
-    def RegisterReloadEngines(self, dbusconn): pass
-
-    @method(in_signature="ss")
-    def RegisterStartEngine(self, lang, name, dbusconn): pass
-
-    @method(in_signature="ss")
-    def RegisterRestartEngine(self, lang, name, dbusconn): pass
-
-    @method(in_signature="ss")
-    def RegisterStopEngine(self, lang, name, dbusconn): pass
+    def ListEngines(self, dbusconn): pass
+    
+    @method(out_signature="av")
+    def ListActiveEngines(self, dbusconn): pass
 
     @async_method()
     def Kill(self, dbusconn, reply_cb, error_cb): pass

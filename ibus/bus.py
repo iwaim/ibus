@@ -110,13 +110,17 @@ class Bus(object.Object):
         return common.IBUS_ADDR
 
     # define ibus methods
-    def register_factories(self, factroy_infos):
-        factories = map(serializable.serialize_object, factroy_infos)
-        return self.__ibus.RegisterFactories(factories)
+    def register_component(self, component):
+        component = serializable.serialize_object(component)
+        return self.__ibus.RegisterComponent(component)
 
-    def list_factories(self):
-        factories = self.__ibus.ListFactories()
-        return map(serializable.deserialize_object, factories)
+    def list_engines(self):
+        engines = self.__ibus.ListEngines()
+        return map(serializable.deserialize_object, engines)
+    
+    def list_active_engines(self):
+        engines = self.__ibus.ListActiveEngines()
+        return map(serializable.deserialize_object, engines)
 
     def create_input_context(self, client_name):
         return self.__ibus.CreateInputContext(client_name)

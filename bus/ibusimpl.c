@@ -922,15 +922,6 @@ bus_ibus_impl_ibus_message (BusIBusImpl     *ibus,
         { IBUS_INTERFACE_IBUS, "SetFactory",            _ibus_set_factory },
         { IBUS_INTERFACE_IBUS, "ListEngines",           _ibus_list_engines },
         { IBUS_INTERFACE_IBUS, "ListActiveEngines",     _ibus_list_active_engines },
-#if 0
-        { IBUS_INTERFACE_IBUS, "GetInputContextStates", _ibus_get_address },
-
-        { IBUS_INTERFACE_IBUS, "RegisterListEngines",   _ibus_get_address },
-        { IBUS_INTERFACE_IBUS, "RegisterReloadEngines", _ibus_get_address },
-        { IBUS_INTERFACE_IBUS, "RegisterStartEngine",   _ibus_get_address },
-        { IBUS_INTERFACE_IBUS, "RegisterRestartEngine", _ibus_get_address },
-        { IBUS_INTERFACE_IBUS, "RegisterStopEngine",    _ibus_get_address },
-#endif
         { IBUS_INTERFACE_IBUS, "Kill",                  _ibus_kill },
         { NULL, NULL, NULL }
     };

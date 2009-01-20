@@ -63,11 +63,11 @@ class IInputContext(dbus.service.Object):
     @method(in_signature="u")
     def SetCapabilities(self, caps): pass
 
-    @method(out_signature="so")
-    def GetFactory(self): pass
+    @method(out_signature="v")
+    def GetEngineDesc(self): pass
 
-    @method(in_signature="so")
-    def SetFactory(self, unique_name, factory_path): pass
+    @method(in_signature="s")
+    def SetEngine(self, engine_name): pass
 
     @method()
     def Destroy(self): pass

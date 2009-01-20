@@ -204,10 +204,13 @@ class InputContext(object.Object):
         caps = dbus.UInt32(caps)
         return self.__context.SetCapabilities(caps)
 
-    def get_factory_info(self):
-        info = self.__context.GetFactoryInfo()
-        info = serializable.deserialize_object(info)
-        return info
+    def get_engine_desc(self):
+        try:
+            engine = self.__context.GetEngineDesc()
+            engine = serializable.deserialize_object(info)
+            return engine
+        except:
+            return None
 
     def set_factory(self, factory_path):
         path = dbus.ObjectPath(factory_path)
