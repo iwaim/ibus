@@ -456,7 +456,19 @@ _context_request_engine_cb (BusInputContext *context,
         engine_desc = ibus->default_engine;
     }
     else {
-        engine_desc = bus_registry_find_engine_by_name (ibus->registry, engine_name);
+        GList *p;
+        for (p = ibus->engine_list; p != NULL; p = p->next) {
+            engine_desc = (IBusEngineDesc *)p->data;
+            if (g_strcmp0 (engine_desc->name, engine_name) == 0)
+                break;
+        }
+
+        if (p == NULL) {
+            engine_desc = bus_registry_find_engine_by_name (ibus->registry, engine_name);
+        }
+        else {
+            engine_desc = NULL;
+        }
     }
 
     if (engine_desc == NULL)

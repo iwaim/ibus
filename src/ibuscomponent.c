@@ -613,12 +613,14 @@ ibus_component_start (IBusComponent *component)
     gboolean retval;
     GError *error;
 
+    error = NULL;
     if (!g_shell_parse_argv (component->exec, &argc, &argv, &error)) {
         g_warning ("Can not parse component %s exec: %s", component->name, error->message);
         g_error_free (error);
         return FALSE;
     }
 
+    error = NULL;
     retval = g_spawn_async (NULL, argv, NULL,
                             G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL,
                             &(component->pid), &error);

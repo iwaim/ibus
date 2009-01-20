@@ -26,6 +26,8 @@ __all__ = (
 import dbus
 from exception import IBusException
 from serializable import *
+from enginedesc import *
+from observedpath import *
 
 class Component(Serializable):
     __NAME__ = "IBusComponent"
@@ -66,6 +68,12 @@ class Component(Serializable):
     def get_textdomain(self):
         return self.__textdomain
 
+    def get_observed_paths(self):
+        return self.__observed_paths[:]
+
+    def get_engines(self):
+        return self.__engines[:]
+
     name        = property(get_name)
     description = property(get_description)
     version     = property(get_version)
@@ -74,6 +82,15 @@ class Component(Serializable):
     homepage    = property(get_homepage)
     _exec       = property(get_exec)
     textdomain  = property(get_textdomain)
+    observed_paths = property(get_observed_paths)
+    engines     = property(get_engines)
+
+    def add_observed_path(self, path):
+        self.__observed_paths.append(ObservedPath(path))
+
+    def add_engine(self, name="", longname="", description="", language="", license="", author="", icon="", layout=""):
+        engine = EngineDesc(name, longname, description, language, license, author, icon, layout)
+        self.__engines.append(engine)
 
     def serialize(self, struct):
         super(Component, self).serialize(struct)
@@ -85,8 +102,8 @@ class Component(Serializable):
         struct.append (dbus.String(self.__homepage))
         struct.append (dbus.String(self.__exec))
         struct.append (dbus.String(self.__textdomain))
-        struct.append (map(serialize_object,self.__observed_paths))
-        struct.append (map(serialize_object,self.__engines))
+        struct.append (dbus.Array(map(serialize_object,self.__observed_paths), signature="v"))
+        struct.append (dbus.Array(map(serialize_object,self.__engines), signature="v"))
 
     def deserialize(self, struct):
         super(Component, self).deserialize(struct)

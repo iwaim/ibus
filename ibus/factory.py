@@ -27,6 +27,7 @@ import dbus
 import object
 import interface
 from serializable import *
+from exception import *
 
 class EngineFactoryBase(object.Object):
     def __init__(self, bus):
@@ -41,7 +42,7 @@ class EngineFactoryBase(object.Object):
         pass
 
     def create_engine(self, engine_name):
-        return None
+        raise IBusException("Can not create engine %s" % engine_name)
 
     def do_destroy(self):
         self.__proxy = None
@@ -64,7 +65,8 @@ class EngineFactoryProxy(interface.IEngineFactory):
         return self.__factory.uninitialize()
 
     def CreateEngine(self, engine_name):
-        return self.__factory.create_engine(engine_name)
+        engine = self.__factory.create_engine(engine_name)
+        return engine.get_dbus_object()
 
     def Destroy(self):
         self.__factory.destroy()
