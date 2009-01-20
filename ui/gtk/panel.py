@@ -183,8 +183,11 @@ class Panel(ibus.PanelBase):
         if not enabled:
             self.__set_im_icon(self.__ibus_icon)
         else:
-            info = self.__focus_ic.get_factory_info()
-            self.__set_im_icon(info.icon)
+            info = self.__focus_ic.get_engine()
+            if info:
+                self.__set_im_icon(info.icon)
+            else:
+                self.__set_im_icon(self.__ibus_icon)
         self.__language_bar.focus_in()
 
     def focus_out(self, ic):
@@ -203,8 +206,12 @@ class Panel(ibus.PanelBase):
         if enabled == False:
             self.__set_im_icon(self.__ibus_icon)
         else:
-            info = self.__focus_ic.get_factory_info()
-            self.__set_im_icon(info.icon)
+            info = self.__focus_ic.get_engine()
+            if info:
+                self.__set_im_icon(info.icon)
+            else:
+                self.__set_im_icon(self.__ibus_icon)
+                
 
     def reset(self):
         self.__candidate_panel.reset()
@@ -281,19 +288,19 @@ class Panel(ibus.PanelBase):
 
     def __create_im_menu(self):
         menu = gtk.Menu()
-        factories = self.__bus.list_factories()
+        engines = self.__bus.list_active_engines()
 
-        if not factories:
+        if not engines:
             item = gtk.MenuItem(label = "no engine")
             item.set_sensitive(False)
             menu.add(item)
         else:
             tmp = {}
-            for factory in factories:
-                lang = ibus.get_language_name(factory.lang)
+            for engine in engines:
+                lang = ibus.get_language_name(engine.language)
                 if lang not in tmp:
                     tmp[lang] = []
-                tmp[lang].append(factory)
+                tmp[lang].append(engine)
 
             langs = tmp.keys()
             other = tmp.get(_("Other"), [])
@@ -303,21 +310,22 @@ class Panel(ibus.PanelBase):
 
             for lang in langs:
                 if len(tmp[lang]) == 1:
-                    item = gtk.ImageMenuItem("%s - %s" % (lang, factory.name))
+                    engine = tmp[lang][0]
+                    item = gtk.ImageMenuItem("%s - %s" % (lang, engine.name))
                     size = gtk.icon_size_lookup(gtk.ICON_SIZE_MENU)
-                    item.set_image (_icon.IconWidget(factory.icon, size[0]))
-                    item.connect("activate", self.__im_menu_item_activate_cb, factory)
+                    item.set_image (_icon.IconWidget(engine.icon, size[0]))
+                    item.connect("activate", self.__im_menu_item_activate_cb, engine)
                     menu.add(item)
                 else:
                     item = gtk.MenuItem(lang)
                     menu.add(item)
                     submenu = gtk.Menu()
                     item.set_submenu(submenu)
-                    for factory in tmp[lang]:
-                        item = gtk.ImageMenuItem(factory.name)
+                    for engine in tmp[lang]:
+                        item = gtk.ImageMenuItem(engine.name)
                         size = gtk.icon_size_lookup(gtk.ICON_SIZE_MENU)
-                        item.set_image (_icon.IconWidget(factory.icon, size[0]))
-                        item.connect("activate", self.__im_menu_item_activate_cb, factory)
+                        item.set_image (_icon.IconWidget(engine.icon, size[0]))
+                        item.connect("activate", self.__im_menu_item_activate_cb, engine)
                         submenu.add(item)
 
         menu.show_all()
@@ -346,8 +354,8 @@ class Panel(ibus.PanelBase):
                 gtk.get_current_event_time(),
                 self.__status_icon)
 
-    def __im_menu_item_activate_cb(self, item, factory):
-        self.__focus_ic.set_factory(factory.path)
+    def __im_menu_item_activate_cb(self, item, engine):
+        self.__focus_ic.set_engine(engine)
 
     def __sys_menu_item_activate_cb(self, item, command):
         if command == gtk.STOCK_PREFERENCES:

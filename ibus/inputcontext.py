@@ -204,20 +204,17 @@ class InputContext(object.Object):
         caps = dbus.UInt32(caps)
         return self.__context.SetCapabilities(caps)
 
-    def get_engine_desc(self):
+    def get_engine(self):
         try:
-            engine = self.__context.GetEngineDesc()
+            engine = self.__context.GetEngine()
             engine = serializable.deserialize_object(info)
             return engine
         except:
             return None
 
-    def set_factory(self, factory_path):
-        path = dbus.ObjectPath(factory_path)
-        return self.__context.SetFactory(path)
+    def set_engine(self, engine):
+        return self.__context.SetEngine(engine.name)
 
-    def get_factory(self):
-        return self.__context.GetFactory()
 
 def test():
     import gtk

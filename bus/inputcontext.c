@@ -429,8 +429,8 @@ bus_input_context_class_init (BusInputContextClass *klass)
             NULL, NULL,
             ibus_marshal_VOID__STRING,
             G_TYPE_NONE,
-            G_TYPE_STRING,
-            0);
+            1,
+            G_TYPE_STRING);
     
     context_signals[REQUEST_NEXT_ENGINE] =
         g_signal_new (I_("request-next-engine"),
@@ -827,9 +827,9 @@ _ic_set_engine (BusInputContext  *context,
 }
 
 static IBusMessage *
-_ic_get_engine_desc (BusInputContext  *context,
-                     IBusMessage      *message,
-                     BusConnection    *connection)
+_ic_get_engine (BusInputContext  *context,
+                IBusMessage      *message,
+                BusConnection    *connection)
 {
     g_assert (BUS_IS_INPUT_CONTEXT (context));
     g_assert (message != NULL);
@@ -904,7 +904,7 @@ bus_input_context_ibus_message (BusInputContext *context,
         { IBUS_INTERFACE_INPUT_CONTEXT, "SetCapabilities",   _ic_set_capabilities },
         { IBUS_INTERFACE_INPUT_CONTEXT, "IsEnabled",         _ic_is_enabled },
         { IBUS_INTERFACE_INPUT_CONTEXT, "SetEngine",         _ic_set_engine },
-        { IBUS_INTERFACE_INPUT_CONTEXT, "GetEngineDesc",     _ic_get_engine_desc },
+        { IBUS_INTERFACE_INPUT_CONTEXT, "GetEngine",         _ic_get_engine },
         { IBUS_INTERFACE_INPUT_CONTEXT, "Destroy",           _ic_destroy },
 
         { NULL, NULL, NULL }
