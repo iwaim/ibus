@@ -35,6 +35,7 @@ IBUS_PATH_PANEL = "/org/freedesktop/IBus/Panel"
 from serializable import *
 from object import Object
 import interface
+import dbus
 
 class PanelItem:
     pass
@@ -142,12 +143,16 @@ class PanelBase(Object):
         self.__proxy.CursorDown()
 
     def property_activate(self, prop_name, prop_state):
+        prop_name = dbus.String(prop_name)
+        prop_state = dbus.Int32(prop_state)
         self.__proxy.PropertyActivate(prop_name, prop_state)
 
     def property_show(self, prop_name):
+        prop_name = dbus.String(prop_name)
         self.__proxy.PropertyShow(prop_name)
 
     def property_hide(self, prop_name):
+        prop_name = dbus.String(prop_name)
         self.__proxy.PropertyHide(prop_name)
 
 

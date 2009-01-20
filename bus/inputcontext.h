@@ -68,7 +68,10 @@ void                 bus_input_context_enable_or_disable(BusInputContext    *con
 void                 bus_input_context_enable           (BusInputContext    *context);
 void                 bus_input_context_disable          (BusInputContext    *context);
 void                 bus_input_context_set_engine       (BusInputContext    *context,
-                                                         BusEngineProxy    *factory);
+                                                         BusEngineProxy     *factory);
+void                 bus_input_context_property_activate(BusInputContext    *context,
+                                                         const gchar        *prop_name,
+                                                         gint                prop_state);
 
 G_END_DECLS
 #endif

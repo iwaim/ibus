@@ -997,6 +997,21 @@ bus_input_context_focus_out (BusInputContext *context)
     }
 }
 
+void
+bus_input_context_property_activate (BusInputContext *context,
+                                     const gchar     *prop_name,
+                                     gint             prop_state)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    
+    BusInputContextPrivate *priv;
+    priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
+    
+    if (priv->engine) {
+        bus_engine_proxy_property_activate (priv->engine, prop_name, prop_state);
+    }
+}
+
 static void
 _engine_destroy_cb (BusEngineProxy  *engine,
                     BusInputContext *context)

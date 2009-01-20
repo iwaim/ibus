@@ -47,12 +47,16 @@ static guint    panel_signals[LAST_SIGNAL] = { 0 };
 // static guint            engine_signals[LAST_SIGNAL] = { 0 };
 
 /* functions prototype */
-static void     bus_panel_proxy_class_init      (BusPanelProxyClass    *klass);
-static void     bus_panel_proxy_init            (BusPanelProxy         *panel);
-static void     bus_panel_proxy_real_destroy    (BusPanelProxy         *panel);
+static void     bus_panel_proxy_class_init      (BusPanelProxyClass     *klass);
+static void     bus_panel_proxy_init            (BusPanelProxy          *panel);
+static void     bus_panel_proxy_real_destroy    (BusPanelProxy          *panel);
 
-static gboolean bus_panel_proxy_ibus_signal     (IBusProxy             *proxy,
+static gboolean bus_panel_proxy_ibus_signal     (IBusProxy              *proxy,
                                                  IBusMessage            *message);
+static void     bus_panel_proxy_property_activate
+                                                (IBusProxy              *panel,
+                                                 const gchar            *prop_name,
+                                                 gint                    prop_state);
 
 static IBusProxyClass  *parent_class = NULL;
 
@@ -115,6 +119,8 @@ bus_panel_proxy_class_init (BusPanelProxyClass *klass)
 
     g_type_class_add_private (klass, sizeof (BusPanelProxyPrivate));
 
+    klass->property_activate = bus_panel_proxy_property_activate;
+
     ibus_object_class->destroy = (IBusObjectDestroyFunc) bus_panel_proxy_real_destroy;
 
     proxy_class->ibus_signal = bus_panel_proxy_ibus_signal;
@@ -160,7 +166,7 @@ bus_panel_proxy_class_init (BusPanelProxyClass *klass)
         g_signal_new (I_("property-activate"),
             G_TYPE_FROM_CLASS (klass),
             G_SIGNAL_RUN_LAST,
-            0,
+            G_STRUCT_OFFSET(BusPanelProxyClass, property_activate),
             NULL, NULL,
             ibus_marshal_VOID__STRING_INT,
             G_TYPE_NONE, 2,
@@ -251,13 +257,13 @@ bus_panel_proxy_ibus_signal (IBusProxy      *proxy,
 
     if (ibus_message_is_signal (message, IBUS_INTERFACE_PANEL, "PropertyActivate")) {
         gchar *prop_name;
-        guint prop_state;
+        gint prop_state;
         gboolean retval;
 
         retval = ibus_message_get_args (message,
                                         &error,
                                         G_TYPE_STRING, &prop_name,
-                                        G_TYPE_UINT, &prop_state,
+                                        G_TYPE_INT, &prop_state,
                                         G_TYPE_INVALID);
         if (!retval)
             goto failed;
@@ -456,6 +462,21 @@ bus_panel_proxy_update_property (BusPanelProxy  *panel,
                      "UpdateProperty",
                      IBUS_TYPE_PROPERTY, &prop,
                      G_TYPE_INVALID);
+}
+
+static void
+bus_panel_proxy_property_activate (IBusProxy   *panel,
+                                   const gchar *prop_name,
+                                   gint         prop_state)
+{
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+    
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+
+    if (priv->focused_context) {
+        bus_input_context_property_activate (priv->focused_context, prop_name, prop_state);
+    }
 }
 
 #define DEFINE_FUNCTION(Name, name)                     \

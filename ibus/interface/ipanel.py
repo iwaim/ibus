@@ -126,12 +126,12 @@ class IPanel(dbus.service.Object):
     @signal()
     def CursorDown(self): pass
 
-    @signal()
+    @signal(signature="si")
     def PropertyActivate(self, prop_name, prop_state): pass
 
-    @signal()
+    @signal(signature="s")
     def PropertyShow(self, prop_name): pass
 
-    @signal()
+    @signal(signature="s")
     def PropertyHide(self, prop_name): pass
 

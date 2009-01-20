@@ -83,7 +83,7 @@ void             bus_engine_proxy_enable            (BusEngineProxy *engine);
 void             bus_engine_proxy_disable           (BusEngineProxy *engine);
 void             bus_engine_proxy_property_activate (BusEngineProxy *engine,
                                                      const gchar    *prop_name,
-                                                     gint32          state);
+                                                     guint           state);
 void             bus_engine_proxy_property_show     (BusEngineProxy *engine,
                                                      const gchar    *prop_name);
 void             bus_engine_proxy_property_hide     (BusEngineProxy *engine,

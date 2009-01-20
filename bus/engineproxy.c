@@ -597,7 +597,7 @@ bus_engine_proxy_set_capabilities (BusEngineProxy *engine,
 void
 bus_engine_proxy_property_activate (BusEngineProxy *engine,
                                     const gchar    *prop_name,
-                                    gint            state)
+                                    guint           prop_state)
 {
     g_assert (BUS_IS_ENGINE_PROXY (engine));
     g_assert (prop_name != NULL);
@@ -605,7 +605,7 @@ bus_engine_proxy_property_activate (BusEngineProxy *engine,
     ibus_proxy_call (IBUS_PROXY (engine),
                      "PropertyActivate",
                      G_TYPE_STRING, &prop_name,
-                     G_TYPE_INT, &state,
+                     G_TYPE_UINT, &prop_state,
                      G_TYPE_INVALID);
 }
 

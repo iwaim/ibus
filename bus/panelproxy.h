@@ -55,6 +55,10 @@ struct _BusPanelProxy {
 struct _BusPanelProxyClass {
     IBusProxyClass parent;
     /* class members */
+
+    void (* property_activate) (BusPanelProxy   *panel,
+                                const gchar     *prop_name,
+                                gint             prop_state);
 };
 
 GType            bus_panel_proxy_get_type           (void);
