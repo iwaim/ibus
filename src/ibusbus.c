@@ -684,6 +684,22 @@ ibus_bus_get_connection (IBusBus *bus)
 }
 
 gboolean
+ibus_bus_kill (IBusBus *bus)
+{
+    g_assert (IBUS_IS_BUS (bus));
+    
+    gboolean result;
+    result = ibus_bus_call (bus,
+                            IBUS_SERVICE_IBUS,
+                            IBUS_PATH_IBUS,
+                            IBUS_INTERFACE_IBUS,
+                            "Kill",
+                            G_TYPE_INVALID,
+                            G_TYPE_INVALID);
+    return result;
+}
+
+gboolean
 ibus_bus_register_component (IBusBus       *bus,
                              IBusComponent *component)
 {

@@ -81,6 +81,7 @@ void         ibus_bus_remove_match      (IBusBus        *bus,
 const gchar *ibus_bus_get_name_owner    (IBusBus        *bus,
                                          const gchar    *name);
 /* declare ibus methods */
+gboolean     ibus_bus_kill              (IBusBus        *bus);
 IBusInputContext
             *ibus_bus_create_input_context
                                         (IBusBus        *bus,
