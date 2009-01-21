@@ -273,9 +273,9 @@ class CandidatePanel(gtk.VBox):
     def update_preedit_text(self, text, cursor_pos, visible):
         attrs = PangoAttrList(text.attributes, text.text)
         if visible:
-            self.show_preedit()
+            self.show_preedit_text()
         else:
-            self.hide_preedit()
+            self.hide_preedit_text()
         self.__preedit_stribg = text.text
         self.__preedit_label.set_text(text.text)
         self.__preedit_attrs = attrs
