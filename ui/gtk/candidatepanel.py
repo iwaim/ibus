@@ -260,12 +260,12 @@ class CandidatePanel(gtk.VBox):
         # self.hide_all()
         # self.show_all()
 
-    def show_preedit(self):
+    def show_preedit_text(self):
         self.__preedit_visible = True
         self.__preedit_label.show()
         self.__check_show_states()
 
-    def hide_preedit(self):
+    def hide_preedit_text(self):
         self.__preedit_visible = False
         self.__preedit_label.hide()
         self.__check_show_states()
