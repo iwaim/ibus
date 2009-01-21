@@ -151,10 +151,6 @@ TESTS = \
 	test-keynames \
 	test-attribute \
 	test-lookuptable \
-	test-bus \
-	test-proxy \
-	test-server \
-	test-engine \
 	$(NULL)
 noinst_PROGRAMS = $(TESTS)
 
@@ -190,6 +186,8 @@ ibusmarshalers.c: ibusmarshalers.list
 
 EXTRA_DIST = \
 	ibusmarshalers.list \
+	ibusenumtypes.h.template \
+	ibusenumtypes.c.template \
 	$(NULL)
 
 CLEANFILES = \
