@@ -204,6 +204,7 @@ class Panel(ibus.PanelBase):
         self.__language_bar.set_enabled(enabled)
 
         if enabled == False:
+            self.reset()
             self.__set_im_icon(self.__ibus_icon)
         else:
             info = self.__focus_ic.get_engine()
