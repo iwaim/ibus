@@ -210,9 +210,11 @@ bus_panel_proxy_real_destroy (BusPanelProxy *panel)
     BusPanelProxyPrivate *priv;
     priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
 
-    ibus_proxy_call (IBUS_PROXY (panel),
-                     "Destroy",
-                     DBUS_TYPE_INVALID);
+    if (ibus_proxy_get_connection ((IBusProxy *)panel) != NULL) {
+        ibus_proxy_call (IBUS_PROXY (panel),
+                         "Destroy",
+                         DBUS_TYPE_INVALID);
+    }
 
     if (priv->focused_context) {
         bus_panel_proxy_focus_out (panel, priv->focused_context);
