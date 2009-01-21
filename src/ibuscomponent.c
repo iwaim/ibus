@@ -126,6 +126,8 @@ ibus_component_init (IBusComponent *component)
 static void
 ibus_component_destroy (IBusComponent *component)
 {
+    GList *p;
+    
     g_free (component->name);
     g_free (component->description);
     g_free (component->version);
@@ -135,12 +137,26 @@ ibus_component_destroy (IBusComponent *component)
     g_free (component->exec);
     g_free (component->textdomain);
 
+    component->name = NULL;
+    component->description = NULL;
+    component->version = NULL;
+    component->license = NULL;
+    component->author = NULL;
+    component->homepage = NULL;
+    component->exec = NULL;
+    component->textdomain = NULL;
+
     g_list_foreach (component->observed_paths, (GFunc)g_object_unref, NULL);
     g_list_free (component->observed_paths);
+    component->observed_paths = NULL;
 
-    g_list_foreach (component->engines, (GFunc)ibus_object_destroy, NULL);
-    g_list_foreach (component->engines, (GFunc)g_object_unref, NULL);
+    for (p = component->engines; p != NULL; p = p->next) {
+        g_object_steal_data ((GObject *)p->data, "component");
+        ibus_object_destroy ((IBusObject *)p->data);
+        g_object_unref (p->data);
+    }
     g_list_free (component->engines);
+    component->engines = NULL;
 
     IBUS_OBJECT_CLASS (parent_class)->destroy (IBUS_OBJECT (component));
 }

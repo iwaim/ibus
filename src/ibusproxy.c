@@ -487,6 +487,9 @@ ibus_proxy_send (IBusProxy      *proxy,
 
     IBusProxyPrivate *priv;
     priv = IBUS_PROXY_GET_PRIVATE (proxy);
+    
+    g_return_val_if_fail (priv->connection, FALSE);
+    g_return_val_if_fail (ibus_connection_is_connected (priv->connection), FALSE);
 
     return ibus_connection_send (priv->connection, message);
 }
@@ -503,8 +506,12 @@ ibus_proxy_call (IBusProxy      *proxy,
     va_list args;
     gboolean retval;
     DBusMessage *message;
+
     IBusProxyPrivate *priv;
     priv = IBUS_PROXY_GET_PRIVATE (proxy);
+
+    g_return_val_if_fail (priv->connection, FALSE);
+    g_return_val_if_fail (ibus_connection_is_connected (priv->connection), FALSE);
 
     message = ibus_message_new_method_call (priv->name,
                                             priv->path,
@@ -547,6 +554,15 @@ ibus_proxy_call_with_reply_and_block (IBusProxy      *proxy,
     IBusProxyPrivate *priv;
     priv = IBUS_PROXY_GET_PRIVATE (proxy);
 
+    if (priv->connection == NULL || !ibus_connection_is_connected (priv->connection)) {
+        if (error) {
+            *error = ibus_error_from_printf (DBUS_ERROR_DISCONNECTED,
+                                             "Connection of %s was disconnected.",
+                                             G_OBJECT_TYPE_NAME (proxy));
+        }
+        return NULL;
+    }
+    
     message = ibus_message_new_method_call (priv->name,
                                             priv->path,
                                             priv->interface,

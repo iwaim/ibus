@@ -290,7 +290,8 @@ _dbus_name_owner_changed_cb (BusDBusImpl *dbus,
     factory = bus_registry_name_owner_changed (ibus->registry, name, old_name, new_name);
 
     if (factory) {
-        bus_ibus_impl_add_factory (ibus, factory);   
+        bus_ibus_impl_add_factory (ibus, factory);
+        g_object_unref (factory);
     }
 }
 
@@ -745,9 +746,22 @@ _factory_destroy_cb (BusFactoryProxy    *factory,
     g_assert (BUS_IS_IBUS_IMPL (ibus));
     g_assert (BUS_IS_FACTORY_PROXY (factory));
 
-    ibus->factory_list = g_list_remove (ibus->factory_list, factory);
-    g_object_unref (factory);
+    IBusComponent *component;
+    GList *engines, *p;
 
+    ibus->factory_list = g_list_remove (ibus->factory_list, factory);
+
+    component = bus_factory_proxy_get_component (factory);
+    
+    if (component != NULL) {
+        p = engines = ibus_component_get_engines (component);
+        for (; p != NULL; p = p->next) {
+            ibus->engine_list = g_list_remove (ibus->engine_list, p->data);
+        }
+        g_list_free (engines);
+    }
+
+    g_object_unref (factory);
 }
 
 static void
@@ -757,7 +771,10 @@ bus_ibus_impl_add_factory (BusIBusImpl     *ibus,
     g_assert (BUS_IS_IBUS_IMPL (ibus));
     g_assert (BUS_IS_FACTORY_PROXY (factory));
 
+    g_object_ref (factory);
     ibus->factory_list = g_list_append (ibus->factory_list, factory);
+
+    g_signal_connect (factory, "destroy", G_CALLBACK (_factory_destroy_cb), ibus);
 }
 
 
@@ -792,15 +809,17 @@ _ibus_register_component (BusIBusImpl     *ibus,
         reply = ibus_message_new_error (message,
                                         DBUS_ERROR_FAILED,
                                         "Can not create factory");
-        g_object_unref (component);
         return reply;
     }
 
     bus_ibus_impl_add_factory (ibus, factory);
+    g_object_unref (factory);
 
     engines = ibus_component_get_engines (component);
+    
     g_list_foreach (engines, (GFunc) g_object_ref, NULL);
     ibus->engine_list = g_list_concat (ibus->engine_list, engines);
+    g_object_unref (component);
 
     reply = ibus_message_new_method_return (message);
     return reply;
