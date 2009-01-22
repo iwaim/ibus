@@ -102,7 +102,8 @@ struct _IBusEngineClass {
 };
 
 GType        ibus_engine_get_type       (void);
-IBusEngine  *ibus_engine_new            (const gchar        *path,
+IBusEngine  *ibus_engine_new            (const gchar        *name,
+                                         const gchar        *path,
                                          IBusConnection     *connection);
 void         ibus_engine_commit_text    (IBusEngine         *engine,
                                          IBusText           *text);
@@ -137,6 +138,7 @@ void         ibus_engine_forward_key_event
                                          guint               keyval,
                                          gboolean            is_press,
                                          guint               state);
+const gchar *ibus_engine_get_name       (IBusEngine         *engine);
 
 G_END_DECLS
 #endif

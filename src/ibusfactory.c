@@ -132,7 +132,10 @@ ibus_factory_init (IBusFactory *factory)
 
     priv->id = 0;
     priv->connection = NULL;
-    priv->engine_table = g_hash_table_new (g_str_hash, g_str_equal);
+    priv->engine_table = g_hash_table_new_full (g_str_hash,
+                                                g_str_equal,
+                                                g_free,
+                                                NULL);
     priv->engine_list =  NULL;
 }
 
@@ -232,6 +235,7 @@ ibus_factory_ibus_message (IBusFactory    *factory,
         path = g_strdup_printf ("/org/freedesktop/IBus/Engine/%s/%d", engine_name, ++priv->id);
 
         engine = g_object_new (engine_type,
+                               "name", engine_name,
                                "path", path,
                                "connection", priv->connection,
                                0);

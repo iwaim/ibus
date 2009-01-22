@@ -47,12 +47,14 @@ enum {
 
 enum {
     PROP_0,
+    PROP_NAME,
     PROP_CONNECTION,
 };
 
 
 /* IBusEnginePriv */
 struct _IBusEnginePrivate {
+    gchar *name;
     IBusConnection *connection;
 };
 typedef struct _IBusEnginePrivate IBusEnginePrivate;
@@ -135,7 +137,8 @@ ibus_engine_get_type (void)
 }
 
 IBusEngine *
-ibus_engine_new (const gchar    *path,
+ibus_engine_new (const gchar    *name,
+                 const gchar    *path,
                  IBusConnection *connection)
 {
     g_assert (path);
@@ -144,6 +147,7 @@ ibus_engine_new (const gchar    *path,
     IBusEngine *engine;
 
     engine = (IBusEngine *) g_object_new (IBUS_TYPE_ENGINE,
+                                          "name", name,
                                           "path", path,
                                           "connection", connection,
                                           NULL);
@@ -186,6 +190,15 @@ ibus_engine_class_init (IBusEngineClass *klass)
 
 
     /* install properties */
+    g_object_class_install_property (gobject_class,
+                    PROP_NAME,
+                    g_param_spec_object ("name",
+                        "name",
+                        "engine name",
+                        G_TYPE_STRING,
+                        G_PARAM_READWRITE |  G_PARAM_CONSTRUCT_ONLY));
+
+
     g_object_class_install_property (gobject_class,
                     PROP_CONNECTION,
                     g_param_spec_object ("connection",
@@ -342,7 +355,8 @@ ibus_engine_init (IBusEngine *engine)
 {
     IBusEnginePrivate *priv;
     priv = IBUS_ENGINE_GET_PRIVATE (engine);
-
+    
+    priv->name = NULL;
     priv->connection = NULL;
 }
 
@@ -351,6 +365,8 @@ ibus_engine_destroy (IBusEngine *engine)
 {
     IBusEnginePrivate *priv;
     priv = IBUS_ENGINE_GET_PRIVATE (engine);
+
+    g_free (priv->name);
 
     if (priv->connection) {
         g_object_unref (priv->connection);
@@ -370,13 +386,17 @@ ibus_engine_set_property (IBusEngine   *engine,
     priv = IBUS_ENGINE_GET_PRIVATE (engine);
 
     switch (prop_id) {
+    case PROP_NAME:
+        priv->name = g_strdup (g_value_dup_string (value));
+        break;
+
     case PROP_CONNECTION:
         priv->connection = g_value_get_object (value);
         g_object_ref (priv->connection);
         ibus_service_add_to_connection ((IBusService *) engine,
                                         priv->connection);
-
         break;
+
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (engine, prop_id, pspec);
     }
@@ -390,9 +410,14 @@ ibus_engine_get_property (IBusEngine *engine,
     priv = IBUS_ENGINE_GET_PRIVATE (engine);
 
     switch (prop_id) {
+    case PROP_NAME:
+        g_value_set_string (value, priv->name);
+        break;
+    
     case PROP_CONNECTION:
         g_value_set_object (value, priv->connection);
         break;
+    
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (engine, prop_id, pspec);
     }
@@ -890,3 +915,15 @@ void ibus_engine_forward_key_event (IBusEngine      *engine,
                   G_TYPE_UINT, &state,
                   G_TYPE_INVALID);
 }
+
+const gchar *
+ibus_engine_get_name (IBusEngine *engine)
+{
+    g_assert (IBUS_IS_ENGINE (engine));
+    
+    IBusEnginePrivate *priv;
+    priv = IBUS_ENGINE_GET_PRIVATE (engine);
+
+    return priv->name;
+}
+
