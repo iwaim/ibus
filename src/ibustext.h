@@ -61,6 +61,11 @@ struct _IBusTextClass {
 GType            ibus_text_get_type             (void);
 IBusText        *ibus_text_from_string          (const gchar    *str);
 IBusText        *ibus_text_from_static_string   (const gchar    *str);
+void             ibus_text_append_attribute     (IBusText       *text,
+                                                 guint           type,
+                                                 guint           value,
+                                                 guint          start_index,
+                                                 gint            end_index);
 
 G_END_DECLS
 #endif

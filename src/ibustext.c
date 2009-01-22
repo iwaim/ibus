@@ -199,3 +199,24 @@ ibus_text_from_static_string (const gchar *str)
     return text;
 }
 
+void
+ibus_text_append_attribute (IBusText *text,
+                            guint     type,
+                            guint     value,
+                            guint     start_index,
+                            gint      end_index)
+{
+    g_assert (IBUS_IS_TEXT (text));
+
+    if (end_index < 0) {
+        end_index  += g_utf8_strlen(text->text, -1) + 1;
+    }
+
+    if (end_index <= 0)
+        return;
+
+    if (text->attrs == NULL)
+        text->attrs = ibus_attr_list_new ();
+
+    ibus_attr_list_append (text->attrs, ibus_attribute_new (type, value, start_index, end_index));
+}

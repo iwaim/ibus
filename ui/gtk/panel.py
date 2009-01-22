@@ -312,7 +312,7 @@ class Panel(ibus.PanelBase):
             for lang in langs:
                 if len(tmp[lang]) == 1:
                     engine = tmp[lang][0]
-                    item = gtk.ImageMenuItem("%s - %s" % (lang, engine.name))
+                    item = gtk.ImageMenuItem("%s - %s" % (lang, engine.longname))
                     size = gtk.icon_size_lookup(gtk.ICON_SIZE_MENU)
                     item.set_image (_icon.IconWidget(engine.icon, size[0]))
                     item.connect("activate", self.__im_menu_item_activate_cb, engine)
@@ -323,7 +323,7 @@ class Panel(ibus.PanelBase):
                     submenu = gtk.Menu()
                     item.set_submenu(submenu)
                     for engine in tmp[lang]:
-                        item = gtk.ImageMenuItem(engine.name)
+                        item = gtk.ImageMenuItem(engine.longname)
                         size = gtk.icon_size_lookup(gtk.ICON_SIZE_MENU)
                         item.set_image (_icon.IconWidget(engine.icon, size[0]))
                         item.connect("activate", self.__im_menu_item_activate_cb, engine)

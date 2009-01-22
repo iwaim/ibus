@@ -192,10 +192,10 @@ ibus_engine_class_init (IBusEngineClass *klass)
     /* install properties */
     g_object_class_install_property (gobject_class,
                     PROP_NAME,
-                    g_param_spec_object ("name",
+                    g_param_spec_string ("name",
                         "name",
                         "engine name",
-                        G_TYPE_STRING,
+                        "noname",
                         G_PARAM_READWRITE |  G_PARAM_CONSTRUCT_ONLY));
 
 

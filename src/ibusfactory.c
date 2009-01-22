@@ -232,7 +232,7 @@ ibus_factory_ibus_message (IBusFactory    *factory,
            
         }
 
-        path = g_strdup_printf ("/org/freedesktop/IBus/Engine/%s/%d", engine_name, ++priv->id);
+        path = g_strdup_printf ("/org/freedesktop/IBus/Engine/%d", ++priv->id);
 
         engine = g_object_new (engine_type,
                                "name", engine_name,
