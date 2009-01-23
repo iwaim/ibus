@@ -260,7 +260,7 @@ bus_panel_proxy_ibus_signal (IBusProxy      *proxy,
     for (i = 0; ; i++) {
         if (signals[i].member == NULL)
             break;
-        if (ibus_message_is_signal (message, IBUS_INTERFACE_ENGINE, signals[i].member)) {
+        if (ibus_message_is_signal (message, IBUS_INTERFACE_PANEL, signals[i].member)) {
             g_signal_emit (panel, panel_signals[signals[i].signal_id], 0);
             goto handled;
         }
@@ -307,7 +307,7 @@ bus_panel_proxy_ibus_signal (IBusProxy      *proxy,
     }
 
 handled:
-    g_signal_stop_emission_by_name (panel, "dbus-signal");
+    g_signal_stop_emission_by_name (panel, "ibus-signal");
     return TRUE;
 
 failed:
