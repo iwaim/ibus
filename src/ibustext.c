@@ -170,7 +170,7 @@ ibus_text_copy (IBusText       *dest,
 }
 
 IBusText *
-ibus_text_from_string (const gchar *str)
+ibus_text_new_from_string (const gchar *str)
 {
     g_return_val_if_fail (str != NULL, NULL);
 
@@ -185,7 +185,7 @@ ibus_text_from_string (const gchar *str)
 }
 
 IBusText *
-ibus_text_from_static_string (const gchar *str)
+ibus_text_new_from_static_string (const gchar *str)
 {
     g_return_val_if_fail (str != NULL, NULL);
 
@@ -197,6 +197,46 @@ ibus_text_from_static_string (const gchar *str)
     text->text = (gchar *)str;
 
     return text;
+}
+
+IBusText *
+ibus_text_new_from_printf (const gchar *format,
+                           ...)
+{
+    g_return_val_if_fail (format != NULL, NULL);
+
+    gchar *str;
+    IBusText *text;
+    va_list args;
+
+    va_start (args, format);
+    str = g_strdup_vprintf (format, args);
+    va_end (args);
+
+    if (str == NULL)
+        return NULL;
+
+    text= g_object_new (IBUS_TYPE_TEXT, 0);
+
+    text->text = (gchar *)str;
+
+    return text;
+}
+
+IBusText *
+ibus_text_new_from_unichar (gunichar c)
+{
+    IBusText *text;
+    gint len;
+
+    text= g_object_new (IBUS_TYPE_TEXT, 0);
+
+    text->text = (gchar *)g_malloc (12);
+    len = g_unichar_to_utf8 (c, text->text);
+    text->text[len] =  0;
+
+    return text;
+   
 }
 
 void

@@ -916,6 +916,26 @@ void ibus_engine_forward_key_event (IBusEngine      *engine,
                   G_TYPE_INVALID);
 }
 
+void
+ibus_engine_register_properties (IBusEngine   *engine,
+                                 IBusPropList *prop_list)
+{
+    _send_signal (engine,
+                  "RegisterProperties",
+                  IBUS_TYPE_PROP_LIST, &prop_list,
+                  G_TYPE_INVALID);
+}
+
+void
+ibus_engine_update_property (IBusEngine   *engine,
+                             IBusProperty *prop)
+{
+    _send_signal (engine,
+                  "UpdateProperty",
+                  IBUS_TYPE_PROPERTY, &prop,
+                  G_TYPE_INVALID);
+}
+
 const gchar *
 ibus_engine_get_name (IBusEngine *engine)
 {

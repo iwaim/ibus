@@ -263,3 +263,21 @@ ibus_lookup_table_clear (IBusLookupTable *table)
 
     g_array_set_size (table->candidates, 0);
 }
+
+void
+ibus_lookup_table_set_cursor_pos (IBusLookupTable *table,
+                                  guint            cursor_pos)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+    
+    table->cursor_pos = cursor_pos;
+}
+void
+ibus_lookup_table_set_page_size  (IBusLookupTable *table,
+                                  guint            page_size)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+    
+    table->page_size = page_size;
+}
+

@@ -10,8 +10,8 @@ int main()
 	IBusError *error;
 	gboolean retval;
 
-	text1 = ibus_text_from_string ("Hello");
-	text2 = ibus_text_from_static_string ("Hello");
+	text1 = ibus_text_new_from_string ("Hello");
+	text2 = ibus_text_new_from_static_string ("Hello");
 
 	message = ibus_message_new_signal ("/org/freedesktop/IBus",
 									   "org.freedesktop.IBus",

@@ -467,9 +467,6 @@ _context_request_engine_cb (BusInputContext *context,
         if (p == NULL) {
             engine_desc = bus_registry_find_engine_by_name (ibus->registry, engine_name);
         }
-        else {
-            engine_desc = NULL;
-        }
     }
 
     if (engine_desc == NULL)

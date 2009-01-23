@@ -9,8 +9,8 @@ int main()
 	gboolean retval;
 
 	table = ibus_lookup_table_new (9, TRUE);
-	ibus_lookup_table_append_candidate (table, ibus_text_from_static_string ("Hello"));
-	ibus_lookup_table_append_candidate (table, ibus_text_from_static_string ("Cool"));
+	ibus_lookup_table_append_candidate (table, ibus_text_new_from_static_string ("Hello"));
+	ibus_lookup_table_append_candidate (table, ibus_text_new_from_static_string ("Cool"));
 
 	message = ibus_message_new (DBUS_MESSAGE_TYPE_METHOD_CALL);
 

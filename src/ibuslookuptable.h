@@ -70,6 +70,12 @@ void                 ibus_lookup_table_append_candidate
 IBusText            *ibus_lookup_table_get_candidate
                                                 (IBusLookupTable    *table,
                                                  guint               index);
+void                 ibus_lookup_table_set_cursor_pos
+                                                (IBusLookupTable    *table,
+                                                 guint               cursor_pos);
+void                 ibus_lookup_table_set_page_size
+                                                (IBusLookupTable    *table,
+                                                 guint               page_size);
 void                 ibus_lookup_table_clear    (IBusLookupTable    *table);
 G_END_DECLS
 #endif

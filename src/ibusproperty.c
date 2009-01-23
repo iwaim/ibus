@@ -222,12 +222,12 @@ ibus_property_copy (IBusProperty       *dest,
         dest->label = (IBusText *) ibus_serializable_copy (IBUS_SERIALIZABLE (src->label));
     }
     else
-        dest->label = ibus_text_from_static_string ("");
+        dest->label = ibus_text_new_from_static_string ("");
     if (src->tooltip) {
         dest->tooltip = (IBusText *) ibus_serializable_copy (IBUS_SERIALIZABLE (src->tooltip));
     }
     else
-        dest->tooltip = ibus_text_from_static_string ("");
+        dest->tooltip = ibus_text_new_from_static_string ("");
 
     dest->sensitive = src->sensitive;
     dest->visible = src->visible;
@@ -255,7 +255,6 @@ ibus_property_new (const gchar   *key,
                           type <= PROP_TYPE_SEPARATOR,
                           NULL);
     g_return_val_if_fail (label == NULL || IBUS_IS_TEXT (label), NULL);
-    g_return_val_if_fail (icon != NULL, NULL);
     g_return_val_if_fail (tooltip == NULL || IBUS_IS_TEXT (tooltip), NULL);
     g_return_val_if_fail (state == PROP_STATE_UNCHECKED ||
                           state == PROP_STATE_CHECKED ||
@@ -267,18 +266,18 @@ ibus_property_new (const gchar   *key,
     prop = (IBusProperty *)g_object_new (IBUS_TYPE_PROPERTY, 0);
 
     prop->key = g_strdup (key);
-    prop->icon = g_strdup (icon);
+    prop->icon = g_strdup (icon != NULL ? icon : "");
     prop->type = type;
 
     if (label)
         prop->label = (IBusText *) g_object_ref (label);
     else
-        prop->label = ibus_text_from_static_string ("");
+        prop->label = ibus_text_new_from_static_string ("");
 
     if (tooltip)
         prop->tooltip = (IBusText *) g_object_ref (tooltip);
     else
-        prop->tooltip = ibus_text_from_static_string ("");
+        prop->tooltip = ibus_text_new_from_static_string ("");
 
     prop->sensitive = sensitive;
     prop->visible = visible;
@@ -290,6 +289,31 @@ ibus_property_new (const gchar   *key,
         prop->sub_props = ibus_prop_list_new ();
 
     return prop;
+}
+
+void
+ibus_property_set_label (IBusProperty *prop,
+                         IBusText     *label)
+{
+    g_assert (IBUS_IS_PROPERTY (prop));
+
+    if (prop->label) {
+        g_object_unref (prop->label);
+    }
+
+    if (label == NULL) {
+        label = ibus_text_new_from_static_string ("");
+    }
+
+    prop->label = g_object_ref (label);
+}
+
+void
+ibus_property_set_visible (IBusProperty *prop,
+                           gboolean      visible)
+{
+    g_assert (IBUS_IS_PROPERTY (prop));
+    prop->visible = visible;
 }
 
 void

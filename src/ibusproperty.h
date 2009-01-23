@@ -117,9 +117,13 @@ IBusProperty    *ibus_property_new          (const gchar    *key,
                                              const gchar    *icon,
                                              IBusText       *tooltip,
                                              gboolean        sensitive,
-                                             gboolean        visbile,
+                                             gboolean        visible,
                                              IBusPropState   state,
                                              IBusPropList   *prop_list);
+void             ibus_property_set_label    (IBusProperty   *prop,
+                                             IBusText       *label);
+void             ibus_property_set_visible  (IBusProperty   *prop,
+                                             gboolean        visible);
 void             ibus_property_set_sub_props(IBusProperty   *prop,
                                              IBusPropList   *prop_list);
 

@@ -24,6 +24,7 @@
 #include "ibusservice.h"
 #include "ibusattribute.h"
 #include "ibuslookuptable.h"
+#include "ibusproperty.h"
 
 /*
  * Type macros.
@@ -138,6 +139,12 @@ void         ibus_engine_forward_key_event
                                          guint               keyval,
                                          gboolean            is_press,
                                          guint               state);
+
+void         ibus_engine_register_properties
+                                        (IBusEngine         *engine,
+                                         IBusPropList       *prop_list);
+void         ibus_engine_update_property(IBusEngine         *engine,
+                                         IBusProperty       *prop);
 const gchar *ibus_engine_get_name       (IBusEngine         *engine);
 
 G_END_DECLS
