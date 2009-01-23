@@ -171,7 +171,10 @@ bus_ibus_impl_reload_config (BusIBusImpl *ibus)
         return;
     }
 
-    if (ibus_config_get_value (ibus->config, "general/hotkey", "trigger", &value)) {
+    if (ibus_config_get_value (ibus->config,
+                               "general/hotkey",
+                               "trigger",
+                               &value)) {
         bus_ibus_impl_set_trigger (ibus, &value);
         g_value_unset (&value);
     }
@@ -324,16 +327,6 @@ bus_ibus_impl_init (BusIBusImpl *ibus)
 static void
 bus_ibus_impl_destroy (BusIBusImpl *ibus)
 {
-#if 0
-    for (p = ibus->factory_list; p != NULL; p = p->next) {
-        g_signal_handlers_disconnect_by_func (p->data,
-                                              G_CALLBACK (_factory_destroy_cb),
-                                              ibus);
-    }
-    g_list_free (ibus->factory_list);
-    ibus->factory_list = NULL;
-#endif
-
     g_list_foreach (ibus->engine_list, (GFunc) g_object_unref, NULL);
     g_list_free (ibus->engine_list);
     ibus->engine_list = NULL;
@@ -982,77 +975,6 @@ bus_ibus_impl_ibus_message (BusIBusImpl     *ibus,
                                        (IBusConnection *) connection,
                                        message);
 }
-
-#if 0
-BusFactoryProxy *
-bus_ibus_impl_get_default_factory (BusIBusImpl *ibus)
-{
-    g_assert (BUS_IS_IBUS_IMPL (ibus));
-
-    if (ibus->default_factory == NULL && ibus->factory_list != NULL) {
-        ibus->default_factory = BUS_FACTORY_PROXY (ibus->factory_list->data);
-        g_object_ref (ibus->default_factory);
-    }
-
-    if (ibus->default_factory == NULL) {
-        /* TODO */
-    }
-
-    return ibus->default_factory;
-}
-
-BusFactoryProxy *
-bus_ibus_impl_get_next_factory (BusIBusImpl     *ibus,
-                                BusFactoryProxy *factory)
-{
-    g_assert (BUS_IS_IBUS_IMPL (ibus));
-    g_assert (BUS_IS_FACTORY_PROXY (factory) || factory == NULL);
-
-    GList *link;
-
-    if (factory == NULL) {
-        return bus_ibus_impl_get_default_factory (ibus);
-    }
-
-    link = g_list_find (ibus->factory_list, factory);
-
-    g_assert (link != NULL);
-
-    link = link->next;
-
-    if (link != NULL) {
-        link = ibus->factory_list;
-    }
-
-    return BUS_FACTORY_PROXY (link->data);
-}
-
-BusFactoryProxy *
-bus_ibus_impl_get_previous_factory (BusIBusImpl     *ibus,
-                                    BusFactoryProxy *factory)
-{
-    g_assert (BUS_IS_IBUS_IMPL (ibus));
-    g_assert (BUS_IS_FACTORY_PROXY (factory) || factory == NULL);
-
-    GList *link;
-
-    if (factory == NULL) {
-        return bus_ibus_impl_get_default_factory (ibus);
-    }
-
-    link = g_list_find (ibus->factory_list, factory);
-
-    g_assert (link != NULL);
-
-    link = link->prev;
-
-    if (link != NULL) {
-        link = g_list_last (ibus->factory_list);
-    }
-
-    return BUS_FACTORY_PROXY (link->data);
-}
-#endif
 
 BusFactoryProxy *
 bus_ibus_impl_lookup_factory (BusIBusImpl *ibus,
