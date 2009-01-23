@@ -67,6 +67,10 @@ void                 bus_input_context_focus_out        (BusInputContext    *con
 void                 bus_input_context_enable_or_disable(BusInputContext    *context);
 void                 bus_input_context_enable           (BusInputContext    *context);
 void                 bus_input_context_disable          (BusInputContext    *context);
+void                 bus_input_context_page_up          (BusInputContext    *context);
+void                 bus_input_context_page_down        (BusInputContext    *context);
+void                 bus_input_context_cursor_up        (BusInputContext    *context);
+void                 bus_input_context_cursor_down      (BusInputContext    *context);
 void                 bus_input_context_set_engine       (BusInputContext    *context,
                                                          BusEngineProxy     *factory);
 void                 bus_input_context_property_activate(BusInputContext    *context,

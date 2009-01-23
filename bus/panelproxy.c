@@ -53,8 +53,12 @@ static void     bus_panel_proxy_real_destroy    (BusPanelProxy          *panel);
 
 static gboolean bus_panel_proxy_ibus_signal     (IBusProxy              *proxy,
                                                  IBusMessage            *message);
+static void     bus_panel_proxy_page_up         (BusPanelProxy          *panel);
+static void     bus_panel_proxy_page_down       (BusPanelProxy          *panel);
+static void     bus_panel_proxy_cursor_up       (BusPanelProxy          *panel);
+static void     bus_panel_proxy_cursor_down     (BusPanelProxy          *panel);
 static void     bus_panel_proxy_property_activate
-                                                (IBusProxy              *panel,
+                                                (BusPanelProxy          *panel,
                                                  const gchar            *prop_name,
                                                  gint                    prop_state);
 
@@ -119,6 +123,11 @@ bus_panel_proxy_class_init (BusPanelProxyClass *klass)
 
     g_type_class_add_private (klass, sizeof (BusPanelProxyPrivate));
 
+    klass->page_up     = bus_panel_proxy_page_up;
+    klass->page_down   = bus_panel_proxy_page_down;
+    klass->cursor_up   = bus_panel_proxy_cursor_up;
+    klass->cursor_down = bus_panel_proxy_cursor_down;
+    
     klass->property_activate = bus_panel_proxy_property_activate;
 
     ibus_object_class->destroy = (IBusObjectDestroyFunc) bus_panel_proxy_real_destroy;
@@ -130,7 +139,7 @@ bus_panel_proxy_class_init (BusPanelProxyClass *klass)
         g_signal_new (I_("page-up"),
             G_TYPE_FROM_CLASS (klass),
             G_SIGNAL_RUN_LAST,
-            0,
+            G_STRUCT_OFFSET(BusPanelProxyClass, page_up),
             NULL, NULL,
             ibus_marshal_VOID__VOID,
             G_TYPE_NONE, 0);
@@ -139,7 +148,7 @@ bus_panel_proxy_class_init (BusPanelProxyClass *klass)
         g_signal_new (I_("page-down"),
             G_TYPE_FROM_CLASS (klass),
             G_SIGNAL_RUN_LAST,
-            0,
+            G_STRUCT_OFFSET(BusPanelProxyClass, page_down),
             NULL, NULL,
             ibus_marshal_VOID__VOID,
             G_TYPE_NONE, 0);
@@ -148,7 +157,7 @@ bus_panel_proxy_class_init (BusPanelProxyClass *klass)
         g_signal_new (I_("cursor-up"),
             G_TYPE_FROM_CLASS (klass),
             G_SIGNAL_RUN_LAST,
-            0,
+            G_STRUCT_OFFSET(BusPanelProxyClass, cursor_up),
             NULL, NULL,
             ibus_marshal_VOID__VOID,
             G_TYPE_NONE, 0);
@@ -157,7 +166,7 @@ bus_panel_proxy_class_init (BusPanelProxyClass *klass)
         g_signal_new (I_("cursor-down"),
             G_TYPE_FROM_CLASS (klass),
             G_SIGNAL_RUN_LAST,
-            0,
+            G_STRUCT_OFFSET(BusPanelProxyClass, cursor_down),
             NULL, NULL,
             ibus_marshal_VOID__VOID,
             G_TYPE_NONE, 0);
@@ -467,9 +476,60 @@ bus_panel_proxy_update_property (BusPanelProxy  *panel,
 }
 
 static void
-bus_panel_proxy_property_activate (IBusProxy   *panel,
-                                   const gchar *prop_name,
-                                   gint         prop_state)
+bus_panel_proxy_page_up (BusPanelProxy *panel)
+{
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+    
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+    
+    if (priv->focused_context) {
+        bus_input_context_page_up (priv->focused_context);
+    }
+}
+
+static void
+bus_panel_proxy_page_down (BusPanelProxy *panel)
+{
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+    
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+    
+    if (priv->focused_context) {
+        bus_input_context_page_down (priv->focused_context);
+    }
+}
+static void
+bus_panel_proxy_cursor_up (BusPanelProxy *panel)
+{
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+    
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+    
+    if (priv->focused_context) {
+        bus_input_context_cursor_up (priv->focused_context);
+    }
+}
+
+static void
+bus_panel_proxy_cursor_down (BusPanelProxy *panel)
+{
+    g_assert (BUS_IS_PANEL_PROXY (panel));
+    
+    BusPanelProxyPrivate *priv;
+    priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
+    
+    if (priv->focused_context) {
+        bus_input_context_cursor_down (priv->focused_context);
+    }
+}
+
+static void
+bus_panel_proxy_property_activate (BusPanelProxy *panel,
+                                   const gchar   *prop_name,
+                                   gint          prop_state)
 {
     g_assert (BUS_IS_PANEL_PROXY (panel));
     

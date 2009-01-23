@@ -998,6 +998,58 @@ bus_input_context_focus_out (BusInputContext *context)
 }
 
 void
+bus_input_context_page_up (BusInputContext *context)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    
+    BusInputContextPrivate *priv;
+    priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
+    
+    if (priv->engine) {
+        bus_engine_proxy_page_up (priv->engine);
+    }
+}
+
+void
+bus_input_context_page_down (BusInputContext *context)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    
+    BusInputContextPrivate *priv;
+    priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
+    
+    if (priv->engine) {
+        bus_engine_proxy_page_down (priv->engine);
+    }
+}
+
+void
+bus_input_context_cursor_up (BusInputContext *context)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    
+    BusInputContextPrivate *priv;
+    priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
+    
+    if (priv->engine) {
+        bus_engine_proxy_cursor_up (priv->engine);
+    }
+}
+
+void
+bus_input_context_cursor_down (BusInputContext *context)
+{
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+    
+    BusInputContextPrivate *priv;
+    priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
+    
+    if (priv->engine) {
+        bus_engine_proxy_cursor_down (priv->engine);
+    }
+}
+
+void
 bus_input_context_property_activate (BusInputContext *context,
                                      const gchar     *prop_name,
                                      gint             prop_state)
