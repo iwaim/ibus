@@ -225,7 +225,7 @@ bus_factory_proxy_create_engine (BusFactoryProxy *factory,
         return NULL;
     }
 
-    if ((error = ibus_error_from_message (reply_message)) != NULL) {
+    if ((error = ibus_error_new_from_message (reply_message)) != NULL) {
         g_warning ("%s: %s", error->name, error->message);
         ibus_error_free (error);
         ibus_message_unref (reply_message);

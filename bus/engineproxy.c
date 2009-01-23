@@ -543,7 +543,7 @@ bus_engine_proxy_process_key_event (BusEngineProxy *engine,
         return FALSE;
     }
 
-    if ((error = ibus_error_from_message (reply_message)) != NULL) {
+    if ((error = ibus_error_new_from_message (reply_message)) != NULL) {
         g_warning ("%s: %s", error->name, error->message);
         ibus_message_unref (reply_message);
         ibus_error_free (error);
