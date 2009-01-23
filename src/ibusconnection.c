@@ -709,7 +709,7 @@ ibus_connection_call (IBusConnection     *connection,
         return FALSE;
     }
 
-    if ((tmp_error = ibus_error_from_message (reply)) != NULL) {
+    if ((tmp_error = ibus_error_new_from_message (reply)) != NULL) {
         if (error) {
             *error = tmp_error;
         }

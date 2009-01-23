@@ -31,8 +31,8 @@ ibus_error_new (void)
 }
 
 IBusError *
-ibus_error_from_text (const gchar *name,
-                      const gchar *message)
+ibus_error_new_from_text (const gchar *name,
+                          const gchar *message)
 {
     IBusError *error = ibus_error_new ();
 
@@ -42,9 +42,9 @@ ibus_error_from_text (const gchar *name,
 }
 
 IBusError *
-ibus_error_from_printf (const gchar *name,
-                        const gchar *format_message,
-                        ...)
+ibus_error_new_from_printf (const gchar *name,
+                            const gchar *format_message,
+                             ...)
 {
     IBusError *error;
     gchar *message;
@@ -53,14 +53,14 @@ ibus_error_from_printf (const gchar *name,
     va_start (va_args, format_message);
     message = g_strdup_vprintf (format_message, va_args);
 
-    error = ibus_error_from_text (name, message);
+    error = ibus_error_new_from_text (name, message);
     g_free (message);
 
     return error;
 }
 
 IBusError *
-ibus_error_from_message (DBusMessage *message)
+ibus_error_new_from_message (DBusMessage *message)
 {
     g_assert (message != NULL);
 

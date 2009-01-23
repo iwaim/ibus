@@ -346,7 +346,7 @@ ibus_bus_create_input_context (IBusBus      *bus,
         return NULL;
     }
 
-    if ((error = ibus_error_from_message (reply)) != NULL) {
+    if ((error = ibus_error_new_from_message (reply)) != NULL) {
         g_warning ("%s: %s", error->name, error->message);
         ibus_message_unref (reply);
         ibus_error_free (error);
@@ -469,7 +469,7 @@ ibus_bus_call (IBusBus      *bus,
         return FALSE;
     }
 
-    if ((error = ibus_error_from_message (reply)) != NULL) {
+    if ((error = ibus_error_new_from_message (reply)) != NULL) {
         g_warning ("%s : %s", error->name, error->message);
         ibus_error_free (error);
         ibus_message_unref (reply);

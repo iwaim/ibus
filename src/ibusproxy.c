@@ -556,9 +556,9 @@ ibus_proxy_call_with_reply_and_block (IBusProxy      *proxy,
 
     if (priv->connection == NULL || !ibus_connection_is_connected (priv->connection)) {
         if (error) {
-            *error = ibus_error_from_printf (DBUS_ERROR_DISCONNECTED,
-                                             "Connection of %s was disconnected.",
-                                             G_OBJECT_TYPE_NAME (proxy));
+            *error = ibus_error_new_from_printf (DBUS_ERROR_DISCONNECTED,
+                                                 "Connection of %s was disconnected.",
+                                                 G_OBJECT_TYPE_NAME (proxy));
         }
         return NULL;
     }

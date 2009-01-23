@@ -476,7 +476,7 @@ ibus_config_get_value (IBusConfig  *config,
         return FALSE;
     }
 
-    if ((error = ibus_error_from_message (reply)) != NULL) {
+    if ((error = ibus_error_new_from_message (reply)) != NULL) {
         g_warning ("%s: %s", error->name, error->message);
         ibus_error_free (error);
         ibus_message_unref (reply);

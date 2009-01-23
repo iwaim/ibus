@@ -563,7 +563,7 @@ ibus_input_context_process_key_event (IBusInputContext *context,
         ibus_error_free (error);
         retval = FALSE;
     }
-    else if ((error = ibus_error_from_message (reply_message)) != NULL) {
+    else if ((error = ibus_error_new_from_message (reply_message)) != NULL) {
         g_debug ("%s: %s", error->name, error->message);
         ibus_message_unref (reply_message);
         ibus_error_free (error);

@@ -422,7 +422,7 @@ ibus_message_get_args_valist (IBusMessage *message,
 
     if (!retval) {
         if (error) {
-            *error = ibus_error_from_printf (DBUS_ERROR_INVALID_ARGS,
+            *error = ibus_error_new_from_printf (DBUS_ERROR_INVALID_ARGS,
                                              "Message does not have arguments!");
         }
         return FALSE;
@@ -445,10 +445,10 @@ ibus_message_get_args_valist (IBusMessage *message,
     return TRUE;
 
 _failed:
-    *error = ibus_error_from_printf (DBUS_ERROR_INVALID_ARGS,
-                                     "The argument %d is not %s",
-                                     i,
-                                     g_type_name (type));
+    *error = ibus_error_new_from_printf (DBUS_ERROR_INVALID_ARGS,
+                                         "The argument %d is not %s",
+                                         i,
+                                         g_type_name (type));
     /* release resources */
     type = first_arg_type;
     while (i > 0) {
