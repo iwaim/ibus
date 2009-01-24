@@ -30,6 +30,7 @@ typedef struct {
 } XMLNode;
 
 XMLNode *ibus_xml_parse_file    (const gchar    *name);
+XMLNode *ibus_xml_parse_buffer  (const gchar    *buffer);
 void     ibus_xml_free          (XMLNode        *node);
 void     ibus_xml_output        (const XMLNode  *node,
                                  GString        *output);

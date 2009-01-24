@@ -372,21 +372,31 @@ ibus_component_output (IBusComponent *component,
         g_string_append (output, "</observed-paths>\n");
     }
 
-    if (component->engines) {
-        g_string_append_indent (output, indent + 1);
-        g_string_append (output, "<engines>\n");
-
-        for (p = component->engines; p != NULL; p = p->next) {
-            ibus_engine_desc_output ((IBusEngineDesc *)p->data, output, indent + 2);
-        }
-
-        g_string_append_indent (output, indent + 1);
-        g_string_append (output, "</engines>\n");
-    }
-
+    ibus_component_output_engines (component, output, indent + 1);
 
     g_string_append_indent (output, indent);
     g_string_append (output, "</component>\n");
+}
+
+void
+ibus_component_output_engines (IBusComponent  *component,
+                               GString        *output,
+                               gint            indent)
+{
+    g_assert (IBUS_IS_COMPONENT (component));
+    g_assert (output);
+
+    GList *p;
+    
+    g_string_append_indent (output, indent);
+    g_string_append (output, "<engines>\n");
+
+    for (p = component->engines; p != NULL; p = p->next) {
+        ibus_engine_desc_output ((IBusEngineDesc *)p->data, output, indent + 2);
+    }
+
+    g_string_append_indent (output, indent);
+    g_string_append (output, "</engines>\n");
 }
 
 static gboolean
@@ -444,23 +454,54 @@ ibus_component_parse_xml_node (IBusComponent   *component,
 
 static void
 ibus_component_parse_engines (IBusComponent *component,
-                             XMLNode      *node)
+                              XMLNode       *node)
 {
     g_assert (IBUS_IS_COMPONENT (component));
     g_assert (node);
+
+    gchar *exec = NULL;
+    gchar **p;
+    XMLNode *engines_node = NULL;
 
     if (g_strcmp0 (node->name, "engines") != 0) {
         return;
     }
 
-    GList *p;
-    for (p = node->sub_nodes; p != NULL; p = p->next) {
+    for (p = node->attributes; *p != NULL; p += 2) {
+        if (g_strcmp0 (*p, "exec")) {
+            exec = *(p + 1);
+            break;
+        }
+    }
+
+    if (exec != NULL) {
+        gchar *output = NULL;
+        if (g_spawn_command_line_sync (exec, &output, NULL, NULL, NULL)) {
+            engines_node = ibus_xml_parse_buffer (output);
+            g_free (output);
+            
+            if (engines_node) {
+                if (g_strcmp0 (engines_node->name, "engines") != 0) {
+                    ibus_xml_free (engines_node);
+                    engines_node = NULL;
+                }
+            }
+            node = engines_node;
+        }
+    }
+
+    GList *pl;
+    for (pl = node->sub_nodes; pl != NULL; pl = pl->next) {
         IBusEngineDesc *engine;
-        engine = ibus_engine_desc_new_from_xml_node ((XMLNode *)p->data);
+        engine = ibus_engine_desc_new_from_xml_node ((XMLNode *)pl->data);
 
         if (G_UNLIKELY (engine == NULL))
             continue;
         ibus_component_add_engine (component, engine);
+    }
+
+    if (engines_node) {
+        ibus_xml_free (engines_node);
     }
 }
 

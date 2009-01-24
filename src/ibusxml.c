@@ -18,6 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include <stdio.h>
+#include <string.h>
 #include "ibusxml.h"
 
 static GMarkupParser parser;
@@ -217,6 +218,48 @@ _failed_out:
     return NULL;
 }
 
+XMLNode *
+ibus_xml_parse_buffer (const gchar *buffer)
+{
+    gboolean retval;
+    GError *error = NULL;
+    
+    GMarkupParseContext *context;
+    XMLNode *node;
+    
+    const static GMarkupParser root_parser = {
+        _start_root_element_cb,
+        _end_element_cb,
+        _text_cb,
+        0,
+        0,
+    };   
+    
+    context = g_markup_parse_context_new (&root_parser, 0, &node, 0);
+    
+    retval = g_markup_parse_context_parse (context, buffer, strlen (buffer), &error);
+
+    if (!retval)
+        goto _failed_out;
+    
+    retval = g_markup_parse_context_end_parse (context, &error);
+    if (!retval)
+        goto _failed_out;
+
+    g_markup_parse_context_free (context);
+
+    return node;
+
+_failed_out:
+    g_warning ("Parse buffer failed: %s", error->message);
+    g_error_free (error);
+    g_markup_parse_context_free (context);
+    return NULL;
+
+}
+
+
+void     ibus_xml_free          (XMLNode        *node);
 static void
 output_indent (int level, GString *output)
 {

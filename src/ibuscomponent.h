@@ -100,6 +100,9 @@ GList           *ibus_component_get_engines     (IBusComponent  *component);
 void             ibus_component_output          (IBusComponent  *component,
                                                  GString        *output,
                                                  gint            indent);
+void             ibus_component_output_engines  (IBusComponent  *component,
+                                                 GString        *output,
+                                                 gint            indent);
 gboolean         ibus_component_check_modification
                                                 (IBusComponent  *component);
 gboolean         ibus_component_start           (IBusComponent  *component);
