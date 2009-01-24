@@ -52,11 +52,8 @@ static void     bus_ibus_impl_set_trigger       (BusIBusImpl        *ibus,
 static void     bus_ibus_impl_set_preload_engines
                                                 (BusIBusImpl        *ibus,
                                                  GValue             *value);
-
-#if 0
 static void     _factory_destroy_cb             (BusFactoryProxy      *factory,
                                                  BusIBusImpl          *ibus);
-#endif
 
 static IBusServiceClass  *parent_class = NULL;
 
@@ -680,110 +677,6 @@ _ibus_create_input_context (BusIBusImpl     *ibus,
     return reply;
 }
 
-#if 0
-
-
-#endif
-
-#if 0
-static int
-_factory_cmp (BusFactoryProxy   *a,
-              BusFactoryProxy   *b)
-{
-    g_assert (BUS_IS_FACTORY_PROXY (a));
-    g_assert (BUS_IS_FACTORY_PROXY (b));
-
-    gint retval;
-
-    retval = g_strcmp0 (bus_factory_proxy_get_lang (a), bus_factory_proxy_get_lang (b));
-    if (retval != 0)
-        return retval;
-    retval = g_strcmp0 (bus_factory_proxy_get_name (a), bus_factory_proxy_get_name (b));
-    return retval;
-}
-#endif
-
-static IBusMessage *
-_ibus_register_factories (BusIBusImpl     *ibus,
-                          IBusMessage     *message,
-                          BusConnection   *connection)
-{
-#if 0
-    IBusMessageIter iter, sub_iter;
-    IBusMessage *reply;
-    gboolean retval;
-    BusFactoryProxy *factory;
-    GArray *info_array;
-    IBusFactoryInfo *info;
-    gint i;
-
-    retval = ibus_message_iter_init (message, &iter);
-    g_assert (retval);
-
-    retval = ibus_message_iter_recurse (&iter, IBUS_TYPE_ARRAY, &sub_iter);
-    g_assert (retval);
-
-
-    info_array = g_array_new (TRUE, TRUE, sizeof (IBusFactoryInfo *));
-
-    for (;;) {
-
-        if (ibus_message_iter_get_arg_type (&sub_iter) == G_TYPE_INVALID)
-            break;
-
-        retval = ibus_message_iter_get (&sub_iter,
-                                        IBUS_TYPE_FACTORY_INFO,
-                                        &info);
-        g_assert (retval);
-
-        g_array_append_val (info_array, info);
-
-
-        if (g_hash_table_lookup (ibus->factory_dict, info->path) != NULL) {
-            reply = ibus_message_new_error_printf (message,
-                                                   DBUS_ERROR_FAILED,
-                                                   "Factory %s has been registered!",
-                                                   info->path);
-            goto _out;
-        }
-
-    }
-
-    for (i = 0; i < info_array->len; i++) {
-        info = g_array_index (info_array, IBusFactoryInfo *, i);
-
-        factory = bus_factory_proxy_new (info, connection);
-
-        g_hash_table_insert (ibus->factory_dict,
-                             (gpointer) ibus_proxy_get_path (IBUS_PROXY (factory)),
-                             factory);
-
-        g_object_ref (factory);
-        ibus->factory_list = g_list_append (ibus->factory_list, factory);
-
-        g_signal_connect (factory,
-                          "destroy",
-                          (GCallback) _factory_destroy_cb,
-                          ibus);
-    }
-
-    reply = ibus_message_new_method_return (message);
-
-    ibus->factory_list = g_list_sort (ibus->factory_list, (GCompareFunc) _factory_cmp);
-
-_out:
-    for (i = 0; i < info_array->len; i++) {
-        info = g_array_index (info_array, IBusFactoryInfo *, i);
-        g_object_unref (info);
-    }
-
-    g_array_free (info_array, TRUE);
-
-    return reply;
-#endif
-    return NULL;
-}
-
 static void
 _factory_destroy_cb (BusFactoryProxy    *factory,
                      BusIBusImpl        *ibus)
@@ -871,43 +764,6 @@ _ibus_register_component (BusIBusImpl     *ibus,
 
     reply = ibus_message_new_method_return (message);
     return reply;
-}
-
-static IBusMessage *
-_ibus_list_factories (BusIBusImpl     *ibus,
-                      IBusMessage     *message,
-                      BusConnection   *connection)
-{
-#if 0
-    IBusMessage *reply;
-    IBusMessageIter iter, sub_iter;
-    GList *p;
-
-    reply = ibus_message_new_method_return (message);
-
-    ibus_message_iter_init_append (reply, &iter);
-    ibus_message_iter_open_container (&iter, IBUS_TYPE_ARRAY, "v", &sub_iter);
-
-    for (p = ibus->factory_list; p != NULL; p = p->next) {
-        BusFactoryProxy *factory;
-        IBusFactoryInfo *info;
-
-        factory = BUS_FACTORY_PROXY (p->data);
-        info = bus_factory_proxy_get_info (factory);
-        ibus_message_iter_append (&sub_iter, IBUS_TYPE_FACTORY_INFO, &info);
-    }
-    ibus_message_iter_close_container (&iter, &sub_iter);
-    return reply;
-#endif
-    return NULL;
-}
-
-static IBusMessage *
-_ibus_set_factory (BusIBusImpl      *ibus,
-                   IBusMessage      *message,
-                   BusConnection    *connection)
-{
-    return NULL;
 }
 
 static IBusMessage *
@@ -999,10 +855,7 @@ bus_ibus_impl_ibus_message (BusIBusImpl     *ibus,
         /* IBus interface */
         { IBUS_INTERFACE_IBUS, "GetAddress",            _ibus_get_address },
         { IBUS_INTERFACE_IBUS, "CreateInputContext",    _ibus_create_input_context },
-        { IBUS_INTERFACE_IBUS, "RegisterFactories",     _ibus_register_factories },
         { IBUS_INTERFACE_IBUS, "RegisterComponent",     _ibus_register_component },
-        { IBUS_INTERFACE_IBUS, "ListFactories",         _ibus_list_factories },
-        { IBUS_INTERFACE_IBUS, "SetFactory",            _ibus_set_factory },
         { IBUS_INTERFACE_IBUS, "ListEngines",           _ibus_list_engines },
         { IBUS_INTERFACE_IBUS, "ListActiveEngines",     _ibus_list_active_engines },
         { IBUS_INTERFACE_IBUS, "Kill",                  _ibus_kill },
