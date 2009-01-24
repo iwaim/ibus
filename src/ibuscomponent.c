@@ -468,7 +468,7 @@ ibus_component_parse_engines (IBusComponent *component,
     }
 
     for (p = node->attributes; *p != NULL; p += 2) {
-        if (g_strcmp0 (*p, "exec")) {
+        if (g_strcmp0 (*p, "exec") == 0) {
             exec = *(p + 1);
             break;
         }

@@ -115,6 +115,10 @@ _end_element_cb (GMarkupParseContext *context,
     if (p->text && p->sub_nodes) {
         g_debug ("Error");
     }
+
+    if (p->text == NULL && p->sub_nodes == NULL) {
+        p->text = g_strdup ("");
+    }
 }
 
 static gboolean
@@ -147,8 +151,9 @@ _text_cb (GMarkupParseContext *context,
 {
     XMLNode *p = (XMLNode *)user_data;
 
-    if (_is_space (text, text_len))
+    if (_is_space (text, text_len)) {
         return;
+    }
 
     if (p->sub_nodes || p->text) {
         g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT, " ");
