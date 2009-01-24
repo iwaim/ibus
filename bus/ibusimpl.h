@@ -63,8 +63,8 @@ struct _BusIBusImpl {
     GList *factory_list;
     GList *contexts;
  
-    IBusEngineDesc *default_engine;
     GList *engine_list;
+    GList *register_engine_list;
     GList *component_list;
 
     BusRegistry     *registry;

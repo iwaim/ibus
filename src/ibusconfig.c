@@ -311,7 +311,8 @@ _from_dbus_value (IBusMessageIter   *iter,
                       sub_type == G_TYPE_INT ||
                       sub_type == G_TYPE_UINT ||
                       sub_type == G_TYPE_BOOLEAN ||
-                      sub_type == G_TYPE_DOUBLE);
+                      sub_type == G_TYPE_DOUBLE ||
+                      sub_type == IBUS_TYPE_VARIANT);
 
             g_value_init (value, G_TYPE_VALUE_ARRAY);
             array = g_value_array_new (0);

@@ -45,11 +45,14 @@ static void     bus_ibus_impl_destroy           (BusIBusImpl        *ibus);
 static gboolean bus_ibus_impl_ibus_message      (BusIBusImpl        *ibus,
                                                  BusConnection      *connection,
                                                  IBusMessage        *message);
-
-static void     bus_ibus_impl_set_default_engine(BusIBusImpl        *ibus,
-                                                 IBusEngineDesc     *engine);
 static void     bus_ibus_impl_add_factory       (BusIBusImpl        *ibus,
-                                                 BusFactoryProxy    *factory); 
+                                                 BusFactoryProxy    *factory);
+static void     bus_ibus_impl_set_trigger       (BusIBusImpl        *ibus,
+                                                 GValue             *value);
+static void     bus_ibus_impl_set_preload_engines
+                                                (BusIBusImpl        *ibus,
+                                                 GValue             *value);
+
 #if 0
 static void     _factory_destroy_cb             (BusFactoryProxy      *factory,
                                                  BusIBusImpl          *ibus);
@@ -160,49 +163,105 @@ bus_ibus_impl_set_trigger (BusIBusImpl *ibus,
 }
 
 static void
+bus_ibus_impl_set_preload_engines (BusIBusImpl *ibus,
+                                   GValue      *value)
+{
+    GList *engine_list = NULL;
+
+    g_list_foreach (ibus->engine_list, (GFunc) g_object_unref, NULL);
+    g_list_free (ibus->engine_list);
+
+    if (value != NULL && G_VALUE_TYPE (value) == G_TYPE_VALUE_ARRAY) {
+        GValueArray *array;
+        gint i;
+
+        array = (GValueArray *) g_value_get_boxed (value);
+        for (i = 0; array && i < array->n_values; i++) {
+            const gchar *engine_name;
+            IBusEngineDesc *engine;
+
+            if (G_VALUE_TYPE (&array->values[i]) != G_TYPE_STRING)
+                continue;
+
+            engine_name = g_value_get_string (&array->values[i]);
+
+            engine = bus_registry_find_engine_by_name (ibus->registry, engine_name);
+
+            if (engine == NULL || g_list_find (engine_list, engine) != NULL)
+                continue;
+
+            engine_list = g_list_append (engine_list, engine);
+        }
+    }
+
+    g_list_foreach (engine_list, (GFunc) g_object_ref, NULL);
+    ibus->engine_list = engine_list;
+}
+
+static void
 bus_ibus_impl_reload_config (BusIBusImpl *ibus)
 {
     g_assert (BUS_IS_IBUS_IMPL (ibus));
 
+    gint i;
     GValue value = { 0 };
 
-    if (ibus->config == NULL) {
-        bus_ibus_impl_set_trigger (ibus, NULL);
-        return;
-    }
+    const static struct {
+        gchar *section;
+        gchar *key;
+        void ( *func) (BusIBusImpl *, GValue *);
+    } entries [] = {
+        { "general/hotkey", "trigger", bus_ibus_impl_set_trigger },
+        { "general", "preload_engines", bus_ibus_impl_set_preload_engines },
+        { NULL, NULL, NULL },
+    };
 
-    if (ibus_config_get_value (ibus->config,
-                               "general/hotkey",
-                               "trigger",
-                               &value)) {
-        bus_ibus_impl_set_trigger (ibus, &value);
-        g_value_unset (&value);
+    for (i = 0; entries[i].section != NULL; i++) {
+        if (ibus->config != NULL &&
+            ibus_config_get_value (ibus->config,
+                                   entries[i].section,
+                                   entries[i].key,
+                                   &value)) {
+            entries[i].func (ibus, &value);
+            g_value_unset (&value);
+        }
+        else {
+            entries[i].func (ibus, NULL);
+        }
     }
-    else {
-        bus_ibus_impl_set_trigger (ibus, NULL);
-    }
-
 }
 
 static void
 _config_value_changed_cb (IBusConfig  *config,
                           gchar       *section,
-                          gchar       *name,
+                          gchar       *key,
                           GValue      *value,
                           BusIBusImpl *ibus)
 {
     g_assert (IBUS_IS_CONFIG (config));
     g_assert (section);
-    g_assert (name);
+    g_assert (key);
     g_assert (value);
     g_assert (BUS_IS_IBUS_IMPL (ibus));
+    
+    gint i;
 
-    if (g_strcmp0 (section, "general/hotkey") != 0) {
-        return;
-    }
+    const static struct {
+        gchar *section;
+        gchar *key;
+        void ( *func) (BusIBusImpl *, GValue *);
+    } entries [] = {
+        { "general/hotkey", "trigger", bus_ibus_impl_set_trigger },
+        { "general", "preload_engines", bus_ibus_impl_set_preload_engines },
+        { NULL, NULL, NULL },
+    };
 
-    if (g_strcmp0 (name, "trigger") == 0) {
-        bus_ibus_impl_set_trigger (ibus, value);
+    for (i = 0; entries[i].section != NULL; i++) {
+        if (g_strcmp0 (entries[i].section, section) == 0 &&
+            g_strcmp0 (entries[i].key, key) == 0) {
+            entries[i].func (ibus, value);
+            break;
+        }
     }
 }
 
@@ -301,14 +360,15 @@ _dbus_name_owner_changed_cb (BusDBusImpl *dbus,
 static void
 bus_ibus_impl_init (BusIBusImpl *ibus)
 {
-    ibus->factory_dict = g_hash_table_new_full (g_str_hash,
-                                                g_str_equal,
-                                                NULL,
-                                                (GDestroyNotify) g_object_unref);
+    ibus->factory_dict = g_hash_table_new_full (
+                            g_str_hash,
+                            g_str_equal,
+                            NULL,
+                            (GDestroyNotify) g_object_unref);
 
     ibus->registry = bus_registry_new ();
     ibus->engine_list = NULL;
-    ibus->default_engine = NULL;
+    ibus->register_engine_list = NULL;
     ibus->contexts = NULL;
     ibus->focused_context = NULL;
     ibus->panel = NULL;
@@ -330,6 +390,10 @@ bus_ibus_impl_destroy (BusIBusImpl *ibus)
     g_list_foreach (ibus->engine_list, (GFunc) g_object_unref, NULL);
     g_list_free (ibus->engine_list);
     ibus->engine_list = NULL;
+    
+    g_list_foreach (ibus->register_engine_list, (GFunc) g_object_unref, NULL);
+    g_list_free (ibus->register_engine_list);
+    ibus->register_engine_list = NULL;
 
     if (ibus->factory_dict != NULL) {
         g_hash_table_destroy (ibus->factory_dict);
@@ -405,60 +469,51 @@ _ibus_get_address (BusIBusImpl     *ibus,
 }
 
 static void
-_engine_destroy_cb (IBusEngineDesc *engine,
-                    BusIBusImpl    *ibus)
-{
-    if (engine == ibus->default_engine) {
-       bus_ibus_impl_set_default_engine (ibus, NULL); 
-    }
-}
-
-
-static void
-bus_ibus_impl_set_default_engine (BusIBusImpl    *ibus,
-                                  IBusEngineDesc *engine)
-{
-    if (ibus->default_engine != NULL) {
-        g_signal_handlers_disconnect_by_func (ibus->default_engine, _engine_destroy_cb, ibus);
-        g_object_unref (ibus->default_engine);
-        ibus->default_engine = NULL;
-    }
-
-    if (engine != NULL) {
-        ibus->default_engine = engine;
-        g_object_ref (ibus->default_engine);
-        g_signal_connect (ibus->default_engine, "destroy", G_CALLBACK (_engine_destroy_cb), ibus);
-    }
-}
-
-static void
 _context_request_engine_cb (BusInputContext *context,
                             gchar           *engine_name,
                             BusIBusImpl     *ibus)
 {
-    IBusEngineDesc *engine_desc;
+    IBusEngineDesc *engine_desc = NULL;
     IBusComponent *comp;
     BusFactoryProxy *factory;
     BusEngineProxy *engine;
     
-    if (engine_name == NULL) {
-        if (ibus->default_engine == NULL) {
-            if (ibus->engine_list) {
-                bus_ibus_impl_set_default_engine (ibus, (IBusEngineDesc *)ibus->engine_list->data);
-            }
+    if (engine_name == NULL || engine_name[0] == '\0') {
+        /* request default engine */
+        if (ibus->register_engine_list) {
+            engine_desc = (IBusEngineDesc *)ibus->register_engine_list->data;
         }
-        engine_desc = ibus->default_engine;
+        else if (ibus->engine_list) {
+            engine_desc = (IBusEngineDesc *)ibus->engine_list->data;
+        }
     }
     else {
+        /* request engine by name */
         GList *p;
-        for (p = ibus->engine_list; p != NULL; p = p->next) {
+        gboolean found = FALSE;
+
+        /* find engine in registered engine list */
+        for (p = ibus->register_engine_list; p != NULL; p = p->next) {
             engine_desc = (IBusEngineDesc *)p->data;
-            if (g_strcmp0 (engine_desc->name, engine_name) == 0)
+            if (g_strcmp0 (engine_desc->name, engine_name) == 0) {
+                found = TRUE;
                 break;
+            }
         }
 
-        if (p == NULL) {
-            engine_desc = bus_registry_find_engine_by_name (ibus->registry, engine_name);
+        if (!found) {
+            /* find engine in preload engine list */
+            for (p = ibus->engine_list; p != NULL; p = p->next) {
+                 engine_desc = (IBusEngineDesc *)p->data;
+                if (g_strcmp0 (engine_desc->name, engine_name) == 0) {
+                    found = TRUE;
+                    break;
+                }
+            }
+        }
+
+        if (!found) {
+            engine_desc = NULL;
         }
     }
 
@@ -466,12 +521,12 @@ _context_request_engine_cb (BusInputContext *context,
         return;
 
     factory = bus_factory_proxy_get_from_engine (engine_desc);
-    comp = ibus_component_get_from_engine (engine_desc);
-
-    if (comp == NULL)
-        return;
 
     if (factory == NULL) {
+        /* try to execute the engine */
+        comp = ibus_component_get_from_engine (engine_desc);
+        g_assert (comp);
+        
         if (!ibus_component_is_running (comp)) {
             ibus_component_start (comp);
 
@@ -746,7 +801,10 @@ _factory_destroy_cb (BusFactoryProxy    *factory,
     if (component != NULL) {
         p = engines = ibus_component_get_engines (component);
         for (; p != NULL; p = p->next) {
-            ibus->engine_list = g_list_remove (ibus->engine_list, p->data);
+            if (g_list_find (ibus->register_engine_list, p->data)) {
+                ibus->register_engine_list = g_list_remove (ibus->register_engine_list, p->data);
+                g_object_unref (p->data);
+            }
         }
         g_list_free (engines);
     }
@@ -808,7 +866,7 @@ _ibus_register_component (BusIBusImpl     *ibus,
     engines = ibus_component_get_engines (component);
     
     g_list_foreach (engines, (GFunc) g_object_ref, NULL);
-    ibus->engine_list = g_list_concat (ibus->engine_list, engines);
+    ibus->register_engine_list = g_list_concat (ibus->register_engine_list, engines);
     g_object_unref (component);
 
     reply = ibus_message_new_method_return (message);
@@ -891,6 +949,10 @@ _ibus_list_active_engines (BusIBusImpl   *ibus,
     ibus_message_iter_open_container (&iter, IBUS_TYPE_ARRAY, "v", &sub_iter);
 
     for (p = ibus->engine_list; p != NULL; p = p->next) {
+        ibus_message_iter_append (&sub_iter, IBUS_TYPE_ENGINE_DESC, &(p->data));
+    }
+    
+    for (p = ibus->register_engine_list; p != NULL; p = p->next) {
         ibus_message_iter_append (&sub_iter, IBUS_TYPE_ENGINE_DESC, &(p->data));
     }
     ibus_message_iter_close_container (&iter, &sub_iter);
