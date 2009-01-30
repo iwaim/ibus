@@ -167,7 +167,7 @@ class RadioMenuItem (gtk.RadioMenuItem, PropItem):
     }
 
     def __init__ (self, group, prop):
-        gtk.RadioMenuItem.__init__ (self, group, label = prop.label)
+        gtk.RadioMenuItem.__init__ (self, group, label = prop.label.text)
         PropItem.__init__ (self, prop)
 
         self.set_active (self._prop.state == ibus.PROP_STATE_CHECKED)

@@ -527,9 +527,19 @@ _context_request_engine_cb (BusInputContext *context,
         if (!ibus_component_is_running (comp)) {
             ibus_component_start (comp);
 
-            if (g_main_context_pending (NULL)) {
-                g_main_context_iteration (NULL, FALSE);
-                g_usleep (50);
+            gint time = 0;
+            while (time < G_USEC_PER_SEC * 1) {
+                if (g_main_context_pending (NULL)) {
+                    g_main_context_iteration (NULL, FALSE);
+                }
+                else {
+                    g_usleep (50 * 1000);
+                    time += 50 * 1000;
+                } 
+                factory = bus_factory_proxy_get_from_engine (engine_desc);
+                if (factory != NULL) {
+                    break;
+                }
             }
         }
         factory = bus_factory_proxy_get_from_engine (engine_desc);

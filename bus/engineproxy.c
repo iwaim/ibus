@@ -519,10 +519,12 @@ failed:
     return FALSE;
 }
 
-gboolean
+void
 bus_engine_proxy_process_key_event (BusEngineProxy *engine,
                                     guint           keyval,
-                                    guint           state)
+                                    guint           state,
+                                    GFunc           return_cb,
+                                    gpointer        user_data)
 {
     g_assert (BUS_IS_ENGINE_PROXY (engine));
 

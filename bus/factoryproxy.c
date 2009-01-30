@@ -165,38 +165,6 @@ bus_factory_proxy_get_from_engine (IBusEngineDesc *desc)
     return factory;
 }
 
-#if 0
-const gchar *
-bus_factory_proxy_get_name (BusFactoryProxy *factory)
-{
-    return factory->info->name;
-}
-
-const gchar *
-bus_factory_proxy_get_lang (BusFactoryProxy *factory)
-{
-    return factory->info->lang;
-}
-
-const gchar *
-bus_factory_proxy_get_icon (BusFactoryProxy *factory)
-{
-    return factory->info->icon;
-}
-
-const gchar *
-bus_factory_proxy_get_authors (BusFactoryProxy *factory)
-{
-    return factory->info->authors;
-}
-
-const gchar *
-bus_factory_proxy_get_credits (BusFactoryProxy *factory)
-{
-    return factory->info->credits;
-}
-#endif
-
 BusEngineProxy *
 bus_factory_proxy_create_engine (BusFactoryProxy *factory,
                                  IBusEngineDesc  *desc)

@@ -185,6 +185,21 @@ ibus_text_new_from_string (const gchar *str)
 }
 
 IBusText *
+ibus_text_new_from_ucs4 (const gunichar *str)
+{
+    g_return_val_if_fail (str != NULL, NULL);
+
+    IBusText *text;
+
+    text= g_object_new (IBUS_TYPE_TEXT, 0);
+
+    text->is_static = FALSE;
+    text->text = g_ucs4_to_utf8 (str, -1, NULL, NULL, NULL);
+
+    return text;
+}
+
+IBusText *
 ibus_text_new_from_static_string (const gchar *str)
 {
     g_return_val_if_fail (str != NULL, NULL);
@@ -259,4 +274,10 @@ ibus_text_append_attribute (IBusText *text,
         text->attrs = ibus_attr_list_new ();
 
     ibus_attr_list_append (text->attrs, ibus_attribute_new (type, value, start_index, end_index));
+}
+
+guint
+ibus_text_get_length (IBusText *text)
+{
+    return g_utf8_strlen (text->text, -1);
 }

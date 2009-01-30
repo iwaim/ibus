@@ -1,6 +1,7 @@
 #include "matchrule.h"
 
-int main()
+int
+main(gint argc, gchar **argv)
 {
 	BusMatchRule *rule, *rule1;
 	g_type_init ();
