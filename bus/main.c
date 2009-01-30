@@ -18,6 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <unistd.h>
 #include <stdlib.h>
 #include <locale.h>
 #include "server.h"
@@ -51,6 +52,13 @@ main (gint argc, gchar **argv)
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_print ("Option parsing failed: %s\n", error->message);
         exit (-1);
+    }
+
+    if (daemonize) {
+        if (daemon (1, 0) != 0) {
+            g_print ("Can not daemonize ibus.");
+            exit (-1);
+        }
     }
 
     g_type_init ();
