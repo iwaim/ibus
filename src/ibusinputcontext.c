@@ -544,23 +544,37 @@ ibus_input_context_process_key_event (IBusInputContext *context,
 {
     g_assert (IBUS_IS_INPUT_CONTEXT (context));
 
-    DBusMessage *reply_message;
+    IBusMessage *reply_message;
+    IBusPendingCall *pending = NULL;
     IBusError *error = NULL;
     gboolean retval;
 
     if (state & IBUS_FORWARD_MASK)
         return FALSE;
 
-    reply_message = ibus_proxy_call_with_reply_and_block (IBUS_PROXY (context),
-                                                  "ProcessKeyEvent",
-                                                  -1,
-                                                  &error,
-                                                  G_TYPE_UINT, &keyval,
-                                                  G_TYPE_UINT, &state,
-                                                  G_TYPE_INVALID);
-    if (reply_message == NULL) {
+    retval = ibus_proxy_call_with_reply (IBUS_PROXY (context),
+                                         "ProcessKeyEvent",
+                                         &pending,
+                                         -1,
+                                         &error,
+                                         G_TYPE_UINT, &keyval,
+                                         G_TYPE_UINT, &state,
+                                         G_TYPE_INVALID);
+    if (!retval) {
         g_debug ("%s: %s", error->name, error->message);
         ibus_error_free (error);
+        return FALSE;
+    }
+
+    do {
+        g_main_context_iteration (NULL, TRUE);
+    } while (!ibus_pending_call_get_completed (pending));
+
+    reply_message = ibus_pending_call_steal_reply (pending);
+    ibus_pending_call_unref (pending);
+
+    if (reply_message == NULL) {
+        g_debug ("%s: Do not recevie reply of ProcessKeyEvent", DBUS_ERROR_NO_REPLY);
         retval = FALSE;
     }
     else if ((error = ibus_error_new_from_message (reply_message)) != NULL) {

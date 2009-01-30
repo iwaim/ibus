@@ -535,7 +535,61 @@ ibus_proxy_call (IBusProxy      *proxy,
     return retval;
 }
 
-DBusMessage *
+gboolean
+ibus_proxy_call_with_reply (IBusProxy        *proxy,
+                            const gchar      *method,
+                            IBusPendingCall **pending,
+                            gint              timeout_milliseconds,
+                            IBusError       **error,
+                            GType             first_arg_type,
+                            ...)
+{
+    g_assert (IBUS_IS_PROXY (proxy));
+    g_assert (pending != NULL);
+    g_assert (method != NULL);
+    
+    va_list args;
+    gboolean retval;
+    DBusMessage *message;
+
+    IBusProxyPrivate *priv;
+    priv = IBUS_PROXY_GET_PRIVATE (proxy);
+
+    if (priv->connection == NULL || !ibus_connection_is_connected (priv->connection)) {
+        if (error) {
+            *error = ibus_error_new_from_printf (DBUS_ERROR_DISCONNECTED,
+                                                 "Connection of %s was disconnected.",
+                                                 G_OBJECT_TYPE_NAME (proxy));
+        }
+        return FALSE;
+    }
+    
+    message = ibus_message_new_method_call (priv->name,
+                                            priv->path,
+                                            priv->interface,
+                                            method);
+    va_start (args, first_arg_type);
+    retval = ibus_message_append_args_valist (message,
+                                              first_arg_type,
+                                              args);
+    va_end (args);
+
+    *pending = NULL;
+    retval = ibus_connection_send_with_reply (priv->connection,
+                                              message,
+                                              pending,
+                                              timeout_milliseconds);
+    ibus_message_unref (message);
+    
+    if (!retval && error != NULL) {
+        *error = ibus_error_new_from_printf (DBUS_ERROR_NO_MEMORY, "");
+    }
+    
+    return retval;
+}
+
+
+IBusMessage *
 ibus_proxy_call_with_reply_and_block (IBusProxy      *proxy,
                                       const gchar    *method,
                                       gint            timeout_milliseconds,

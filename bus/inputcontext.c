@@ -547,6 +547,31 @@ _ibus_introspect (BusInputContext   *context,
     return reply_message;
 }
 
+typedef struct {
+    BusInputContext *context;
+    IBusMessage     *message;
+}CallData;
+
+static void
+_ic_process_key_event_reply_cb (gboolean  retval,
+                                CallData *call_data)
+{
+    IBusMessage *reply;
+    BusInputContextPrivate *priv;
+    priv = BUS_INPUT_CONTEXT_GET_PRIVATE (call_data->context);
+    
+    reply = ibus_message_new_method_return (call_data->message);
+    ibus_message_append_args (reply,
+                              G_TYPE_BOOLEAN, &retval,
+                              G_TYPE_INVALID);
+    ibus_connection_send ((IBusConnection *)priv->connection, reply);
+
+    g_object_unref (call_data->context);
+    ibus_message_unref (call_data->message);
+    ibus_message_unref (reply);
+    g_slice_free (CallData, call_data);
+}
+
 static IBusMessage *
 _ic_process_key_event (BusInputContext *context,
                        IBusMessage     *message,
@@ -556,7 +581,7 @@ _ic_process_key_event (BusInputContext *context,
     g_assert (message != NULL);
     g_assert (BUS_IS_CONNECTION (connection));
 
-    IBusMessage *reply;
+    IBusMessage *reply = NULL;
     guint keyval, modifiers;
     gboolean retval;
     IBusError *error;
@@ -585,20 +610,30 @@ _ic_process_key_event (BusInputContext *context,
     retval = bus_input_context_filter_keyboard_shortcuts (context, keyval, modifiers);
 
     if (retval) {
+        reply = ibus_message_new_method_return (message);
+        ibus_message_append_args (reply,
+                                  G_TYPE_BOOLEAN, &retval,
+                                  G_TYPE_INVALID);
     }
     else if (priv->enabled && priv->engine) {
-        retval = bus_engine_proxy_process_key_event (priv->engine,
-                                                     keyval,
-                                                     modifiers);
+        CallData *call_data = g_slice_new (CallData);
+        call_data->context = context;
+        call_data->message = message;
+        g_object_ref (context);
+        ibus_message_ref (message);
+
+        bus_engine_proxy_process_key_event (priv->engine,
+                                            keyval,
+                                            modifiers,
+                                            (GFunc) _ic_process_key_event_reply_cb,
+                                            call_data);
     }
     else {
-        retval = FALSE;
+        reply = ibus_message_new_method_return (message);
+        ibus_message_append_args (reply,
+                                  G_TYPE_BOOLEAN, &retval,
+                                  G_TYPE_INVALID);
     }
-
-    reply = ibus_message_new_method_return (message);
-    ibus_message_append_args (reply,
-                              G_TYPE_BOOLEAN, &retval,
-                              G_TYPE_INVALID);
     return reply;
 }
 

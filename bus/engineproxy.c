@@ -519,37 +519,27 @@ failed:
     return FALSE;
 }
 
-void
-bus_engine_proxy_process_key_event (BusEngineProxy *engine,
-                                    guint           keyval,
-                                    guint           state,
-                                    GFunc           return_cb,
-                                    gpointer        user_data)
-{
-    g_assert (BUS_IS_ENGINE_PROXY (engine));
+typedef struct {
+    GFunc    func;
+    gpointer user_data;
+}CallData;
 
+static void
+bus_engine_proxy_process_key_event_reply_cb (IBusPendingCall *pending,
+                                             CallData        *call_data)
+{
     IBusMessage *reply_message;
     IBusError *error;
     gboolean retval;
 
-    reply_message = ibus_proxy_call_with_reply_and_block (IBUS_PROXY (engine),
-                                                          "ProcessKeyEvent",
-                                                          -1,
-                                                          &error,
-                                                          G_TYPE_UINT, &keyval,
-                                                          G_TYPE_UINT, &state,
-                                                          G_TYPE_INVALID);
-    if (reply_message == NULL) {
-        g_warning ("%s: %s", error->name, error->message);
-        ibus_error_free (error);
-        return FALSE;
-    }
-
+    reply_message = dbus_pending_call_steal_reply (pending);
+    
     if ((error = ibus_error_new_from_message (reply_message)) != NULL) {
         g_warning ("%s: %s", error->name, error->message);
         ibus_message_unref (reply_message);
         ibus_error_free (error);
-        return FALSE;
+        call_data->func(FALSE, call_data->user_data);
+        return;
     }
 
     if (!ibus_message_get_args (reply_message,
@@ -559,10 +549,58 @@ bus_engine_proxy_process_key_event (BusEngineProxy *engine,
         g_warning ("%s: %s", error->name, error->message);
         ibus_message_unref (reply_message);
         ibus_error_free (error);
-        return FALSE;
+        call_data->func(FALSE, call_data->user_data);
+        return;
     }
 
-    return retval;
+    call_data->func((gpointer *)retval, call_data->user_data);
+    g_slice_free (CallData, call_data);
+}
+
+void
+bus_engine_proxy_process_key_event (BusEngineProxy *engine,
+                                    guint           keyval,
+                                    guint           state,
+                                    GFunc           return_cb,
+                                    gpointer        user_data)
+{
+    g_assert (BUS_IS_ENGINE_PROXY (engine));
+    g_assert (return_cb);
+
+    IBusPendingCall *pending = NULL;
+    CallData *call_data;
+    IBusError *error;
+    gboolean retval;
+
+    retval = ibus_proxy_call_with_reply (IBUS_PROXY (engine),
+                                         "ProcessKeyEvent",
+                                         &pending,
+                                         -1,
+                                         &error,
+                                         G_TYPE_UINT, &keyval,
+                                         G_TYPE_UINT, &state,
+                                         G_TYPE_INVALID);
+    if (!retval) {
+        g_warning ("%s: %s", error->name, error->message);
+        ibus_error_free (error);
+        return_cb (FALSE, user_data);
+        return;
+    }
+
+    call_data = g_slice_new0 (CallData);
+    call_data->func = return_cb;
+    call_data->user_data = user_data;
+
+    retval = dbus_pending_call_set_notify (pending,
+                                           (IBusPendingCallNotifyFunction) bus_engine_proxy_process_key_event_reply_cb,
+                                           call_data,
+                                           NULL);
+
+    if (!retval) {
+        g_warning ("%s : ProcessKeyEvent", DBUS_ERROR_NO_MEMORY);
+        return_cb (FALSE, user_data);
+        return;
+    }
 }
 
 void
