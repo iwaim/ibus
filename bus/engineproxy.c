@@ -591,10 +591,11 @@ bus_engine_proxy_process_key_event (BusEngineProxy *engine,
     call_data->func = return_cb;
     call_data->user_data = user_data;
 
-    retval = dbus_pending_call_set_notify (pending,
+    retval = ibus_pending_call_set_notify (pending,
                                            (IBusPendingCallNotifyFunction) bus_engine_proxy_process_key_event_reply_cb,
                                            call_data,
                                            NULL);
+    ibus_pending_call_unref (pending);
 
     if (!retval) {
         g_warning ("%s : ProcessKeyEvent", DBUS_ERROR_NO_MEMORY);

@@ -30,7 +30,7 @@ class GconfApplication:
     def __init__(self):
         self.__mainloop = gobject.MainLoop()
         self.__bus = ibus.Bus()
-        self.__bus.connect("destroy", self.__bus_destroy_cb)
+        self.__bus.connect("disconnected", self.__bus_disconnected_cb)
 
         self.__config = config.Config(self.__bus)
         self.__config.connect("destroy", self.__config_destroy_cb)
@@ -42,7 +42,7 @@ class GconfApplication:
     def __config_destroy_cb(self, config):
         self.__mainloop.quit()
 
-    def __bus_destroy_cb(self, _ibus):
+    def __bus_disconnected_cb(self, _ibus):
         print "disconnected"
         self.__mainloop.quit()
 
