@@ -22,6 +22,7 @@
 
 #include <dbus/dbus.h>
 #include "ibusmessage.h"
+#include "ibuspendingcall.h"
 #include "ibusobject.h"
 #include "ibuserror.h"
 
@@ -114,12 +115,10 @@ gboolean         ibus_connection_send_valist        (IBusConnection     *connect
                                                      const gchar        *name,
                                                      GType               first_arg_type,
                                                      va_list             args);
-gboolean         ibus_connection_send_with_reply    (IBusConnection             *connection,
-                                                     IBusMessage                *message,
-                                                     gint                        timeout_milliseconds,
-                                                     IBusConnectionReplyFunc     reply_callback,
-                                                     gpointer                    user_data,
-                                                     IBusFreeFunc                user_data_free_callback);
+gboolean         ibus_connection_send_with_reply    (IBusConnection     *connection,
+                                                     IBusMessage        *message,
+                                                     IBusPendingCall   **pending_return,    
+                                                     gint                timeout_milliseconds);
 IBusMessage     *ibus_connection_send_with_reply_and_block
                                                     (IBusConnection     *connection,
                                                      IBusMessage        *message,

@@ -36,6 +36,7 @@
 #include <ibusbus.h>
 #include <ibuskeysyms.h>
 #include <ibusmessage.h>
+#include <ibuspendingcall.h>
 #include <ibuserror.h>
 #include <ibusenumtypes.h>
 #include <ibushotkey.h>

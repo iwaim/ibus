@@ -56,6 +56,7 @@ ibus_public_h_sources = \
 	ibusinputcontext.h \
 	ibusconfig.h \
 	ibusmessage.h \
+	ibuspendingcall.h \
 	ibuserror.h \
 	ibuskeysyms.h \
 	ibustypes.h \
@@ -90,6 +91,7 @@ ibus_c_sources = \
 	ibusinputcontext.c \
 	ibusconfig.c \
 	ibusmessage.c \
+	ibuspendingcall.c \
 	ibuserror.c \
 	ibusbus.c \
 	ibuskeynames.c \
