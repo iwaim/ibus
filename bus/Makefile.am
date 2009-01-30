@@ -73,18 +73,10 @@ ibus_daemon_SOURCES = \
 	registry.h \
 	$(NULL)
 ibus_daemon_CFLAGS = \
-	@X11_CFLAGS@ \
-	@GLIB2_CFLAGS@ \
-	@DBUS_CFLAGS@ \
-	-DG_LOG_DOMAIN=\"IBUS\" \
-	-DPKGDATADIR=\"$(pkgdatadir)\" \
-	-I$(top_srcdir)/src \
+	$(AM_CFLAGS) \
 	$(NULL)
 ibus_daemon_LDADD = \
-	@X11_LIBS@ \
-	@GLIB2_LIBS@ \
-	@DBUS_LIBS@ \
-	$(libibus) \
+	$(AM_LDFLAGS) \
 	$(NULL)
 
 test_registry_SOURCES = \

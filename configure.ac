@@ -242,8 +242,10 @@ launcher/Makefile
 ui/Makefile
 ui/gtk/Makefile
 ui/gtk/ibus-ui-gtk
+ui/gtk/gtkpanel.xml
 gconf/Makefile
 gconf/ibus-gconf
+gconf/gconf.xml
 client/Makefile
 client/gtk2/Makefile
 client/qt4/Makefile

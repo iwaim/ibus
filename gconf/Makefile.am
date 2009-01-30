@@ -23,10 +23,16 @@ gconf_PYTHON = \
 	config.py \
 	main.py \
 	$(NULL)
-
 gconfdir = $(pkgdatadir)/gconf
 
-bin_SCRIPTS = ibus-gconf
+bin_SCRIPTS = \
+	ibus-gconf \
+	$(NULL)
+
+component_DATA = \
+	gconf.xml \
+	$(NULL)
+componentdir = $(pkgdatadir)/component
 
 CLEANFILES = \
 	*.pyc \
@@ -34,6 +40,7 @@ CLEANFILES = \
 
 EXTRA_DIST = \
 	ibus-gconf.in \
+	gconf.xml.in \
 	$(NULL)
 
 test:

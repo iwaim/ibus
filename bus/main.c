@@ -24,14 +24,18 @@
 #include "server.h"
 
 static gboolean daemonize = FALSE;
+static gchar *panel = "default";
+static gchar *config = "default";
 static gchar *desktop = "gnome";
 static gboolean verbose = FALSE;
 
 static const GOptionEntry entries[] = 
 {
     { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "run ibus as background process", NULL },
-    { "desktop", 'n', 0, G_OPTION_ARG_STRING, &desktop, "specify the name of desktop session. [default=gnome]", "name" },
-    { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "verbose", NULL },
+    { "desktop",   'n', 0, G_OPTION_ARG_STRING, &desktop, "specify the name of desktop session. [default=gnome]", "name" },
+    { "panel",     'p', 0, G_OPTION_ARG_STRING, &panel, "specify the path of panel program", NULL },
+    { "config",    'c', 0, G_OPTION_ARG_STRING, &config, "specify the path of config program", NULL },
+    { "verbose",   'v', 0, G_OPTION_ARG_NONE, &verbose, "verbose", NULL },
     { NULL },
 };
 
