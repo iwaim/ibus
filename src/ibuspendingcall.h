@@ -40,6 +40,7 @@ void                ibus_pending_call_cancel        (IBusPendingCall            
 gboolean            ibus_pending_call_get_completed (IBusPendingCall                *pending);
 IBusMessage*        ibus_pending_call_steal_reply   (IBusPendingCall                *pending);
 void                ibus_pending_call_block         (IBusPendingCall                *pending);
+void                ibus_pending_call_wait          (IBusPendingCall                *pending);
 gboolean            ibus_pending_call_allocate_data_slot
                                                     (gint                           *slot_p);
 void                ibus_pending_call_free_data_slot

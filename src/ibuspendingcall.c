@@ -64,6 +64,16 @@ ibus_pending_call_block (IBusPendingCall *pending)
     return dbus_pending_call_block (pending);
 }
 
+void
+ibus_pending_call_wait (IBusPendingCall *pending)
+{
+    g_assert (pending);
+
+    while (!ibus_pending_call_get_completed (pending)) {
+        g_main_context_iteration (NULL, TRUE);
+    }
+}
+
 gboolean
 ibus_pending_call_allocate_data_slot (gint *slot_p)
 {

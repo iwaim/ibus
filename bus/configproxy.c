@@ -437,19 +437,31 @@ bus_config_proxy_get_value (BusConfigProxy  *config,
     g_assert (name != NULL);
     g_assert (value != NULL);
 
-    DBusMessage *reply;
+    IBusMessage *reply;
+    IBusPendingCall *pending = NULL;
     IBusError *error;
+    gboolean retval;
 
-    reply = ibus_proxy_call_with_reply_and_block ((IBusProxy *) config,
-                                                  "GetValue",
-                                                  -1,
-                                                  &error,
-                                                  DBUS_TYPE_STRING, section,
-                                                  DBUS_TYPE_STRING, name,
-                                                  DBUS_TYPE_INVALID);
-    if (reply == NULL) {
+    reply = ibus_proxy_call_with_reply ((IBusProxy *) config,
+                                        "GetValue",
+                                        &pending,
+                                        -1,
+                                        &error,
+                                        DBUS_TYPE_STRING, section,
+                                        DBUS_TYPE_STRING, name,
+                                        DBUS_TYPE_INVALID);
+    if (!retval) {
         g_warning ("%s: %s", error->name, error->message);
         ibus_error_free (error);
+        return FALSE;
+    }
+
+    ibus_pending_call_wait (pending);
+    reply = ibus_pending_call_steal_reply (pending);
+    ibus_pending_call_unref (pending);
+
+    if (reply == NULL) {
+        g_warning ("%s: Do not receive reply of GetValue", DBUS_ERROR_NO_REPLY);
         return FALSE;
     }
 

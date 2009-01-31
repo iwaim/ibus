@@ -575,9 +575,7 @@ ibus_input_context_process_key_event (IBusInputContext *context,
     }
 
     /* wait reply or timeout */
-    do {
-        g_main_context_iteration (NULL, TRUE);
-    } while (!ibus_pending_call_get_completed (pending));
+    ibus_pending_call_wait (pending);
 
     reply_message = ibus_pending_call_steal_reply (pending);
     ibus_pending_call_unref (pending);
