@@ -5,4 +5,4 @@ ICON="/usr/share/ibus/icons/ibus.svg"
 PREFERENCE_PROGRAM=/usr/bin/ibus-setup
 SHORT_DESC="iBus"
 GTK_IM_MODULE=ibus
-QT_IM_MODULE=ibus
+# QT_IM_MODULE=ibus

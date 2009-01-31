@@ -37,7 +37,7 @@ SUBDIRS = 		\
 
 ACLOCAL_AMFLAGS = -I m4
 
-pkgconfigdir = $(libdir)/pkg-config
+pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = ibus-1.0.pc
 
 EXTRA_DIST = \
