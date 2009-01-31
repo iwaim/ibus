@@ -23,7 +23,7 @@
 libIMdkit = $(top_builddir)/util/IMdkit/libIMdkit.la
 libibus = $(top_builddir)/src/libibus.la
 
-bin_PROGRAMS = ibus-x11
+libexec_PROGRAMS = ibus-x11
 
 ibus_x11_SOURCES = \
 	main.c \

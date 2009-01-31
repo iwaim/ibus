@@ -528,7 +528,7 @@ _context_request_engine_cb (BusInputContext *context,
             ibus_component_start (comp);
 
             gint time = 0;
-            while (time < G_USEC_PER_SEC * 1) {
+            while (time < G_USEC_PER_SEC * 3) {
                 if (g_main_context_pending (NULL)) {
                     g_main_context_iteration (NULL, FALSE);
                 }
@@ -921,3 +921,13 @@ bus_ibus_impl_get_hotkey_profile (BusIBusImpl *ibus)
 
     return ibus->hotkey_profile;
 }
+
+BusRegistry *
+bus_ibus_impl_get_registry (BusIBusImpl *ibus)
+{
+
+    g_assert (BUS_IS_IBUS_IMPL (ibus));
+
+    return ibus->registry;
+}
+

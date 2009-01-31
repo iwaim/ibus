@@ -361,7 +361,7 @@ _component_is_name (IBusComponent *component,
     return g_strcmp0 (component->name, name);
 }
 
-static IBusComponent *
+IBusComponent *
 bus_registry_lookup_component_by_name (BusRegistry *registry,
                                        const gchar *name)
 {

@@ -1490,8 +1490,10 @@ bus_input_context_filter_keyboard_shortcuts (BusInputContext    *context,
             g_signal_emit (context, context_signals[REQUEST_ENGINE], 0, NULL);
         }
 
-        if (priv->engine == NULL)
+        if (priv->engine == NULL) {
+            g_debug ("Can not find a engine");
             return FALSE;
+        }
 
         if (priv->enabled)
             bus_input_context_disable (context);

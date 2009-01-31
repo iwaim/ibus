@@ -31,6 +31,7 @@ AM_CFLAGS = \
 	@DBUS_CFLAGS@ \
 	-DG_LOG_DOMAIN=\"IBUS\" \
 	-DPKGDATADIR=\"$(pkgdatadir)\" \
+	-DLIBEXECDIR=\"$(libexecdir)\" \
 	-I$(top_srcdir)/src \
 	$(NULL)
 AM_LDFLAGS = \

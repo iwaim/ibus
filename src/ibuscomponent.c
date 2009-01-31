@@ -679,7 +679,8 @@ ibus_component_start (IBusComponent *component)
 
     error = NULL;
     retval = g_spawn_async (NULL, argv, NULL,
-                            G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL,
+                            G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_STDOUT_TO_DEV_NULL | G_SPAWN_STDERR_TO_DEV_NULL,
+                            NULL, NULL,
                             &(component->pid), &error);
     g_strfreev (argv)
     ;

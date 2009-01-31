@@ -33,7 +33,7 @@ ui_gtk_PYTHON = \
 	$(NULL)
 ui_gtkdir = $(pkgdatadir)/ui/gtk
 
-bin_SCRIPTS = \
+libexec_SCRIPTS = \
 	ibus-ui-gtk \
 	$(NULL)
 

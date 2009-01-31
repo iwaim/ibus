@@ -49,6 +49,8 @@
     (bus_ibus_impl_get_default ())
 #define BUS_DEFAULT_HOTKEY_PROFILE \
     (bus_ibus_impl_get_hotkey_profile (BUS_DEFAULT_IBUS))
+#define BUS_DEFAULT_REGISTRY \
+    (bus_ibus_impl_get_registry (BUS_DEFAULT_IBUS))
 
 G_BEGIN_DECLS
 
@@ -93,7 +95,7 @@ BusFactoryProxy *bus_ibus_impl_lookup_factory       (BusIBusImpl        *ibus,
                                                      const gchar        *path);
 IBusHotkeyProfile
                 *bus_ibus_impl_get_hotkey_profile   (BusIBusImpl        *ibus);
-
+BusRegistry     *bus_ibus_impl_get_registry         (BusIBusImpl        *ibus);
 
 G_END_DECLS
 #endif

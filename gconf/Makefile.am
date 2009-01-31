@@ -25,7 +25,7 @@ gconf_PYTHON = \
 	$(NULL)
 gconfdir = $(pkgdatadir)/gconf
 
-bin_SCRIPTS = \
+libexec_SCRIPTS = \
 	ibus-gconf \
 	$(NULL)
 

@@ -77,7 +77,8 @@ static void     _xim_set_cursor_location    (X11IC              *x11ic);
 static void     _context_commit_text_cb     (IBusInputContext   *context,
                                              IBusText           *text,
                                              X11IC              *x11ic);
-static void     _context_forward_event_cb   (IBusInputContext   *context,
+static void     _context_forward_key_event_cb
+                                            (IBusInputContext   *context,
                                              X11IC              *x11ic);
 
 static void     _context_update_preedit_text_cb
@@ -343,8 +344,8 @@ xim_create_ic (XIMS xims, IMChangeICStruct *call_data)
     
     g_signal_connect (x11ic->context, "commit-text",
                         G_CALLBACK (_context_commit_text_cb), x11ic);
-    g_signal_connect (x11ic->context, "forward-event",
-                        G_CALLBACK (_context_forward_event_cb), x11ic);
+    g_signal_connect (x11ic->context, "forward-key-event",
+                        G_CALLBACK (_context_forward_key_event_cb), x11ic);
 
     g_signal_connect (x11ic->context, "update-preedit-text",
                         G_CALLBACK (_context_update_preedit_text_cb), x11ic);
@@ -789,8 +790,8 @@ _context_commit_text_cb (IBusInputContext *context,
 }
 
 static void
-_context_forward_event_cb (IBusInputContext *context,
-                           X11IC            *x11ic)
+_context_forward_key_event_cb (IBusInputContext *context,
+                               X11IC            *x11ic)
 {
     g_assert (x11ic);
     

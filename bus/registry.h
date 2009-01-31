@@ -71,6 +71,10 @@ gboolean         bus_registry_exec_component    (BusRegistry    *registry,
                                                  const gchar    *name);
 gboolean         bus_registry_kill_component    (BusRegistry    *registry,
                                                  const gchar    *name);
+
+IBusComponent   *bus_registry_lookup_component_by_name
+                                                (BusRegistry    *registry,
+                                                 const gchar    *name);
 IBusEngineDesc  *bus_registry_find_engine_by_name
                                                 (BusRegistry    *registry,
                                                  const gchar    *name);
