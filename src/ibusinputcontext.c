@@ -329,12 +329,14 @@ static void
 ibus_input_context_real_destroy (IBusInputContext *context)
 {
     IBusConnection *connection;
+    
     connection = ibus_proxy_get_connection ((IBusProxy *) context);
     if (connection && ibus_connection_is_connected (connection)) {
         ibus_proxy_call (IBUS_PROXY (context),
                          "Destroy",
                          G_TYPE_INVALID);
     }
+    
     IBUS_OBJECT_CLASS(parent_class)->destroy (IBUS_OBJECT (context));
 }
 
@@ -559,7 +561,7 @@ ibus_input_context_process_key_event (IBusInputContext *context,
     if (state & IBUS_FORWARD_MASK)
         return FALSE;
 
-    retval = ibus_proxy_call_with_reply (IBUS_PROXY (context),
+    retval = ibus_proxy_call_with_reply ((IBusProxy *) context,
                                          "ProcessKeyEvent",
                                          &pending,
                                          -1,
@@ -573,6 +575,7 @@ ibus_input_context_process_key_event (IBusInputContext *context,
         return FALSE;
     }
 
+    /* wait reply or timeout */
     do {
         g_main_context_iteration (NULL, TRUE);
     } while (!ibus_pending_call_get_completed (pending));
@@ -614,7 +617,7 @@ ibus_input_context_set_cursor_location (IBusInputContext *context,
 {
     g_assert (IBUS_IS_INPUT_CONTEXT (context));
 
-    ibus_proxy_call (IBUS_PROXY (context),
+    ibus_proxy_call ((IBusProxy *) context,
                      "SetCursorLocation",
                      G_TYPE_INT, &x,
                      G_TYPE_INT, &y,
@@ -629,91 +632,9 @@ ibus_input_context_set_capabilities (IBusInputContext   *context,
 {
     g_assert (IBUS_IS_INPUT_CONTEXT (context));
 
-    ibus_proxy_call (IBUS_PROXY (context),
+    ibus_proxy_call ((IBusProxy *) context,
                      "SetCapabilities",
                      G_TYPE_UINT, &capabilites,
-                     G_TYPE_INVALID);
-}
-
-void
-ibus_input_context_focus_in (IBusInputContext *context)
-{
-    g_assert (IBUS_IS_INPUT_CONTEXT (context));
-
-    ibus_proxy_call (IBUS_PROXY (context),
-                     "FocusIn",
-                     G_TYPE_INVALID);
-}
-
-void
-ibus_input_context_focus_out (IBusInputContext *context)
-{
-    g_assert (IBUS_IS_INPUT_CONTEXT (context));
-    ibus_proxy_call (IBUS_PROXY (context),
-                     "FocusOut",
-                     G_TYPE_INVALID);
-}
-
-void
-ibus_input_context_reset (IBusInputContext *context)
-{
-    g_assert (IBUS_IS_INPUT_CONTEXT (context));
-    ibus_proxy_call (IBUS_PROXY (context),
-                     "Reset",
-                     G_TYPE_INVALID);
-}
-
-void
-ibus_input_context_page_up (IBusInputContext *context)
-{
-    g_assert (IBUS_IS_INPUT_CONTEXT (context));
-    ibus_proxy_call (IBUS_PROXY (context),
-                     "PageUp",
-                     G_TYPE_INVALID);
-}
-
-void
-ibus_input_context_page_down (IBusInputContext *context)
-{
-    g_assert (IBUS_IS_INPUT_CONTEXT (context));
-    ibus_proxy_call (IBUS_PROXY (context),
-                     "PageDown",
-                     G_TYPE_INVALID);
-}
-
-void
-ibus_input_context_cursor_up (IBusInputContext *context)
-{
-    g_assert (IBUS_IS_INPUT_CONTEXT (context));
-    ibus_proxy_call (IBUS_PROXY (context),
-                     "CursorUp",
-                     G_TYPE_INVALID);
-}
-
-void
-ibus_input_context_cursor_down (IBusInputContext *context)
-{
-    g_assert (IBUS_IS_INPUT_CONTEXT (context));
-    ibus_proxy_call (IBUS_PROXY (context),
-                     "CursorDown",
-                     G_TYPE_INVALID);
-}
-
-void
-ibus_input_context_enable (IBusInputContext *context)
-{
-    g_assert (IBUS_IS_INPUT_CONTEXT (context));
-    ibus_proxy_call (IBUS_PROXY (context),
-                     "Enable",
-                     G_TYPE_INVALID);
-}
-
-void
-ibus_input_context_disable (IBusInputContext *context)
-{
-    g_assert (IBUS_IS_INPUT_CONTEXT (context));
-    ibus_proxy_call (IBUS_PROXY (context),
-                     "Disable",
                      G_TYPE_INVALID);
 }
 
@@ -724,7 +645,7 @@ ibus_input_context_property_activate (IBusInputContext *context,
 {
     g_assert (IBUS_IS_INPUT_CONTEXT (context));
 
-    ibus_proxy_call (IBUS_PROXY (context),
+    ibus_proxy_call ((IBusProxy *) context,
                      "PropertyActivate",
                      G_TYPE_STRING, &prop_name,
                      G_TYPE_INT, &state,
@@ -737,7 +658,7 @@ ibus_input_context_property_show (IBusInputContext *context,
 {
     g_assert (IBUS_IS_INPUT_CONTEXT (context));
 
-    ibus_proxy_call (IBUS_PROXY (context),
+    ibus_proxy_call ((IBusProxy *) context,
                      "PropertyShow",
                      G_TYPE_STRING, &prop_name,
                      G_TYPE_INVALID);
@@ -749,22 +670,31 @@ ibus_input_context_property_hide (IBusInputContext *context,
 {
     g_assert (IBUS_IS_INPUT_CONTEXT (context));
 
-    ibus_proxy_call (IBUS_PROXY (context),
+    ibus_proxy_call ((IBusProxy *) context,
                      "PropertyHide",
                      G_TYPE_STRING, &prop_name,
                      G_TYPE_INVALID);
 }
 
-void
-ibus_input_context_destroy (IBusInputContext *context)
-{
-    g_assert (IBUS_IS_INPUT_CONTEXT (context));
+#define DEFINE_FUNC(name,Name)                              \
+    void                                                    \
+    ibus_input_context_##name (IBusInputContext *context)   \
+    {                                                       \
+        g_assert (IBUS_IS_INPUT_CONTEXT (context));         \
+        ibus_proxy_call ((IBusProxy *) context,             \
+                         #Name,                             \
+                         G_TYPE_INVALID);                   \
+    }
 
-    ibus_proxy_call (IBUS_PROXY (context),
-                     "Destroy",
-                     G_TYPE_INVALID);
-    ibus_object_destroy (IBUS_OBJECT (context));
-}
+DEFINE_FUNC(focus_in, FocusIn);
+DEFINE_FUNC(focus_out, FocusOut);
+DEFINE_FUNC(reset, Reset);
+DEFINE_FUNC(page_up, PageUp);
+DEFINE_FUNC(page_down, PageDown);
+DEFINE_FUNC(cursor_up, CursorUp);
+DEFINE_FUNC(cursor_down, CursorDown);
+DEFINE_FUNC(enable, Enable);
+DEFINE_FUNC(disable, Disable);
 
-
+#undef DEFINE_FUNC
 

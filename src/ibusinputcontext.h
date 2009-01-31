@@ -81,7 +81,6 @@ void         ibus_input_context_focus_out   (IBusInputContext   *context);
 void         ibus_input_context_reset       (IBusInputContext   *context);
 void         ibus_input_context_enable      (IBusInputContext   *context);
 void         ibus_input_context_disable     (IBusInputContext   *context);
-void         ibus_input_context_destroy     (IBusInputContext   *context);
 
 G_END_DECLS
 #endif
