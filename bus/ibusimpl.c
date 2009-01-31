@@ -571,6 +571,26 @@ _context_request_prev_engine_cb (BusInputContext *context,
 }
 
 static void
+_context_focus_out_cb (BusInputContext    *context,
+                       BusIBusImpl        *ibus)
+{
+    g_assert (BUS_IS_IBUS_IMPL (ibus));
+    g_assert (BUS_IS_INPUT_CONTEXT (context));
+
+    if (ibus->focused_context != context)
+        return;
+
+    if (ibus->panel != NULL) {
+        bus_panel_proxy_focus_out (ibus->panel, context);
+    }
+    
+    if (context) {
+        g_object_unref (context);
+        ibus->focused_context = NULL;
+    }
+}
+
+static void
 _context_focus_in_cb (BusInputContext *context,
                       BusIBusImpl     *ibus)
 {
@@ -578,8 +598,9 @@ _context_focus_in_cb (BusInputContext *context,
     g_assert (BUS_IS_INPUT_CONTEXT (context));
 
     if (ibus->focused_context) {
+        /* focus out context */
         bus_input_context_focus_out (ibus->focused_context);
-        g_object_unref (ibus->focused_context);
+        g_assert (ibus->focused_context == NULL);
     }
 
     g_object_ref (context);
@@ -592,26 +613,6 @@ _context_focus_in_cb (BusInputContext *context,
 }
 
 static void
-_context_focus_out_cb (BusInputContext    *context,
-                       BusIBusImpl        *ibus)
-{
-    g_assert (BUS_IS_IBUS_IMPL (ibus));
-    g_assert (BUS_IS_INPUT_CONTEXT (context));
-
-    if (ibus->focused_context != context)
-        return;
-
-    if (ibus->panel != NULL) {
-        bus_panel_proxy_focus_out (ibus->panel, ibus->focused_context);
-    }
-
-    if (ibus->focused_context) {
-        g_object_unref (ibus->focused_context);
-        ibus->focused_context = NULL;
-    }
-}
-
-static void
 _context_destroy_cb (BusInputContext    *context,
                      BusIBusImpl        *ibus)
 {
@@ -619,7 +620,9 @@ _context_destroy_cb (BusInputContext    *context,
     g_assert (BUS_IS_INPUT_CONTEXT (context));
 
     if (context == ibus->focused_context) {
-
+        /* focus out context */
+        bus_input_context_focus_out (ibus->focused_context);
+        g_assert (ibus->focused_context == NULL);
     }
 
     ibus->contexts = g_list_remove (ibus->contexts, context);

@@ -761,6 +761,8 @@ _bus_disconnected_cb (IBusBus  *bus,
                       gpointer  user_data)
 {
     g_warning ("Connection closed by ibus-daemon");
+    g_object_unref (_bus);
+    _bus = NULL;
     exit(EXIT_SUCCESS);
 }
 
@@ -979,7 +981,9 @@ _xim_init_IMdkit ()
 static void
 _atexit_cb ()
 {
-    ibus_bus_kill(_bus);
+    if (_bus) {
+        ibus_bus_kill(_bus);
+    }
 }
 
 static void
