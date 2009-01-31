@@ -387,7 +387,7 @@ ibus_attr_list_copy (IBusAttrList       *dest,
             break;
         }
 
-        attr = (IBusAttribute *) ibus_serializable_copy (IBUS_SERIALIZABLE (attr));
+        attr = (IBusAttribute *) ibus_serializable_copy ((IBusSerializable *) attr);
         if (attr == NULL) {
             g_warning ("can not copy attribute");
             continue;

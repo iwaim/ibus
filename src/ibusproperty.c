@@ -219,12 +219,12 @@ ibus_property_copy (IBusProperty       *dest,
     dest->key = g_strdup (src->key);
     dest->icon = g_strdup (src->icon);
     if (src->label) {
-        dest->label = (IBusText *) ibus_serializable_copy (IBUS_SERIALIZABLE (src->label));
+        dest->label = (IBusText *) ibus_serializable_copy ((IBusSerializable *) src->label);
     }
     else
         dest->label = ibus_text_new_from_static_string ("");
     if (src->tooltip) {
-        dest->tooltip = (IBusText *) ibus_serializable_copy (IBUS_SERIALIZABLE (src->tooltip));
+        dest->tooltip = (IBusText *) ibus_serializable_copy ((IBusSerializable *) src->tooltip);
     }
     else
         dest->tooltip = ibus_text_new_from_static_string ("");
@@ -234,7 +234,7 @@ ibus_property_copy (IBusProperty       *dest,
     dest->type = src->type;
     dest->state = src->state;
 
-    dest->sub_props = (IBusPropList *) ibus_serializable_copy (IBUS_SERIALIZABLE (src->sub_props));
+    dest->sub_props = (IBusPropList *) ibus_serializable_copy ((IBusSerializable *) src->sub_props);
 
     return TRUE;
 }
