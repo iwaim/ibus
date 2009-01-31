@@ -682,6 +682,14 @@ ibus_engine_ibus_message (IBusEngine     *engine,
         ibus_message_unref (error_message);
         return TRUE;
     }
+    else if (ibus_message_is_method_call (message, IBUS_INTERFACE_ENGINE, "Destroy")) {
+        return_message = ibus_message_new_method_return (message);
+        
+        ibus_connection_send (connection, return_message);
+        ibus_message_unref (return_message);
+        
+        ibus_object_destroy ((IBusObject *) engine);
+    }
 
     return parent_class->ibus_message ((IBusService *) engine, connection, message);
 }

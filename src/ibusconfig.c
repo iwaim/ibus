@@ -231,12 +231,11 @@ ibus_config_init (IBusConfig *config)
 static void
 ibus_config_real_destroy (IBusConfig *config)
 {
-    IBusConfigPrivate *priv;
-    priv = IBUS_CONFIG_GET_PRIVATE (config);
-
-    ibus_proxy_call (IBUS_PROXY (config),
-                     "Destroy",
-                     G_TYPE_INVALID);
+    if (ibus_proxy_get_connection ((IBusProxy *) config) != NULL) {
+        ibus_proxy_call ((IBusProxy *) config,
+                         "Destroy",
+                         G_TYPE_INVALID);
+    }
 
     IBUS_OBJECT_CLASS(parent_class)->destroy (IBUS_OBJECT (config));
 }
