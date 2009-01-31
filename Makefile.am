@@ -24,7 +24,6 @@ SUBDIRS = 		\
 	bindings	\
 	gconf 		\
 	ibus 		\
-	launcher 	\
 	ui 			\
 	util 		\
 	client 		\

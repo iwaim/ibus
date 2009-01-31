@@ -236,9 +236,6 @@ ibus.spec
 ibus/_config.py
 ibus/Makefile
 ibus/interface/Makefile
-launcher/ibus
-launcher/ibus.desktop
-launcher/Makefile
 ui/Makefile
 ui/gtk/Makefile
 ui/gtk/ibus-ui-gtk

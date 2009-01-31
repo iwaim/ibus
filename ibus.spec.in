@@ -17,6 +17,7 @@ BuildRequires:  gettext-devel
 BuildRequires:  libtool
 BuildRequires:  python
 BuildRequires:  gtk2-devel
+BuildRequires:  dbus-devel
 BuildRequires:  qt-devel
 BuildRequires:  dbus-glib-devel
 BuildRequires:  desktop-file-utils
@@ -112,26 +113,23 @@ fi
 %dir %{python_sitelib}/ibus
 %{python_sitelib}/ibus/*
 %dir %{_datadir}/ibus/
-%dir %{_datadir}/ibus/daemon/
 %dir %{_datadir}/ibus/gconf/
 %dir %{_datadir}/ibus/ui
 %dir %{_datadir}/ibus/setup/
 %dir %{_datadir}/ibus/engine/
 %dir %{_datadir}/ibus/icons/
-%{_bindir}/ibus
+%{_bindir}/ibus-daemon
 %{_bindir}/ibus-setup
-%{_libdir}/libibus-gtk.so*
-%{_datadir}/ibus/daemon/*
+%{_libdir}/libibus.so*
 %{_datadir}/ibus/gconf/*
 %{_datadir}/ibus/ui/*
 %{_datadir}/ibus/setup/*
 %{_datadir}/ibus/icons/*
 %{_datadir}/applications/*
 %{_datadir}/pixmaps/*
-%{_bindir}/ibus-daemon
-%{_bindir}/ibus-gconf
-%{_bindir}/ibus-ui-gtk
-%{_bindir}/ibus-x11
+%{_libexecdir}/ibus-gconf
+%{_libexecdir}/ibus-ui-gtk
+%{_libexecdir}/ibus-x11
 %config %{_xinputconf}
 
 %files gtk

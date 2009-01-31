@@ -135,7 +135,9 @@ BUILT_SOURCES = \
 
 
 # test programs
-
+DEPS = \
+	libibus.la \
+	$(NULL)
 AM_CFLAGS = \
 	@X11_CFLAGS@ \
 	@GLIB2_CFLAGS@ \
@@ -145,7 +147,7 @@ AM_CFLAGS = \
 	-DG_LOG_DOMAIN=\"IBUS\" \
 	$(NULL)
 AM_LDFLAGS = \
-	libibus.la \
+	$(DEPS) \
 	$(NULL)
 
 TESTS = \
@@ -155,6 +157,10 @@ TESTS = \
 	test-lookuptable \
 	$(NULL)
 noinst_PROGRAMS = $(TESTS)
+test_text_DEPENDENCIES = $(DEPS)
+test_keynames_DEPENDENCIES = $(DEPS)
+test_attribute_DEPENDENCIES = $(DEPS)
+test_lookuptable_DEPENDENCIES = $(DEPS)
 
 # gen enum types
 ibusenumtypes.h: stamp-ibusenumtypes.h
