@@ -463,7 +463,7 @@ ibus_config_get_value (IBusConfig  *config,
     IBusMessage *reply;
     IBusError *error;
 
-    reply = ibus_proxy_call_with_reply_and_block (IBUS_PROXY (config),
+    reply = ibus_proxy_call_with_reply_and_block ((IBusProxy *) config,
                                                   "GetValue",
                                                   -1,
                                                   &error,
@@ -507,14 +507,14 @@ ibus_config_set_value (IBusConfig  *config,
     IBusMessageIter iter;
 
     message = ibus_message_new_method_call (
-                                ibus_proxy_get_name (IBUS_PROXY (config)),
-                                ibus_proxy_get_path (IBUS_PROXY (config)),
-                                ibus_proxy_get_interface (IBUS_PROXY (config)),
+                                ibus_proxy_get_name ((IBusProxy *) config),
+                                ibus_proxy_get_path ((IBusProxy *) config),
+                                ibus_proxy_get_interface ((IBusProxy *) config),
                                 "SetValue");
     ibus_message_iter_init_append (message, &iter);
     _to_dbus_value (&iter, value);
 
-    ibus_proxy_send (IBUS_PROXY (config), message);
+    ibus_proxy_send ((IBusProxy *) config, message);
     ibus_message_unref (message);
 
     return TRUE;
