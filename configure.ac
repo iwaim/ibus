@@ -21,9 +21,9 @@
 
 # if not 1, append datestamp to the version number.
 m4_define([ibus_released], [0])
-m4_define([ibus_major_version], [0])
+m4_define([ibus_major_version], [1])
 m4_define([ibus_minor_version], [1])
-m4_define([ibus_micro_version], [1])
+m4_define([ibus_micro_version], [0])
 m4_define(ibus_maybe_datestamp,
     m4_esyscmd([if test x]ibus_released[ != x1; then date +.%Y%m%d | tr -d '\n\r'; fi]))
 
@@ -48,6 +48,15 @@ AC_PROG_CXX
 AC_ISC_POSIX
 AC_HEADER_STDC
 AM_PROG_LIBTOOL
+
+# If only source code changed, lt_revision + 1
+# If any interface added, lt_age + 1
+# If any interfaces changed or removed, lt_current + 1
+m4_define([lt_current], [0])
+m4_define([lt_revision], [0])
+m4_define([lt_age], [0])
+LT_VERSION_INFO="lt_current:lt_revision:lt_age"
+AC_SUBST(LT_VERSION_INFO)
 
 # check inotify
 AC_CHECK_HEADERS([sys/inotify.h])

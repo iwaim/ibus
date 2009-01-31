@@ -127,6 +127,7 @@ libibus_la_LDFLAGS = \
 	@GOBJECT2_LIBS@ \
 	@GIO2_LIBS@ \
 	@DBUS_LIBS@ \
+	-version-info @LT_VERSION_INFO@ \
 	$(NULL)
 
 BUILT_SOURCES = \
