@@ -220,7 +220,7 @@ bus_panel_proxy_real_destroy (BusPanelProxy *panel)
     priv = BUS_PANEL_PROXY_GET_PRIVATE (panel);
 
     if (ibus_proxy_get_connection ((IBusProxy *)panel) != NULL) {
-        ibus_proxy_call (IBUS_PROXY (panel),
+        ibus_proxy_call ((IBusProxy *) panel,
                          "Destroy",
                          DBUS_TYPE_INVALID);
     }
@@ -338,7 +338,7 @@ bus_panel_proxy_focus_in (BusPanelProxy     *panel,
 
     const gchar *path = ibus_service_get_path ((IBusService *)context);
 
-    ibus_proxy_call (IBUS_PROXY (panel),
+    ibus_proxy_call ((IBusProxy *) panel,
                      "FocusIn",
                      IBUS_TYPE_OBJECT_PATH, &path,
                      G_TYPE_INVALID);
@@ -375,7 +375,7 @@ bus_panel_proxy_focus_out (BusPanelProxy    *panel,
 
     const gchar *path = ibus_service_get_path ((IBusService *)context);
 
-    ibus_proxy_call (IBUS_PROXY (panel),
+    ibus_proxy_call ((IBusProxy *) panel,
                      "FocusOut",
                      IBUS_TYPE_OBJECT_PATH, &path,
                      G_TYPE_INVALID);
@@ -393,7 +393,7 @@ bus_panel_proxy_set_cursor_location (BusPanelProxy *panel,
 {
     g_assert (BUS_IS_PANEL_PROXY (panel));
 
-    ibus_proxy_call (IBUS_PROXY (panel),
+    ibus_proxy_call ((IBusProxy *) panel,
                      "SetCursorLocation",
                      G_TYPE_INT, &x,
                      G_TYPE_INT, &y,
@@ -411,7 +411,7 @@ bus_panel_proxy_update_preedit_text (BusPanelProxy  *panel,
     g_assert (BUS_IS_PANEL_PROXY (panel));
     g_assert (text != NULL);
 
-    ibus_proxy_call (IBUS_PROXY (panel),
+    ibus_proxy_call ((IBusProxy *) panel,
                      "UpdatePreeditText",
                      IBUS_TYPE_TEXT, &text,
                      G_TYPE_UINT, &cursor_pos,
@@ -426,7 +426,8 @@ bus_panel_proxy_update_auxiliary_text (BusPanelProxy *panel,
 {
     g_assert (BUS_IS_PANEL_PROXY (panel));
     g_assert (text != NULL);
-    ibus_proxy_call (IBUS_PROXY (panel),
+    
+    ibus_proxy_call ((IBusProxy *) panel,
                      "UpdateAuxiliaryText",
                      IBUS_TYPE_TEXT, &text,
                      G_TYPE_BOOLEAN, &visible,
@@ -441,7 +442,7 @@ bus_panel_proxy_update_lookup_table (BusPanelProxy   *panel,
     g_assert (BUS_IS_PANEL_PROXY (panel));
     g_assert (table != NULL);
 
-    ibus_proxy_call (IBUS_PROXY (panel),
+    ibus_proxy_call ((IBusProxy *) panel,
                      "UpdateLookupTable",
                      IBUS_TYPE_LOOKUP_TABLE, &table,
                      G_TYPE_BOOLEAN, &visible,
@@ -455,7 +456,7 @@ bus_panel_proxy_register_properties (BusPanelProxy  *panel,
     g_assert (BUS_IS_PANEL_PROXY (panel));
     g_assert (prop_list != NULL);
 
-    ibus_proxy_call (IBUS_PROXY (panel),
+    ibus_proxy_call ((IBusProxy *) panel,
                      "RegisterProperties",
                      IBUS_TYPE_PROP_LIST, &prop_list,
                      G_TYPE_INVALID);
@@ -469,7 +470,7 @@ bus_panel_proxy_update_property (BusPanelProxy  *panel,
     g_assert (BUS_IS_PANEL_PROXY (panel));
     g_assert (prop != NULL);
 
-    ibus_proxy_call (IBUS_PROXY (panel),
+    ibus_proxy_call ((IBusProxy *) panel,
                      "UpdateProperty",
                      IBUS_TYPE_PROPERTY, &prop,
                      G_TYPE_INVALID);
@@ -545,7 +546,7 @@ bus_panel_proxy_property_activate (BusPanelProxy *panel,
     void bus_panel_proxy_##name (BusPanelProxy *panel)  \
     {                                                   \
         g_assert (BUS_IS_PANEL_PROXY (panel));          \
-        ibus_proxy_call (IBUS_PROXY (panel),            \
+        ibus_proxy_call ((IBusProxy *) panel,           \
                      #Name,                             \
                      G_TYPE_INVALID);                   \
     }

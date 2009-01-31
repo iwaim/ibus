@@ -337,7 +337,7 @@ bus_engine_proxy_real_destroy (BusEngineProxy *engine)
         priv->prop_list = NULL;
     }
 
-    ibus_proxy_call (IBUS_PROXY (engine),
+    ibus_proxy_call ((IBusProxy *) engine,
                      "Destroy",
                      DBUS_TYPE_INVALID);
 
@@ -572,7 +572,7 @@ bus_engine_proxy_process_key_event (BusEngineProxy *engine,
     IBusError *error;
     gboolean retval;
 
-    retval = ibus_proxy_call_with_reply (IBUS_PROXY (engine),
+    retval = ibus_proxy_call_with_reply ((IBusProxy *) engine,
                                          "ProcessKeyEvent",
                                          &pending,
                                          -1,
@@ -613,7 +613,7 @@ bus_engine_proxy_set_cursor_location (BusEngineProxy *engine,
 {
     g_assert (BUS_IS_ENGINE_PROXY (engine));
 
-    ibus_proxy_call (IBUS_PROXY (engine),
+    ibus_proxy_call ((IBusProxy *) engine,
                      "SetCursorLocation",
                      G_TYPE_INT, &x,
                      G_TYPE_INT, &y,
@@ -628,7 +628,7 @@ bus_engine_proxy_set_capabilities (BusEngineProxy *engine,
 {
     g_assert (BUS_IS_ENGINE_PROXY (engine));
 
-    ibus_proxy_call (IBUS_PROXY (engine),
+    ibus_proxy_call ((IBusProxy *) engine,
                      "SetCapabilites",
                      G_TYPE_UINT, &caps,
                      G_TYPE_INVALID);
@@ -643,7 +643,7 @@ bus_engine_proxy_property_activate (BusEngineProxy *engine,
     g_assert (BUS_IS_ENGINE_PROXY (engine));
     g_assert (prop_name != NULL);
 
-    ibus_proxy_call (IBUS_PROXY (engine),
+    ibus_proxy_call ((IBusProxy *) engine,
                      "PropertyActivate",
                      G_TYPE_STRING, &prop_name,
                      G_TYPE_UINT, &prop_state,
@@ -657,7 +657,7 @@ bus_engine_proxy_property_show (BusEngineProxy *engine,
     g_assert (BUS_IS_ENGINE_PROXY (engine));
     g_assert (prop_name != NULL);
 
-    ibus_proxy_call (IBUS_PROXY (engine),
+    ibus_proxy_call ((IBusProxy *) engine,
                      "PropertyShow",
                      G_TYPE_STRING, &prop_name,
                      G_TYPE_INVALID);
@@ -669,7 +669,7 @@ void bus_engine_proxy_property_hide (BusEngineProxy *engine,
     g_assert (BUS_IS_ENGINE_PROXY (engine));
     g_assert (prop_name != NULL);
 
-    ibus_proxy_call (IBUS_PROXY (engine),
+    ibus_proxy_call ((IBusProxy *) engine,
                      "PropertyHide",
                      G_TYPE_STRING, &prop_name,
                      G_TYPE_INVALID);
@@ -679,7 +679,7 @@ void bus_engine_proxy_property_hide (BusEngineProxy *engine,
     void bus_engine_proxy_##name (BusEngineProxy *engine)   \
     {                                                       \
         g_assert (BUS_IS_ENGINE_PROXY (engine));            \
-        ibus_proxy_call (IBUS_PROXY (engine),               \
+        ibus_proxy_call ((IBusProxy *) engine,              \
                      #Name,                                 \
                      DBUS_TYPE_INVALID);                    \
     }

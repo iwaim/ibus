@@ -679,7 +679,7 @@ _ibus_create_input_context (BusIBusImpl     *ibus,
                           ibus);
     }
 
-    path = ibus_service_get_path (IBUS_SERVICE (context));
+    path = ibus_service_get_path ((IBusService *) context);
     reply = ibus_message_new_method_return (message);
     ibus_message_append_args (reply,
                               IBUS_TYPE_OBJECT_PATH, &path,
@@ -837,8 +837,8 @@ _ibus_kill (BusIBusImpl     *ibus,
     IBusMessage *reply;
 
     reply = ibus_message_new_method_return (message);
-    ibus_connection_send (IBUS_CONNECTION (connection), reply);
-    ibus_connection_flush (IBUS_CONNECTION (connection));
+    ibus_connection_send ((IBusConnection *) connection, reply);
+    ibus_connection_flush ((IBusConnection *) connection);
     ibus_message_unref (reply);
 
     ibus_object_destroy (IBUS_OBJECT (ibus));
@@ -890,7 +890,7 @@ bus_ibus_impl_ibus_message (BusIBusImpl     *ibus,
                 ibus_message_set_destination (reply_message, bus_connection_get_unique_name (connection));
                 ibus_message_set_no_reply (reply_message, TRUE);
 
-                ibus_connection_send (IBUS_CONNECTION (connection), reply_message);
+                ibus_connection_send ((IBusConnection *) connection, reply_message);
                 ibus_message_unref (reply_message);
             }
 

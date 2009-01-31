@@ -181,12 +181,12 @@ bus_factory_proxy_create_engine (BusFactoryProxy *factory,
         return NULL;
     }
 
-    reply_message = ibus_proxy_call_with_reply_and_block (IBUS_PROXY (factory),
-                                                  "CreateEngine",
-                                                  -1,
-                                                  &error,
-                                                  G_TYPE_STRING, &(desc->name),
-                                                  DBUS_TYPE_INVALID);
+    reply_message = ibus_proxy_call_with_reply_and_block ((IBusProxy *) factory,
+                                                          "CreateEngine",
+                                                          -1,
+                                                          &error,
+                                                          G_TYPE_STRING, &(desc->name),
+                                                          DBUS_TYPE_INVALID);
     if (reply_message == NULL) {
         g_warning ("%s: %s", error->name, error->message);
         ibus_error_free (error);
@@ -211,8 +211,8 @@ bus_factory_proxy_create_engine (BusFactoryProxy *factory,
         return NULL;
     }
 
-    IBusConnection *connection = ibus_proxy_get_connection (IBUS_PROXY (factory));
-    engine = bus_engine_proxy_new (object_path, desc, BUS_CONNECTION (connection));
+    IBusConnection *connection = ibus_proxy_get_connection ((IBusProxy *) factory);
+    engine = bus_engine_proxy_new (object_path, desc, (BusConnection *) connection);
     ibus_message_unref (reply_message);
 
     return engine;

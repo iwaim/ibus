@@ -233,7 +233,7 @@ bus_config_proxy_real_destroy (BusConfigProxy *config)
     BusConfigProxyPrivate *priv;
     priv = BUS_CONFIG_PROXY_GET_PRIVATE (config);
 
-    ibus_proxy_call (IBUS_PROXY (config),
+    ibus_proxy_call ((IBusProxy *) config,
                      "Destroy",
                      DBUS_TYPE_INVALID);
 
@@ -440,7 +440,7 @@ bus_config_proxy_get_value (BusConfigProxy  *config,
     DBusMessage *reply;
     IBusError *error;
 
-    reply = ibus_proxy_call_with_reply_and_block (IBUS_PROXY (config),
+    reply = ibus_proxy_call_with_reply_and_block ((IBusProxy *) config,
                                                   "GetValue",
                                                   -1,
                                                   &error,
@@ -477,14 +477,14 @@ bus_config_proxy_set_value (BusConfigProxy  *config,
     DBusMessageIter iter;
 
     message = dbus_message_new_method_call (
-                                ibus_proxy_get_name (IBUS_PROXY (config)),
-                                ibus_proxy_get_path (IBUS_PROXY (config)),
-                                ibus_proxy_get_interface (IBUS_PROXY (config)),
+                                ibus_proxy_get_name ((IBusProxy *) config),
+                                ibus_proxy_get_path ((IBusProxy *) config),
+                                ibus_proxy_get_interface ((IBusProxy *) config),
                                 "SetValue");
     dbus_message_iter_init_append (message, &iter);
     _to_dbus_value (&iter, value);
 
-    ibus_proxy_send (IBUS_PROXY (config), message);
+    ibus_proxy_send ((IBusProxy *) config, message);
     dbus_message_unref (message);
 
     return TRUE;
