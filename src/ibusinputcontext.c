@@ -328,6 +328,13 @@ ibus_input_context_init (IBusInputContext *context)
 static void
 ibus_input_context_real_destroy (IBusInputContext *context)
 {
+    IBusConnection *connection;
+    connection = ibus_proxy_get_connection ((IBusProxy *) context);
+    if (connection && ibus_connection_is_connected (connection)) {
+        ibus_proxy_call (IBUS_PROXY (context),
+                         "Destroy",
+                         G_TYPE_INVALID);
+    }
     IBUS_OBJECT_CLASS(parent_class)->destroy (IBUS_OBJECT (context));
 }
 

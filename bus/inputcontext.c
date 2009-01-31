@@ -903,11 +903,15 @@ _ic_destroy (BusInputContext  *context,
     g_assert (BUS_IS_CONNECTION (connection));
 
     IBusMessage *reply;
-
-    ibus_object_destroy (IBUS_OBJECT (context));
     reply = ibus_message_new_method_return (message);
+    
+    ibus_connection_send ((IBusConnection *) connection, reply);
+    ibus_connection_flush ((IBusConnection *) connection);
+    ibus_message_unref (reply);
+    
+    ibus_object_destroy ((IBusObject *) context);
 
-    return reply;
+    return NULL;
 }
 
 static gboolean
@@ -1491,7 +1495,6 @@ bus_input_context_filter_keyboard_shortcuts (BusInputContext    *context,
         }
 
         if (priv->engine == NULL) {
-            g_debug ("Can not find a engine");
             return FALSE;
         }
 
