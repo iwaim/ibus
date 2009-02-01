@@ -6,6 +6,7 @@
 *.so
 *~
 tags
+TAGS
 Makefile.qmake
 Makefile
 Makefile.in
