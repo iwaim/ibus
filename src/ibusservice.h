@@ -83,6 +83,7 @@ gboolean         ibus_service_handle_message    (IBusService    *service,
                                                  IBusMessage    *message);
 gboolean         ibus_service_add_to_connection (IBusService    *service,
                                                  IBusConnection *connection);
+GList           *ibus_service_get_connections   (IBusService    *service);
 gboolean         ibus_service_remove_from_connection
                                                 (IBusService    *service,
                                                  IBusConnection *connection);

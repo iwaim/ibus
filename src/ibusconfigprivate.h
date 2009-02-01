@@ -61,6 +61,7 @@ _from_dbus_value (IBusMessageIter   *iter,
             ibus_message_iter_get_basic (iter, &v);
             g_value_set_uint (value, v);
         }
+        break;
     case G_TYPE_BOOLEAN:
         {
             gboolean v;

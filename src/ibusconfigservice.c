@@ -28,27 +28,36 @@ enum {
 
 enum {
     PROP_0,
+    PROP_CONNECTION,
 };
 
 // static guint            config_service_signals[LAST_SIGNAL] = { 0 };
 
 /* functions prototype */
-static void     ibus_config_service_class_init      (IBusConfigServiceClass     *klass);
-static void     ibus_config_service_init            (IBusConfigService          *config);
-static void     ibus_config_service_destroy         (IBusConfigService          *config);
-static gboolean ibus_config_service_ibus_message    (IBusConfigService          *config,
-                                                     IBusConnection             *connection,
-                                                     IBusMessage                *message);
-static gboolean ibus_config_service_set_value       (IBusConfigService          *config,
-                                                     const gchar                *section,
-                                                     const gchar                *name,
-                                                     const GValue               *value,
-                                                     IBusError                 **error);
-static gboolean ibus_config_service_get_value       (IBusConfigService          *config,
-                                                     const gchar                *section,
-                                                     const gchar                *name,
-                                                     GValue                     *value,
-                                                     IBusError                 **error);
+static void     ibus_config_service_class_init      (IBusConfigServiceClass *klass);
+static void     ibus_config_service_init            (IBusConfigService      *config);
+static void     ibus_config_service_set_property    (IBusConfigService      *config,
+                                                     guint                   prop_id,
+                                                     const GValue           *value,
+                                                     GParamSpec             *pspec);
+static void     ibus_config_service_get_property    (IBusConfigService      *config,
+                                                     guint                   prop_id,
+                                                     GValue                 *value,
+                                                     GParamSpec             *pspec);
+static void     ibus_config_service_destroy         (IBusConfigService      *config);
+static gboolean ibus_config_service_ibus_message    (IBusConfigService      *config,
+                                                     IBusConnection         *connection,
+                                                     IBusMessage            *message);
+static gboolean ibus_config_service_set_value       (IBusConfigService      *config,
+                                                     const gchar            *section,
+                                                     const gchar            *name,
+                                                     const GValue           *value,
+                                                     IBusError             **error);
+static gboolean ibus_config_service_get_value       (IBusConfigService      *config,
+                                                     const gchar            *section,
+                                                     const gchar            *name,
+                                                     GValue                 *value,
+                                                     IBusError             **error);
 
 static IBusServiceClass  *parent_class = NULL;
 
@@ -71,9 +80,9 @@ ibus_config_service_get_type (void)
 
     if (type == 0) {
         type = g_type_register_static (IBUS_TYPE_SERVICE,
-                    "IBusConfigService",
-                    &type_info,
-                    (GTypeFlags) 0);
+                                       "IBusConfigService",
+                                       &type_info,
+                                       (GTypeFlags) 0);
     }
     return type;
 }
@@ -96,21 +105,74 @@ ibus_config_service_new (IBusConnection *connection)
 static void
 ibus_config_service_class_init (IBusConfigServiceClass *klass)
 {
-    IBusObjectClass *ibus_object_class = IBUS_OBJECT_CLASS (klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
     parent_class = (IBusServiceClass *) g_type_class_peek_parent (klass);
 
-    ibus_object_class->destroy = (IBusObjectDestroyFunc) ibus_config_service_destroy;
+    gobject_class->set_property = (GObjectSetPropertyFunc) ibus_config_service_set_property;
+    gobject_class->get_property = (GObjectGetPropertyFunc) ibus_config_service_get_property;
+
+    IBUS_OBJECT_CLASS (gobject_class)->destroy = (IBusObjectDestroyFunc) ibus_config_service_destroy;
 
     IBUS_SERVICE_CLASS (klass)->ibus_message = (ServiceIBusMessageFunc) ibus_config_service_ibus_message;
 
     klass->set_value = ibus_config_service_set_value;
     klass->get_value = ibus_config_service_get_value;
+
+    g_object_class_install_property (gobject_class,
+                    PROP_CONNECTION,
+                    g_param_spec_object ("connection",
+                        "connection",
+                        "The connection of config object",
+                        IBUS_TYPE_CONNECTION,
+                        G_PARAM_READWRITE |  G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
 ibus_config_service_init (IBusConfigService *config)
 {
+}
+
+static void
+ibus_config_service_set_property (IBusConfigService *config,
+                                  guint              prop_id,
+                                  const GValue      *value,
+                                  GParamSpec        *pspec)
+{
+    switch (prop_id) {
+    case PROP_CONNECTION:
+        ibus_service_add_to_connection ((IBusService *) config,
+                                        g_value_get_object (value));
+        break;
+
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (config, prop_id, pspec);
+    }
+}
+
+static void
+ibus_config_service_get_property (IBusConfigService *config,
+                                  guint              prop_id,
+                                  GValue            *value,
+                                  GParamSpec        *pspec)
+{
+    switch (prop_id) {
+    case PROP_CONNECTION:
+        {
+            GList *connections = ibus_service_get_connections ((IBusService *) config);
+            if (connections) {
+                g_value_set_object (value, connections->data);
+            }
+            else {
+                g_value_set_object (value, NULL);
+            }
+            g_list_foreach (connections, (GFunc) g_object_unref, NULL);
+            g_list_free (connections);
+        }
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (config, prop_id, pspec);
+    }
 }
 
 static void

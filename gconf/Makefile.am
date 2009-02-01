@@ -22,17 +22,19 @@
 libibus = $(top_builddir)/src/libibus.la
 
 INCLUDES = \
-	-I$(top_srcdir) \
+	-I$(top_srcdir)/src \
 	$(NULL)
 
 AM_CFLAGS = \
 	@GLIB2_CFLAGS@ \
+	@GCONF_CFLAGS@ \
 	@DBUS_CFLAGS@ \
 	-DG_LOG_DOMAIN=\"IBUS\" \
 	$(INCLUDES) \
 	$(NULL)
 AM_LDFLAGS = \
 	@GLIB2_LIBS@ \
+	@GCONF_LIBS@ \
 	@DBUS_LIBS@ \
 	$(libibus) \
 	$(NULL)
@@ -45,6 +47,12 @@ ibus_gconf_SOURCES = \
 	main.c \
 	config.c \
 	config.h \
+	$(NULL)
+ibus_gconf_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(NULL)
+ibus_gconf_LDFLAGS = \
+	$(AM_LDFLAGS) \
 	$(NULL)
 
 component_DATA = \
@@ -59,3 +67,6 @@ CLEANFILES = \
 EXTRA_DIST = \
 	gconf.xml.in \
 	$(NULL)
+
+$(libibus):
+	$(MAKE) -C $(top_builddir)/src

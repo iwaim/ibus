@@ -277,8 +277,8 @@ _connection_destroy_cb (IBusConnection *connection, IBusService *service)
 gboolean
 ibus_service_add_to_connection (IBusService *service, IBusConnection *connection)
 {
-    g_return_val_if_fail (IBUS_IS_SERVICE (service), FALSE);
-    g_return_val_if_fail (IBUS_IS_CONNECTION (connection), FALSE);
+    g_assert (IBUS_IS_SERVICE (service));
+    g_assert (IBUS_IS_CONNECTION (connection));
 
     gboolean retval;
     IBusServicePrivate *priv;
@@ -303,6 +303,21 @@ ibus_service_add_to_connection (IBusService *service, IBusConnection *connection
                       service);
 
     return retval;
+}
+
+GList *
+ibus_service_get_connections (IBusService *service)
+{
+    g_assert (IBUS_IS_SERVICE (service));
+    
+    IBusServicePrivate *priv;
+    priv = IBUS_SERVICE_GET_PRIVATE (service);
+
+    GList *l;
+
+    l = g_list_copy (priv->connections);
+    g_list_foreach (l, (GFunc) g_object_ref, NULL);
+    return l;
 }
 
 gboolean
