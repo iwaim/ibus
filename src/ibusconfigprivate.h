@@ -116,11 +116,17 @@ static void
 _to_dbus_value (IBusMessageIter *iter,
                 const GValue    *value)
 {
+    IBusMessageIter sub_iter;
+    gboolean retval;
+
+    retval = ibus_message_iter_open_container (iter, IBUS_TYPE_VARIANT, 0, &sub_iter);
+    g_assert (retval);
+
     switch (G_VALUE_TYPE (value)) {
     case G_TYPE_STRING:
         {
             const gchar *v = g_value_get_string (value);
-            ibus_message_iter_append (iter,
+            ibus_message_iter_append (&sub_iter,
                                       G_TYPE_STRING,
                                       &v);
         }
@@ -128,7 +134,7 @@ _to_dbus_value (IBusMessageIter *iter,
     case G_TYPE_INT:
         {
             gint v = g_value_get_int (value);
-            ibus_message_iter_append (iter,
+            ibus_message_iter_append (&sub_iter,
                                       G_TYPE_INT,
                                       &v);
         }
@@ -136,7 +142,7 @@ _to_dbus_value (IBusMessageIter *iter,
     case G_TYPE_UINT:
         {
             guint v = g_value_get_uint (value);
-            ibus_message_iter_append (iter,
+            ibus_message_iter_append (&sub_iter,
                                       G_TYPE_UINT,
                                       &v);
         }
@@ -144,7 +150,7 @@ _to_dbus_value (IBusMessageIter *iter,
     case G_TYPE_BOOLEAN:
         {
             gboolean v = g_value_get_boolean (value);
-            ibus_message_iter_append (iter,
+            ibus_message_iter_append (&sub_iter,
                                       G_TYPE_BOOLEAN,
                                       &v);
         }
@@ -152,21 +158,21 @@ _to_dbus_value (IBusMessageIter *iter,
     case G_TYPE_DOUBLE:
         {
             gdouble v = g_value_get_double (value);
-            ibus_message_iter_append (iter,
+            ibus_message_iter_append (&sub_iter,
                                       G_TYPE_DOUBLE,
                                       &v);
         }
         break;
     default:
         if (G_TYPE_VALUE_ARRAY == G_VALUE_TYPE (value)) {
-            IBusMessageIter sub_iter;
+            IBusMessageIter sub_sub_iter;
             GType type = G_TYPE_INVALID;
             gint i;
             GValueArray *array = (GValueArray *)g_value_get_boxed (value);
-            ibus_message_iter_open_container (iter,
+            ibus_message_iter_open_container (&sub_iter,
                                               IBUS_TYPE_ARRAY,
                                               "v",
-                                              &sub_iter);
+                                              &sub_sub_iter);
             if (array->n_values > 0) {
                 type = G_VALUE_TYPE (&array->values[0]);
                 g_assert (type == G_TYPE_STRING ||
@@ -177,13 +183,14 @@ _to_dbus_value (IBusMessageIter *iter,
             }
             for (i = 0; i < array->n_values; i++) {
                 g_assert (type == G_VALUE_TYPE (&array->values[i]));
-                _to_dbus_value (&sub_iter, &array->values[i]);
+                _to_dbus_value (&sub_sub_iter, &array->values[i]);
             }
-            ibus_message_iter_close_container (iter, &sub_iter);
+            ibus_message_iter_close_container (&sub_iter, &sub_sub_iter);
             break;
         }
         g_assert_not_reached();
     }
+    ibus_message_iter_close_container (iter, &sub_iter);
 }
 #endif
 

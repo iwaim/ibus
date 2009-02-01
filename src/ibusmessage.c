@@ -19,6 +19,7 @@
  */
 #include "ibusmessage.h"
 #include "ibusserializable.h"
+#include "ibusconfigprivate.h"
 
 GType
 ibus_type_get_object_path (void)
@@ -552,6 +553,10 @@ ibus_message_iter_append (IBusMessageIter *iter,
             return dbus_message_iter_append_basic (iter, DBUS_TYPE_DOUBLE, &v);
         }
     default:
+        if (type == G_TYPE_VALUE) {
+            _to_dbus_value (iter, (GValue *)value);
+            return TRUE;
+        }
         if (type == IBUS_TYPE_OBJECT_PATH) {
             const gchar *v;
             v = * (gchar **)value;
@@ -687,6 +692,10 @@ ibus_message_iter_peek (IBusMessageIter *iter,
             return TRUE;
         }
     default:
+        if (type == G_TYPE_VALUE) {
+            _from_dbus_value (iter, (GValue *) value);
+            return TRUE;
+        }
         if (type == IBUS_TYPE_OBJECT_PATH) {
             gchar *v;
             if (dbus_message_iter_get_arg_type (iter) != DBUS_TYPE_OBJECT_PATH)

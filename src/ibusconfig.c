@@ -22,7 +22,6 @@
 #include "ibusmarshalers.h"
 #include "ibusshare.h"
 #include "ibusconfig.h"
-#include "ibusconfigprivate.h"
 
 #define IBUS_CONFIG_GET_PRIVATE(o)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((o), IBUS_TYPE_CONFIG, IBusConfigPrivate))
@@ -253,33 +252,33 @@ ibus_config_ibus_signal (IBusProxy     *proxy,
     config = IBUS_CONFIG (proxy);
 
     if (ibus_message_is_signal (message, IBUS_INTERFACE_CONFIG, "ValueChanged")) {
-        IBusMessageIter iter;
         gchar *section;
         gchar *name;
         GValue value = { 0 };
+        IBusError *error = NULL;
+        gboolean retval;
 
-        ibus_message_iter_init (message, &iter);
-
-        if (!ibus_message_iter_get (&iter, G_TYPE_STRING, &section)) {
-            g_warning ("Argument 1 of ValueChanged should be a string");
+        retval = ibus_message_get_args (message,
+                                        &error,
+                                        G_TYPE_STRING, &section,
+                                        G_TYPE_STRING, &name,
+                                        G_TYPE_VALUE, &value,
+                                        G_TYPE_INVALID);
+        if (!retval) {
+            g_warning ("%s: Can not parse arguments of ValueChanges.", DBUS_ERROR_INVALID_ARGS);
             return FALSE;
         }
-
-        if (!ibus_message_iter_get (&iter, G_TYPE_STRING, &name)) {
-            g_warning ("Argument 2 of ValueChanged should be a string");
-            return FALSE;
-        }
-
-        _from_dbus_value (&iter, &value);
-
+    
         g_signal_emit (config,
                        config_signals[VALUE_CHANGED],
                        0,
                        section,
                        name,
                        &value);
-
+        g_value_unset (&value);
+        
         g_signal_stop_emission_by_name (config, "ibus-signal");
+        
         return TRUE;
     }
 
@@ -299,6 +298,7 @@ ibus_config_get_value (IBusConfig  *config,
 
     IBusMessage *reply;
     IBusError *error;
+    gboolean retval;
 
     reply = ibus_proxy_call_with_reply_and_block ((IBusProxy *) config,
                                                   "GetValue",
@@ -320,39 +320,37 @@ ibus_config_get_value (IBusConfig  *config,
         return FALSE;
     }
 
-    IBusMessageIter iter;
-    ibus_message_iter_init (reply, &iter);
-    _from_dbus_value (&iter, value);
-
+    retval = ibus_message_get_args (reply,
+                                    &error,
+                                    G_TYPE_VALUE, &value);
     ibus_message_unref (reply);
+    if (!retval) {
+        g_warning ("%s: %s", error->name, error->message);
+        return FALSE;
+    }
 
     return TRUE;
 }
 
 gboolean
-ibus_config_set_value (IBusConfig  *config,
-                            const gchar     *section,
-                            const gchar     *name,
-                            const GValue    *value)
+ibus_config_set_value (IBusConfig   *config,
+                       const gchar  *section,
+                       const gchar  *name,
+                       const GValue *value)
 {
     g_assert (IBUS_IS_CONFIG (config));
     g_assert (section != NULL);
     g_assert (name != NULL);
     g_assert (value != NULL);
 
-    IBusMessage *message;
-    IBusMessageIter iter;
+    gboolean retval;
 
-    message = ibus_message_new_method_call (
-                                ibus_proxy_get_name ((IBusProxy *) config),
-                                ibus_proxy_get_path ((IBusProxy *) config),
-                                ibus_proxy_get_interface ((IBusProxy *) config),
-                                "SetValue");
-    ibus_message_iter_init_append (message, &iter);
-    _to_dbus_value (&iter, value);
-
-    ibus_proxy_send ((IBusProxy *) config, message);
-    ibus_message_unref (message);
-
+    retval = ibus_proxy_call ((IBusProxy *) config,
+                              "SetValue",
+                              G_TYPE_STRING, &section,
+                              G_TYPE_STRING, &name,
+                              G_TYPE_VALUE, value,
+                              G_TYPE_INVALID);
+    g_assert (retval);
     return TRUE;
 }
