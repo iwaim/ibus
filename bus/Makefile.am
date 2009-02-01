@@ -22,20 +22,18 @@
 libibus = $(top_builddir)/src/libibus.la
 
 INCLUDES = \
-	-I$(top_srcdir) \
+	-I$(top_srcdir)/src \
 	$(NULL)
 
 AM_CFLAGS = \
-	@X11_CFLAGS@ \
 	@GLIB2_CFLAGS@ \
 	@DBUS_CFLAGS@ \
 	-DG_LOG_DOMAIN=\"IBUS\" \
 	-DPKGDATADIR=\"$(pkgdatadir)\" \
 	-DLIBEXECDIR=\"$(libexecdir)\" \
-	-I$(top_srcdir)/src \
+	$(INCLUDES) \
 	$(NULL)
 AM_LDFLAGS = \
-	@X11_LIBS@ \
 	@GLIB2_LIBS@ \
 	@DBUS_LIBS@ \
 	$(libibus) \
