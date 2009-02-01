@@ -20,7 +20,6 @@
 
 #include "ibusshare.h"
 #include "ibusconfigservice.h"
-#include "ibusconfigprivate.h"
 
 enum {
     LAST_SIGNAL,
@@ -196,43 +195,29 @@ ibus_config_service_ibus_message (IBusConfigService     *config,
         gchar *section;
         gchar *name;
         GValue value = { 0 };
-        IBusMessageIter iter;
         IBusError *error = NULL;
+        gboolean retval;
 
-        ibus_message_iter_init (message, &iter);
-
-        if (!ibus_message_iter_get (&iter, G_TYPE_STRING, &section)) {
+        retval = ibus_message_get_args (message,
+                                        &error,
+                                        G_TYPE_STRING, &section,
+                                        G_TYPE_STRING, &name,
+                                        G_TYPE_VALUE, &value,
+                                        G_TYPE_INVALID);
+        if (!retval) {
             reply = ibus_message_new_error_printf (message,
                                                    DBUS_ERROR_INVALID_ARGS,
-                                                   "Argument 1 of SetValue should be a string");
-            goto _out;
-        }
-        if (!ibus_message_iter_get (&iter, G_TYPE_STRING, &name)) {
-            reply = ibus_message_new_error_printf (message,
-                                                   DBUS_ERROR_INVALID_ARGS,
-                                                   "Argument 2 of SetValue should be a string");
-            goto _out;
-        }
-
-        _from_dbus_value (&iter, &value);
-
-        if (!IBUS_CONFIG_SERVICE_GET_CLASS (config)->set_value (config, section, name, &value, &error)) {
-            reply = ibus_message_new_error (message,
-                                            error->name,
-                                            error->message);
+                                                   "Can not parse arguments 1 of SetValue");
             ibus_error_free (error);
         }
         else {
             reply = ibus_message_new_method_return (message);
         }
-        g_value_unset (&value);
-        goto _out;
     }
     else if (ibus_message_is_method_call (message, IBUS_INTERFACE_CONFIG, "GetValue")) {
         gchar *section;
         gchar *name;
         GValue value = { 0 };
-        IBusMessageIter iter;
         IBusError *error = NULL;
         gboolean retval;
 
@@ -247,10 +232,8 @@ ibus_config_service_ibus_message (IBusConfigService     *config,
                                             error->name,
                                             error->message);
             ibus_error_free (error);
-            goto _out;
         }
-
-        if (!IBUS_CONFIG_SERVICE_GET_CLASS (config)->get_value (config, section, name, &value, &error)) {
+        else if (!IBUS_CONFIG_SERVICE_GET_CLASS (config)->get_value (config, section, name, &value, &error)) {
             reply = ibus_message_new_error (message,
                                             error->name,
                                             error->message);
@@ -258,22 +241,19 @@ ibus_config_service_ibus_message (IBusConfigService     *config,
         }
         else {
             reply = ibus_message_new_method_return (message);
-            ibus_message_iter_init (reply, &iter);
-            _to_dbus_value (&iter, &value);
+            ibus_message_append_args (reply,
+                                      G_TYPE_VALUE, &value);
             g_value_unset (&value);
-            goto _out;
         }
     }
-    
-    return parent_class->ibus_message ((IBusService *) config, connection, message);
 
-_out:
     if (reply) {
         ibus_connection_send (connection, reply);
         ibus_message_unref (reply);
+        return TRUE;
     }
     
-    return TRUE;
+    return parent_class->ibus_message ((IBusService *) config, connection, message);
 }
 
 static gboolean
