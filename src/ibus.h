@@ -44,6 +44,8 @@
 #include <ibusenginedesc.h>
 #include <ibusobservedpath.h>
 #include <ibuscomponent.h>
+#include <ibusconfig.h>
+#include <ibusconfigservice.h>
 
 #endif
 

@@ -328,8 +328,6 @@ ibus_input_context_init (IBusInputContext *context)
 static void
 ibus_input_context_real_destroy (IBusInputContext *context)
 {
-    IBusConnection *connection;
-    
     if (ibus_proxy_get_connection ((IBusProxy *) context) != NULL) {
         ibus_proxy_call (IBUS_PROXY (context),
                          "Destroy",

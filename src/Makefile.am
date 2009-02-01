@@ -55,6 +55,7 @@ ibus_public_h_sources = \
 	ibuslookuptable.h \
 	ibusinputcontext.h \
 	ibusconfig.h \
+	ibusconfigservice.h \
 	ibusmessage.h \
 	ibuspendingcall.h \
 	ibuserror.h \
@@ -69,6 +70,7 @@ ibus_public_h_sources = \
 	$(NULL)
 ibus_h_sources = \
 	ibusinternal.h \
+	ibusconfigprivate.h \
 	keyname-table.h \
 	$(ibus_public_h_sources) \
 	$(ibus_built_public_h_sources) \
@@ -90,6 +92,7 @@ ibus_c_sources = \
 	ibuslookuptable.c \
 	ibusinputcontext.c \
 	ibusconfig.c \
+	ibusconfigservice.c \
 	ibusmessage.c \
 	ibuspendingcall.c \
 	ibuserror.c \
