@@ -38,7 +38,7 @@ enum {
 /* IBusServicePriv */
 struct _IBusServicePrivate {
     gchar *path;
-    GSList *connections;
+    GList *connections;
 };
 typedef struct _IBusServicePrivate IBusServicePrivate;
 
@@ -285,7 +285,7 @@ ibus_service_add_to_connection (IBusService *service, IBusConnection *connection
     priv = IBUS_SERVICE_GET_PRIVATE (service);
 
     g_return_val_if_fail (priv->path != NULL, FALSE);
-    g_return_val_if_fail (g_slist_find (priv->connections, connection) == NULL, FALSE);
+    g_return_val_if_fail (g_list_find (priv->connections, connection) == NULL, FALSE);
 
     g_object_ref (connection);
 
@@ -296,7 +296,7 @@ ibus_service_add_to_connection (IBusService *service, IBusConnection *connection
         return FALSE;
     }
 
-    priv->connections = g_slist_append (priv->connections, connection);
+    priv->connections = g_list_append (priv->connections, connection);
     g_signal_connect (connection,
                       "destroy",
                       (GCallback) _connection_destroy_cb,
@@ -330,7 +330,7 @@ ibus_service_remove_from_connection (IBusService *service, IBusConnection *conne
     priv = IBUS_SERVICE_GET_PRIVATE (service);
 
     g_assert (priv->path != NULL);
-    g_assert (g_slist_find (priv->connections, connection) != NULL);
+    g_assert (g_list_find (priv->connections, connection) != NULL);
 
     gboolean retval;
     retval = ibus_connection_unregister_object_path (connection, priv->path);
@@ -342,7 +342,7 @@ ibus_service_remove_from_connection (IBusService *service, IBusConnection *conne
     g_signal_handlers_disconnect_by_func (connection,
                                           (GCallback) _connection_destroy_cb,
                                           service);
-    priv->connections = g_slist_remove (priv->connections, connection);
+    priv->connections = g_list_remove (priv->connections, connection);
     g_object_unref (connection);
 
     return TRUE;
@@ -356,7 +356,7 @@ ibus_service_remove_from_all_connections (IBusService *service)
     IBusServicePrivate *priv;
     priv = IBUS_SERVICE_GET_PRIVATE (service);
 
-    GSList *element = priv->connections;
+    GList *element = priv->connections;
     while (element != NULL) {
         IBusConnection *connection = IBUS_CONNECTION (element->data);
 
@@ -370,37 +370,37 @@ ibus_service_remove_from_all_connections (IBusService *service)
         element = element->next;
     }
 
-    g_slist_free (priv->connections);
+    g_list_free (priv->connections);
     priv->connections = NULL;
     return TRUE;
 }
 
 gboolean
 ibus_service_send_signal (IBusService   *service,
+                          const gchar   *interface,
                           const gchar   *name,
-                          gint           first_arg_type,
+                          GType          first_arg_type,
                           ...)
 {
-#if 0
     g_assert (IBUS_IS_SERVICE (service));
     g_assert (name != NULL);
 
     gboolean retval;
     va_list args;
+    GList *p;
 
     IBusServicePrivate *priv;
     priv = IBUS_SERVICE_GET_PRIVATE (service);
 
-    g_assert (priv->connection != NULL);
-    va_start (first_arg_type, args);
-    retval = ibus_connection_send_signal_valist (priv->connection,
-                                                 priv->path,
-                                                 priv->interface,
-                                                 name,
-                                                 first_arg_type,
-                                                 args);
-    va_end (args);
+    for (p = priv->connections; p != NULL; p = p->next) {
+        va_start (args, first_arg_type);
+        retval = ibus_connection_send_signal_valist ((IBusConnection *) p->data,
+                                                     priv->path,
+                                                     interface,
+                                                     name,
+                                                     first_arg_type,
+                                                     args);
+        va_end (args);
+    }
     return retval;
-#endif
-    return FALSE;
 }

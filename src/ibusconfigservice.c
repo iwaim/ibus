@@ -299,6 +299,7 @@ ibus_config_service_value_changed (IBusConfigService  *config,
     g_assert (G_IS_VALUE (value));
 
     ibus_service_send_signal ((IBusService *) config,
+                              IBUS_INTERFACE_CONFIG,
                               "ValueChanged",
                               G_TYPE_STRING, &section,
                               G_TYPE_STRING, &name,

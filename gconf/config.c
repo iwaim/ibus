@@ -78,7 +78,7 @@ _value_changed_cb (GConfClient     *client,
     p = g_strdup (key);
     section = p + sizeof (GCONF_PREFIX);
     name = rindex (p, '/') + 1;
-    *(name - 1) = '0';
+    *(name - 1) = '\0';
    
 
     _from_gconf_value (&v, value);

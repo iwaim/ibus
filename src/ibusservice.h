@@ -90,8 +90,9 @@ gboolean         ibus_service_remove_from_connection
 gboolean         ibus_service_remove_from_all_connections
                                                 (IBusService    *service);
 gboolean         ibus_service_send_signal       (IBusService    *service,
+                                                 const gchar    *interface,
                                                  const gchar    *name,
-                                                 gint            first_arg_type,
+                                                 GType           first_arg_type,
                                                  ...);
 G_END_DECLS
 #endif
