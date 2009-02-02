@@ -242,7 +242,8 @@ ibus_config_service_ibus_message (IBusConfigService     *config,
         else {
             reply = ibus_message_new_method_return (message);
             ibus_message_append_args (reply,
-                                      G_TYPE_VALUE, &value);
+                                      G_TYPE_VALUE, &value,
+                                      G_TYPE_INVALID);
             g_value_unset (&value);
         }
     }
@@ -286,3 +287,21 @@ ibus_config_service_get_value (IBusConfigService *config,
     return FALSE;
 }
 
+void
+ibus_config_service_value_changed (IBusConfigService  *config,
+                                   const gchar        *section,
+                                   const gchar        *name,
+                                   const GValue       *value)
+{
+    g_assert (IBUS_IS_CONFIG_SERVICE (config));
+    g_assert (section);
+    g_assert (name);
+    g_assert (G_IS_VALUE (value));
+
+    ibus_service_send_signal ((IBusService *) config,
+                              "ValueChanged",
+                              G_TYPE_STRING, &section,
+                              G_TYPE_STRING, &name,
+                              G_TYPE_VALUE, value,
+                              G_TYPE_INVALID);
+}

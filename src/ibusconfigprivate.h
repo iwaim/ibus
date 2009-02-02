@@ -33,6 +33,7 @@ _from_dbus_value (IBusMessageIter   *iter,
     type = ibus_message_iter_get_arg_type (iter);
     if (type == IBUS_TYPE_VARIANT) {
         ibus_message_iter_recurse (iter, IBUS_TYPE_VARIANT, &sub_iter);
+        ibus_message_iter_next (iter);
         iter = &sub_iter;
         type = ibus_message_iter_get_arg_type (iter);
     }
@@ -103,6 +104,7 @@ _from_dbus_value (IBusMessageIter   *iter,
                 g_value_unset (&v);
             }
             g_value_take_boxed (value, array);
+            ibus_message_iter_next (iter);
             break;
         }
 
@@ -119,48 +121,66 @@ _to_dbus_value (IBusMessageIter *iter,
     IBusMessageIter sub_iter;
     gboolean retval;
 
-    retval = ibus_message_iter_open_container (iter, IBUS_TYPE_VARIANT, 0, &sub_iter);
-    g_assert (retval);
 
     switch (G_VALUE_TYPE (value)) {
     case G_TYPE_STRING:
         {
+            retval = ibus_message_iter_open_container (iter, IBUS_TYPE_VARIANT, "s", &sub_iter);
+            g_assert (retval);
+            
             const gchar *v = g_value_get_string (value);
             ibus_message_iter_append (&sub_iter,
                                       G_TYPE_STRING,
                                       &v);
+            ibus_message_iter_close_container (iter, &sub_iter);
         }
         break;
     case G_TYPE_INT:
         {
+            retval = ibus_message_iter_open_container (iter, IBUS_TYPE_VARIANT, "i", &sub_iter);
+            g_assert (retval);
+            
             gint v = g_value_get_int (value);
             ibus_message_iter_append (&sub_iter,
                                       G_TYPE_INT,
                                       &v);
+            ibus_message_iter_close_container (iter, &sub_iter);
         }
         break;
     case G_TYPE_UINT:
         {
+            retval = ibus_message_iter_open_container (iter, IBUS_TYPE_VARIANT, "u", &sub_iter);
+            g_assert (retval);
+            
             guint v = g_value_get_uint (value);
             ibus_message_iter_append (&sub_iter,
                                       G_TYPE_UINT,
                                       &v);
+            ibus_message_iter_close_container (iter, &sub_iter);
         }
         break;
     case G_TYPE_BOOLEAN:
         {
+            retval = ibus_message_iter_open_container (iter, IBUS_TYPE_VARIANT, "b", &sub_iter);
+            g_assert (retval);
+            
             gboolean v = g_value_get_boolean (value);
             ibus_message_iter_append (&sub_iter,
                                       G_TYPE_BOOLEAN,
                                       &v);
+            ibus_message_iter_close_container (iter, &sub_iter);
         }
         break;
     case G_TYPE_DOUBLE:
         {
+            retval = ibus_message_iter_open_container (iter, IBUS_TYPE_VARIANT, "d", &sub_iter);
+            g_assert (retval);
+            
             gdouble v = g_value_get_double (value);
             ibus_message_iter_append (&sub_iter,
                                       G_TYPE_DOUBLE,
                                       &v);
+            ibus_message_iter_close_container (iter, &sub_iter);
         }
         break;
     default:
@@ -168,6 +188,10 @@ _to_dbus_value (IBusMessageIter *iter,
             IBusMessageIter sub_sub_iter;
             GType type = G_TYPE_INVALID;
             gint i;
+            
+            retval = ibus_message_iter_open_container (iter, IBUS_TYPE_VARIANT, "av", &sub_iter);
+            g_assert (retval);
+            
             GValueArray *array = (GValueArray *)g_value_get_boxed (value);
             ibus_message_iter_open_container (&sub_iter,
                                               IBUS_TYPE_ARRAY,
@@ -186,11 +210,12 @@ _to_dbus_value (IBusMessageIter *iter,
                 _to_dbus_value (&sub_sub_iter, &array->values[i]);
             }
             ibus_message_iter_close_container (&sub_iter, &sub_sub_iter);
+            ibus_message_iter_close_container (iter, &sub_iter);
             break;
         }
         g_assert_not_reached();
     }
-    ibus_message_iter_close_container (iter, &sub_iter);
+
 }
 #endif
 

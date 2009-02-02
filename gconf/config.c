@@ -73,7 +73,7 @@ _value_changed_cb (GConfClient     *client,
                    IBusConfigGConf *config)
 {
     gchar *p, *section, *name;
-    GValue v =  { 0 }, *tmp;
+    GValue v =  { 0 };
 
     p = g_strdup (key);
     section = p + sizeof (GCONF_PREFIX);
@@ -81,16 +81,13 @@ _value_changed_cb (GConfClient     *client,
     *(name - 1) = '0';
    
 
-    tmp = &v;
-    _from_gconf_value (tmp, value);
-    ibus_service_send_signal ((IBusService *) config,
-                              "ValueChanged",
-                              G_TYPE_STRING, &section,
-                              G_TYPE_STRING, &name,
-                              G_TYPE_VALUE, &tmp,
-                              G_TYPE_INVALID);
+    _from_gconf_value (&v, value);
+    ibus_config_service_value_changed ((IBusConfigService *) config,
+                                       section,
+                                       name,
+                                       &v);
     g_free (p);
-    g_value_unset (tmp);
+    g_value_unset (&v);
 }
 
 static void

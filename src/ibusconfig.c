@@ -322,7 +322,8 @@ ibus_config_get_value (IBusConfig  *config,
 
     retval = ibus_message_get_args (reply,
                                     &error,
-                                    G_TYPE_VALUE, &value);
+                                    G_TYPE_VALUE, value,
+                                    G_TYPE_INVALID);
     ibus_message_unref (reply);
     if (!retval) {
         g_warning ("%s: %s", error->name, error->message);

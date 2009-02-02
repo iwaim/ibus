@@ -74,7 +74,8 @@ struct _IBusConfigServiceClass {
 
 GType                ibus_config_service_get_type   (void);
 IBusConfigService   *ibus_config_service_new        (IBusConnection     *connection);
-void                 ibus_config_value_changed      (IBusConfigService  *config,
+void                 ibus_config_service_value_changed
+                                                    (IBusConfigService  *config,
                                                      const gchar        *section,
                                                      const gchar        *name,
                                                      const GValue       *value);
