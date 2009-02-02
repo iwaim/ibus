@@ -337,9 +337,11 @@ bus_engine_proxy_real_destroy (BusEngineProxy *engine)
         priv->prop_list = NULL;
     }
 
-    ibus_proxy_call ((IBusProxy *) engine,
-                     "Destroy",
-                     DBUS_TYPE_INVALID);
+    if (ibus_proxy_get_connection ((IBusProxy *) engine)) {
+        ibus_proxy_call ((IBusProxy *) engine,
+                         "Destroy",
+                         DBUS_TYPE_INVALID);
+    }
 
     if (priv->desc) {
         g_object_unref (priv->desc);

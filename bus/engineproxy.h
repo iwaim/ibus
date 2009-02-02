@@ -47,8 +47,8 @@ typedef struct _BusEngineProxy BusEngineProxy;
 typedef struct _BusEngineProxyClass BusEngineProxyClass;
 
 struct _BusEngineProxy {
-  IBusProxy parent;
-  /* instance members */
+    IBusProxy parent;
+    /* instance members */
 };
 
 struct _BusEngineProxyClass {

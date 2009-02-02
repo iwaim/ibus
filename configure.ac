@@ -180,30 +180,6 @@ fi
 enable_qt=no
 AM_CONDITIONAL(IBUS_BUILD_QT4, [test x"$enable_qt4" = x"yes" ])
 
-# check pygtk gconf for pygconf
-AC_ARG_ENABLE(pygconf,
-    AS_HELP_STRING([--enable-pygconf],
-        [Build python gconf binding, with it ibus will not depend on gnome-python]),
-    [enable_pygconf=$enableval],
-    [enable_pygconf=no],
-)
-
-PKG_CHECK_MODULES(PYGTK,
-    pygtk-2.0 >= 2.10.3,
-    [IBUS_HAS_PYGTK=yes],
-    [IBUS_HAS_PYGTK=no]
-)
-AC_SUBST(PYGTK_CFLAGS)
-AC_SUBST(PYGTK_LIBS)
-if test x"$IBUS_HAS_PYGTK" != x"yes" -a x"$enable_pygconf" = x"yes"; then
-  AC_MSG_ERROR(can not build python gconf binding without pygtk-2.0)
-fi
-
-AC_PATH_PROG(PYGTK_CODEGEN, pygtk-codegen-2.0, no)
-if test x"$PYGTK_CODEGEN" = x"no" -a x"$enable_pygconf" = x"yes"; then
-  AC_MSG_ERROR(can not build python gconf binding without pygtk-codegen-2.0)
-fi
-
 PKG_CHECK_MODULES(GCONF,
     [gconf-2.0 >= 2.11.1],
     [IBUS_HAS_GCONF=yes],
@@ -211,11 +187,6 @@ PKG_CHECK_MODULES(GCONF,
 )
 AC_SUBST(GCONF_CFLAGS)
 AC_SUBST(GCONF_LIBS)
-if test x"$IBUS_HAS_GCONF" != x"yes" -a x"$enable_pygconf" = x"yes"; then
-  AC_MSG_ERROR(can not build python gconf binding without gconf-2.0)
-fi
-
-AM_CONDITIONAL(IBUS_BUILD_PYGCONF, [test x"$enable_pygconf" = x"yes" ])
 
 # check iso-codes
 AC_ARG_ENABLE(iso-codes-check,
@@ -264,7 +235,6 @@ bindings/Makefile
 bindings/python/Makefile
 util/Makefile
 util/IMdkit/Makefile
-util/gconf/Makefile
 icons/Makefile
 docs/Makefile
 docs/reference/Makefile
@@ -281,7 +251,6 @@ Build options:
   Build static libs        $enable_static
   Gtk immodule dir         $GTK_IM_MODULEDIR
   Enable Qt4 IM module     $enable_qt4
-  Build pygconf            $enable_pygconf
   Build document           $enable_gtk_doc
 ])
 

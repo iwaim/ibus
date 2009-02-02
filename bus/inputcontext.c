@@ -1371,6 +1371,9 @@ bus_input_context_enable (BusInputContext *context)
     g_signal_emit (context,
                    context_signals[ENABLED],
                    0);
+    if (priv->has_focus) {
+        bus_engine_proxy_focus_in (priv->engine);
+    }
 }
 
 void
@@ -1384,6 +1387,9 @@ bus_input_context_disable (BusInputContext *context)
     priv->enabled = FALSE;
     
     if (priv->engine) {
+        if (priv->has_focus) {
+            bus_engine_proxy_focus_out (priv->engine);
+        }
         bus_engine_proxy_disable (priv->engine);
     }
     
@@ -1498,10 +1504,12 @@ bus_input_context_filter_keyboard_shortcuts (BusInputContext    *context,
             return FALSE;
         }
 
-        if (priv->enabled)
+        if (priv->enabled) {
             bus_input_context_disable (context);
-        else
+        }
+        else {
             bus_input_context_enable (context);
+        }
 
         return TRUE;
     }
