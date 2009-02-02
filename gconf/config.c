@@ -282,18 +282,15 @@ ibus_config_gconf_get_value (IBusConfigService      *config,
 {
     gchar *key;
     GConfValue *gv;
-    GError *gerror = NULL;
 
     key = g_strdup_printf (GCONF_PREFIX"/%s/%s", section, name);
 
-    gv = gconf_client_get (((IBusConfigGConf *) config)->client, key, &gerror);
+    gv = gconf_client_get (((IBusConfigGConf *) config)->client, key, NULL);
     g_free (key);
 
     if (gv == NULL) {
-        if (error) {
-            *error = ibus_error_new_from_text (DBUS_ERROR_FAILED, gerror->message);
-            g_error_free (gerror);
-        }
+        *error = ibus_error_new_from_printf (DBUS_ERROR_FAILED,
+                                             "Can not get value [%s->%s]", section, name);
         return FALSE;
     }
 
