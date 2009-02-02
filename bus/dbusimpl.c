@@ -769,7 +769,8 @@ bus_dbus_impl_ibus_message (BusDBusImpl  *dbus,
             if (reply_message) {
 
                 ibus_message_set_sender (reply_message, DBUS_SERVICE_DBUS);
-                ibus_message_set_destination (reply_message, bus_connection_get_unique_name (connection));
+                ibus_message_set_destination (reply_message,
+                                              bus_connection_get_unique_name (connection));
                 ibus_message_set_no_reply (reply_message, TRUE);
 
                 ibus_connection_send (IBUS_CONNECTION (connection), reply_message);
