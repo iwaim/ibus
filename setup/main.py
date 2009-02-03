@@ -90,64 +90,66 @@ class Setup(object):
 
         # keyboard shortcut
         # trigger
-        shortcuts = self.__bus.config_get_value(
-                        "general", "keyboard_shortcut_trigger",
+        self.__config = self.__bus.get_config()
+        shortcuts = self.__config.get_value(
+                        "general/hotkey", "trigger",
                         ibus.CONFIG_GENERAL_SHORTCUT_TRIGGER_DEFAULT)
+        print "got config"
         button = self.__xml.get_widget("button_trigger")
         entry = self.__xml.get_widget("entry_trigger")
         entry.set_text("; ".join(shortcuts))
         button.connect("clicked", self.__shortcut_button_clicked_cb,
-                    N_("trigger"), "general", "keyboard_shortcut_trigger", entry)
+                    N_("trigger"), "general/hotkey", "trigger", entry)
 
         # next engine
-        shortcuts = self.__bus.config_get_value(
-                        "general", "keyboard_shortcut_next_engine",
+        shortcuts = self.__config.get_value(
+                        "general/hotkey", "next_engine",
                         ibus.CONFIG_GENERAL_SHORTCUT_NEXT_ENGINE_DEFAULT)
         button = self.__xml.get_widget("button_next_engine")
         entry = self.__xml.get_widget("entry_next_engine")
         entry.set_text("; ".join(shortcuts))
         button.connect("clicked", self.__shortcut_button_clicked_cb,
-                    N_("next engine"), "general", "keyboard_shortcut_next_engine", entry)
+                    N_("next engine"), "general/hotkey", "next_engine", entry)
 
         # prev engine
-        shortcuts = self.__bus.config_get_value(
-                        "general", "keyboard_shortcut_prev_engine",
+        shortcuts = self.__config.get_value(
+                        "general/hotkey", "prev_engine",
                         ibus.CONFIG_GENERAL_SHORTCUT_PREV_ENGINE_DEFAULT)
         button = self.__xml.get_widget("button_prev_engine")
         entry = self.__xml.get_widget("entry_prev_engine")
         entry.set_text("; ".join(shortcuts))
         button.connect("clicked", self.__shortcut_button_clicked_cb,
-                    N_("prev engine"), "general", "keyboard_shortcut_prev_engine", entry)
+                    N_("prev engine"), "general/hotkey", "prev_engine", entry)
 
 
 
         # lookup table orientation
         self.__combobox_lookup_table_orientation = self.__xml.get_widget("combobox_lookup_table_orientation")
         self.__combobox_lookup_table_orientation.set_active(
-            self.__bus.config_get_value("panel", "lookup_table_orientation", 0))
+            self.__config.get_value("panel", "lookup_table_orientation", 0))
         self.__combobox_lookup_table_orientation.connect("changed",
             self.__combobox_lookup_table_orientation_changed_cb)
 
         # auto hide
         self.__checkbutton_auto_hide = self.__xml.get_widget("checkbutton_auto_hide")
         self.__checkbutton_auto_hide.set_active(
-            self.__bus.config_get_value("panel", "auto_hide", False))
+            self.__config.get_value("panel", "auto_hide", False))
         self.__checkbutton_auto_hide.connect("toggled", self.__checkbutton_auto_hide_toggled_cb)
 
         # custom font
         self.__checkbutton_custom_font = self.__xml.get_widget("checkbutton_custom_font")
         self.__checkbutton_custom_font.set_active(
-            self.__bus.config_get_value("panel", "use_custom_font", False))
+            self.__config.get_value("panel", "use_custom_font", False))
         self.__checkbutton_custom_font.connect("toggled", self.__checkbutton_custom_font_toggled_cb)
 
         self.__fontbutton_custom_font = self.__xml.get_widget("fontbutton_custom_font")
-        if self.__bus.config_get_value("panel", "use_custom_font", False):
+        if self.__config.get_value("panel", "use_custom_font", False):
             self.__fontbutton_custom_font.set_sensitive(True)
         else:
             self.__fontbutton_custom_font.set_sensitive(False)
         font_name = gtk.settings_get_default().get_property("gtk-font-name")
         font_name = unicode(font_name, "utf-8")
-        font_name = self.__bus.config_get_value("panel", "custom_font", font_name)
+        font_name = self.__config.get_value("panel", "custom_font", font_name)
         self.__fontbutton_custom_font.connect("notify::font-name", self.__fontbutton_custom_font_notify_cb)
         self.__fontbutton_custom_font.set_font_name(font_name)
 
@@ -157,9 +159,10 @@ class Setup(object):
         try:
             self.__bus = ibus.Bus()
             # self.__bus.connect("config-value-changed", self.__config_value_changed_cb)
-            self.__bus.connect("config-reloaded", self.__config_reloaded_cb)
-            self.__bus.config_add_watch("/general")
-            self.__bus.config_add_watch("/panel")
+            # self.__bus.connect("config-reloaded", self.__config_reloaded_cb)
+            # self.__bus.config_add_watch("/general")
+            # self.__bus.config_add_watch("/general/hotkey")
+            # self.__bus.config_add_watch("/panel")
         except:
             while self.__bus == None:
                 message = _("IBus daemon is not started. Do you want to start it now?")
@@ -193,7 +196,7 @@ class Setup(object):
     def __init_engine_view(self):
         # engines tree
         self.__tree = self.__xml.get_widget("treeview_engines")
-        self.__preload_engines = set(self.__bus.config_get_value("general", "preload_engines", []))
+        self.__preload_engines = set(self.__config.get_value("general", "preload_engines", []))
         model = self.__create_model()
         self.__tree.set_model(model)
 
@@ -223,7 +226,8 @@ class Setup(object):
         renderer = gtk.CellRendererToggle()
         renderer.set_data('column', COLUMN_ENABLE)
         renderer.set_property("xalign", 0.5)
-        renderer.connect("toggled", self.__item_started_column_toggled_cb, model)
+        # TODO Implement register
+        # renderer.connect("toggled", self.__item_started_column_toggled_cb, model)
 
         #col_offset = gtk.TreeViewColumn("Holiday", renderer, text=HOLIDAY_NAME)
         column = gtk.TreeViewColumn(_("Started"), renderer, active = COLUMN_ENABLE, visible = COLUMN_VISIBLE)
@@ -259,7 +263,7 @@ class Setup(object):
         dialog.destroy()
         if id != gtk.RESPONSE_OK:
             return
-        self.__bus.config_set_value(section, _name, shortcuts)
+        self.__config.set_value(section, _name, shortcuts)
         entry.set_text("; ".join(shortcuts))
 
 
@@ -309,11 +313,11 @@ class Setup(object):
         if data[DATA_PRELOAD]:
             if engine not in self.__preload_engines:
                 self.__preload_engines.add(engine)
-                self.__bus.config_set_list("general", "preload_engines", list(self.__preload_engines), "s")
+                self.__config.set_list("general", "preload_engines", list(self.__preload_engines), "s")
         else:
             if engine in self.__preload_engines:
                 self.__preload_engines.remove(engine)
-                self.__bus.config_set_list("general", "preload_engines", list(self.__preload_engines), "s")
+                self.__config.set_list("general", "preload_engines", list(self.__preload_engines), "s")
 
         # set new value
         model.set(iter, COLUMN_PRELOAD, data[DATA_PRELOAD])
@@ -346,6 +350,10 @@ class Setup(object):
             gobject.TYPE_BOOLEAN,
             gdk.Pixbuf,
             gobject.TYPE_PYOBJECT)
+
+        return model
+
+        # FIXME Implement register
 
         langs = dict()
 
@@ -425,27 +433,27 @@ class Setup(object):
             os.symlink(ibus_desktop, link_file)
 
     def __combobox_lookup_table_orientation_changed_cb(self, combobox):
-        self.__bus.config_set_value(
+        self.__config.set_value(
             "panel", "lookup_table_orientation",
             self.__combobox_lookup_table_orientation.get_active())
 
     def __checkbutton_auto_hide_toggled_cb(self, button):
-        self.__bus.config_set_value(
+        self.__config.set_value(
             "panel", "auto_hide",
             self.__checkbutton_auto_hide.get_active())
 
     def __checkbutton_custom_font_toggled_cb(self, button):
         if self.__checkbutton_custom_font.get_active():
             self.__fontbutton_custom_font.set_sensitive(True)
-            self.__bus.config_set_value("panel", "use_custom_font", True)
+            self.__config.set_value("panel", "use_custom_font", True)
         else:
             self.__fontbutton_custom_font.set_sensitive(False)
-            self.__bus.config_set_value("panel", "use_custom_font", False)
+            self.__config.set_value("panel", "use_custom_font", False)
 
     def __fontbutton_custom_font_notify_cb(self, button, arg):
         font_name = self.__fontbutton_custom_font.get_font_name()
         font_name = unicode(font_name, "utf-8")
-        self.__bus.config_set_value("panel", "custom_font", font_name)
+        self.__config.set_value("panel", "custom_font", font_name)
 
     def __config_value_changed_cb(self, bus, section, name, value):
         pass
