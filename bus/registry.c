@@ -157,8 +157,10 @@ bus_registry_load (BusRegistry *registry)
     
     path = ibus_observed_path_new (dirname, TRUE);
     registry->observed_paths = g_list_append (registry->observed_paths, path);
-    
-    bus_registry_load_in_dir (registry, dirname);
+   
+    if (g_file_test(dirname, G_FILE_TEST_EXISTS)) {
+        bus_registry_load_in_dir (registry, dirname);
+    }
     
     g_free (dirname);
 }
