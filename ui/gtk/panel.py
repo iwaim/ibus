@@ -183,9 +183,9 @@ class Panel(ibus.PanelBase):
         if not enabled:
             self.__set_im_icon(self.__ibus_icon)
         else:
-            info = self.__focus_ic.get_engine()
-            if info:
-                self.__set_im_icon(info.icon)
+            engine = self.__focus_ic.get_engine()
+            if engine:
+                self.__set_im_icon(engine.icon)
             else:
                 self.__set_im_icon(self.__ibus_icon)
         self.__language_bar.focus_in()
@@ -208,8 +208,7 @@ class Panel(ibus.PanelBase):
             self.__set_im_icon(self.__ibus_icon)
         else:
             engine = self.__focus_ic.get_engine()
-            print engine, engine.icon
-            if engine and engine.icon:
+            if engine:
                 self.__set_im_icon(engine.icon)
             else:
                 self.__set_im_icon(self.__ibus_icon)

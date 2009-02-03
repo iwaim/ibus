@@ -211,7 +211,7 @@ class InputContext(object.Object):
     def get_engine(self):
         try:
             engine = self.__context.GetEngine()
-            engine = serializable.deserialize_object(info)
+            engine = serializable.deserialize_object(engine)
             return engine
         except:
             return None
