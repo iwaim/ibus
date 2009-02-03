@@ -207,9 +207,10 @@ class Panel(ibus.PanelBase):
             self.reset()
             self.__set_im_icon(self.__ibus_icon)
         else:
-            info = self.__focus_ic.get_engine()
-            if info:
-                self.__set_im_icon(info.icon)
+            engine = self.__focus_ic.get_engine()
+            print engine, engine.icon
+            if engine and engine.icon:
+                self.__set_im_icon(engine.icon)
             else:
                 self.__set_im_icon(self.__ibus_icon)
                 
