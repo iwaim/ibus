@@ -17,6 +17,16 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION: iBus-bus
+ * @short_description: iBus-daemon communicating functions.
+ * 
+ * iBus-bus handles the communication with iBus-daemon, including 
+ * component registration, name request/release,
+ * and connection status checking.
+ *
+ * It also provides some function to invoke functions in iBus-daemon.
+ */
 #ifndef __IBUS_BUS_H_
 #define __IBUS_BUS_H_
 
@@ -46,6 +56,11 @@
 
 G_BEGIN_DECLS
 
+/**
+ * IBusBus:
+ *
+ * Struct for containing dBus status.
+ */
 typedef struct _IBusBus IBusBus;
 typedef struct _IBusBusClass IBusBusClass;
 
@@ -60,12 +75,46 @@ struct _IBusBusClass {
 };
 
 GType        ibus_bus_get_type          (void);
+
+/**
+ * ibus_bus_new:
+ * @returns: A newly allocated IBusBus instance.
+ *
+ * New an IBusBus instance.
+ */
 IBusBus     *ibus_bus_new               (void);
+
+/**
+ * ibus_bus_is_connected:
+ * @bus: the IBusBus instance to be processed.
+ * @returns: TRUE if @bus is connected, FALSE otherwise.
+ *
+ * Return TRUE if @bus is connected to iBus daemon.
+ */
 gboolean     ibus_bus_is_connected      (IBusBus        *bus);
+
+
+/**
+ * ibus_bus_get_connection:
+ * @bus: the IBusBus instance to be processed.
+ * @returns: TRUE if @bus is connected, FALSE otherwise.
+ *
+ * Return IBusConnection of an IBusIBus instance.
+ */
 IBusConnection
             *ibus_bus_get_connection    (IBusBus        *bus);
+
 /* declare dbus methods */
 const gchar *ibus_bus_hello             (IBusBus        *bus);
+
+/**
+ * ibus_bus_request_name:
+ * @bus: the IBusBus instance to be processed.
+ * @name: Name to be requested.
+ * @returns: 0 if failed; positive number otherwise.
+ * 
+ * Request a name from iBus daemon.
+ */
 guint        ibus_bus_request_name      (IBusBus        *bus,
                                          const gchar    *name,
                                          guint           flags);
