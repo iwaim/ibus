@@ -88,7 +88,7 @@ ibus_engine_desc_class_init (IBusEngineDescClass *klass)
     parent_class = (IBusSerializableClass *) g_type_class_peek_parent (klass);
 
     object_class->destroy = (IBusObjectDestroyFunc) ibus_engine_desc_destroy;
-    
+
     serializable_class->serialize   = (IBusSerializableSerializeFunc) ibus_engine_desc_serialize;
     serializable_class->deserialize = (IBusSerializableDeserializeFunc) ibus_engine_desc_deserialize;
     serializable_class->copy        = (IBusSerializableCopyFunc) ibus_engine_desc_copy;
@@ -136,28 +136,28 @@ ibus_engine_desc_serialize (IBusEngineDesc  *desc,
 
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->name);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->longname);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->description);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->language);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->license);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->author);
     g_return_val_if_fail (retval, FALSE);
 
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->icon);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &desc->layout);
     g_return_val_if_fail (retval, FALSE);
-    
+
     return TRUE;
 }
 
@@ -174,7 +174,7 @@ ibus_engine_desc_deserialize (IBusEngineDesc  *desc,
     retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
     g_return_val_if_fail (retval, FALSE);
     desc->name = g_strdup (str);
-    
+
     retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
     g_return_val_if_fail (retval, FALSE);
     desc->longname = g_strdup (str);
@@ -182,27 +182,27 @@ ibus_engine_desc_deserialize (IBusEngineDesc  *desc,
     retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
     g_return_val_if_fail (retval, FALSE);
     desc->description = g_strdup (str);
-    
+
     retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
     g_return_val_if_fail (retval, FALSE);
     desc->language = g_strdup (str);
-    
+
     retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
     g_return_val_if_fail (retval, FALSE);
     desc->license = g_strdup (str);
-    
+
     retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
     g_return_val_if_fail (retval, FALSE);
     desc->author = g_strdup (str);
-    
+
     retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
     g_return_val_if_fail (retval, FALSE);
     desc->icon = g_strdup (str);
-    
+
     retval = ibus_message_iter_get (iter, G_TYPE_STRING, &str);
     g_return_val_if_fail (retval, FALSE);
     desc->layout = g_strdup (str);
-    
+
     return TRUE;
 }
 
@@ -345,12 +345,12 @@ ibus_engine_desc_new_from_xml_node (XMLNode      *node)
     }
 
     desc = (IBusEngineDesc *)g_object_new (IBUS_TYPE_ENGINE_DESC, NULL);
-    
+
     if (!ibus_engine_desc_parse_xml_node (desc, node)) {
         g_object_unref (desc);
         desc = NULL;
     }
-    
+
     return desc;
 }
 

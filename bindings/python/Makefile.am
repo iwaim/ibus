@@ -21,12 +21,12 @@
 
 # pyexec_PYTHON =
 # pyexec_LTLIBRARIES = ibus.la
-# 
+#
 # INCLUDES = 					\
 # 	-I$(top_srcdir)/src		\
 # 	-I$(top_builddir)/src	\
 # 	$(NULL)
-# 
+#
 # ibus_la_SOURCES = ibus.c ibusmodule.c
 # ibus_la_CFLAGS = 		\
 # 	@PYTHON_CFLAGS@ 	\
@@ -45,11 +45,11 @@
 # 	-module			\
 # 	-export-symbols-regex "initibus"	\
 # 	$(NULL)
-# 
+#
 # ibus-codegen.defs:
 # 	(cd $(srcdir); \
 # 	 ./gendefs.sh; ) > ibus-codegen.defs
-# 
+#
 # IBUS_DEFS = 					\
 # 	ibus.defs					\
 # 	ibus-types.defs				\
@@ -57,18 +57,18 @@
 # 	ibus-virtual-methods.defs	\
 # 	ibus.override				\
 # 	$(NULL)
-# 
+#
 # ibus.c: $(IBUS_DEFS) ibus.override ibus-codegen.defs
-# 
+#
 # CLEANFILES = ibus.c ibus-codegen.defs
 # EXTRA_DIST = 					\
 # 	gendefs.sh					\
 # 	common.h					\
 # 	$(GIK_DEFS)					\
 # 	$(NULL)
-# 
+#
 # PYGOBJECT_CODEGEN = pygobject-codegen-2.0
-# 
+#
 # .defs.c:
 # 	(cd $(srcdir)\
 # 	&& $(PYGOBJECT_CODEGEN) \
@@ -77,4 +77,4 @@
 # 	-p py$* $*.defs) > gen-$*.c \
 # 	&& cp gen-$*.c $*.c \
 # 	&& rm -f gen-$*.c
-# 
+#

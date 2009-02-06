@@ -687,7 +687,7 @@ gboolean
 ibus_bus_kill (IBusBus *bus)
 {
     g_assert (IBUS_IS_BUS (bus));
-    
+
     gboolean result;
     result = ibus_bus_call (bus,
                             IBUS_SERVICE_IBUS,
@@ -705,9 +705,9 @@ ibus_bus_register_component (IBusBus       *bus,
 {
     g_assert (IBUS_IS_BUS (bus));
     g_assert (IBUS_IS_COMPONENT (component));
-   
+
     gboolean result;
-    
+
     result = ibus_bus_call (bus,
                             IBUS_SERVICE_IBUS,
                             IBUS_PATH_IBUS,
@@ -726,7 +726,7 @@ ibus_bus_register_component (IBusBus       *bus,
 
     IBusBusPrivate *priv;
     priv = IBUS_BUS_GET_PRIVATE (bus);
-    
+
     message = ibus_message_new_method_call (IBUS_SERVICE_IBUS,
                                             IBUS_PATH_IBUS,
                                             IBUS_INTERFACE_IBUS,
@@ -742,7 +742,7 @@ ibus_bus_register_component (IBusBus       *bus,
                                         -1,
                                         &error);
     ibus_message_unref (message);
-    
+
     if (reply == NULL) {
         g_warning ("%s : %s", error->name, error->message);
         ibus_error_free (error);

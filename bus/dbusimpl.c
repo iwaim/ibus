@@ -176,8 +176,7 @@ _dbus_introspect (BusDBusImpl     *dbus,
                   BusConnection   *connection)
 {
     static const gchar *introspect =
-        "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
-        "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
+        DBUS_INTROSPECT_1_0_XML_DOCTYPE_DECL_NODE
         "<node>\n"
         "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
         "    <method name=\"Introspect\">\n"

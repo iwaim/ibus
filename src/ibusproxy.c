@@ -206,7 +206,7 @@ _connection_destroy_cb (IBusConnection  *connection,
 
     g_object_unref (connection);
     priv->connection = NULL;
-    
+
     ibus_object_destroy ((IBusObject *) proxy);
 }
 
@@ -487,7 +487,7 @@ ibus_proxy_send (IBusProxy      *proxy,
 
     IBusProxyPrivate *priv;
     priv = IBUS_PROXY_GET_PRIVATE (proxy);
-    
+
     g_return_val_if_fail (priv->connection, FALSE);
     g_return_val_if_fail (ibus_connection_is_connected (priv->connection), FALSE);
 
@@ -547,7 +547,7 @@ ibus_proxy_call_with_reply (IBusProxy        *proxy,
     g_assert (IBUS_IS_PROXY (proxy));
     g_assert (pending != NULL);
     g_assert (method != NULL);
-    
+
     va_list args;
     gboolean retval;
     DBusMessage *message;
@@ -563,7 +563,7 @@ ibus_proxy_call_with_reply (IBusProxy        *proxy,
         }
         return FALSE;
     }
-    
+
     message = ibus_message_new_method_call (priv->name,
                                             priv->path,
                                             priv->interface,
@@ -580,11 +580,11 @@ ibus_proxy_call_with_reply (IBusProxy        *proxy,
                                               pending,
                                               timeout_milliseconds);
     ibus_message_unref (message);
-    
+
     if (!retval && error != NULL) {
         *error = ibus_error_new_from_printf (DBUS_ERROR_NO_MEMORY, "");
     }
-    
+
     return retval;
 }
 
@@ -616,7 +616,7 @@ ibus_proxy_call_with_reply_and_block (IBusProxy      *proxy,
         }
         return NULL;
     }
-    
+
     message = ibus_message_new_method_call (priv->name,
                                             priv->path,
                                             priv->interface,

@@ -229,7 +229,7 @@ ibus_factory_ibus_message (IBusFactory    *factory,
             ibus_connection_send (connection, reply_message);
             ibus_message_unref (reply_message);
             return TRUE;
-           
+
         }
 
         path = g_strdup_printf ("/org/freedesktop/IBus/Engine/%d", ++priv->id);
@@ -269,7 +269,7 @@ ibus_factory_add_engine (IBusFactory *factory,
     g_assert (IBUS_IS_FACTORY (factory));
     g_assert (engine_name);
     g_assert (g_type_is_a (engine_type, IBUS_TYPE_ENGINE));
-    
+
     IBusFactoryPrivate *priv;
     priv = IBUS_FACTORY_GET_PRIVATE (factory);
 

@@ -240,7 +240,7 @@ _config_value_changed_cb (IBusConfig  *config,
     g_assert (key);
     g_assert (value);
     g_assert (BUS_IS_IBUS_IMPL (ibus));
-    
+
     gint i;
 
     const static struct {
@@ -345,7 +345,7 @@ _dbus_name_owner_changed_cb (BusDBusImpl *dbus,
             bus_ibus_impl_reload_config (ibus);
         }
     }
-    
+
     factory = bus_registry_name_owner_changed (ibus->registry, name, old_name, new_name);
 
     if (factory) {
@@ -387,7 +387,7 @@ bus_ibus_impl_destroy (BusIBusImpl *ibus)
     g_list_foreach (ibus->engine_list, (GFunc) g_object_unref, NULL);
     g_list_free (ibus->engine_list);
     ibus->engine_list = NULL;
-    
+
     g_list_foreach (ibus->register_engine_list, (GFunc) g_object_unref, NULL);
     g_list_free (ibus->register_engine_list);
     ibus->register_engine_list = NULL;
@@ -414,8 +414,7 @@ _ibus_introspect (BusIBusImpl     *ibus,
                   BusConnection   *connection)
 {
     static const gchar *introspect =
-        "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
-        "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
+        DBUS_INTROSPECT_1_0_XML_DOCTYPE_DECL_NODE
         "<node>\n"
         "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
         "    <method name=\"Introspect\">\n"
@@ -474,7 +473,7 @@ _context_request_engine_cb (BusInputContext *context,
     IBusComponent *comp;
     BusFactoryProxy *factory;
     BusEngineProxy *engine;
-    
+
     if (engine_name == NULL || engine_name[0] == '\0') {
         /* request default engine */
         if (ibus->register_engine_list) {
@@ -523,7 +522,7 @@ _context_request_engine_cb (BusInputContext *context,
         /* try to execute the engine */
         comp = ibus_component_get_from_engine (engine_desc);
         g_assert (comp);
-        
+
         if (!ibus_component_is_running (comp)) {
             ibus_component_start (comp);
 
@@ -535,7 +534,7 @@ _context_request_engine_cb (BusInputContext *context,
                 else {
                     g_usleep (50 * 1000);
                     time += 50 * 1000;
-                } 
+                }
                 factory = bus_factory_proxy_get_from_engine (engine_desc);
                 if (factory != NULL) {
                     break;
@@ -547,7 +546,7 @@ _context_request_engine_cb (BusInputContext *context,
 
     if (factory == NULL)
         return;
-    
+
     engine = bus_factory_proxy_create_engine (factory, engine_desc);
 
     if (engine == NULL)
@@ -560,14 +559,14 @@ static void
 _context_request_next_engine_cb (BusInputContext *context,
                                  BusIBusImpl     *ibus)
 {
-    
+
 }
 
 static void
 _context_request_prev_engine_cb (BusInputContext *context,
                                  BusIBusImpl     *ibus)
 {
-    
+
 }
 
 static void
@@ -583,7 +582,7 @@ _context_focus_out_cb (BusInputContext    *context,
     if (ibus->panel != NULL) {
         bus_panel_proxy_focus_out (ibus->panel, context);
     }
-    
+
     if (context) {
         g_object_unref (context);
         ibus->focused_context = NULL;
@@ -703,7 +702,7 @@ _factory_destroy_cb (BusFactoryProxy    *factory,
     ibus->factory_list = g_list_remove (ibus->factory_list, factory);
 
     component = bus_factory_proxy_get_component (factory);
-    
+
     if (component != NULL) {
         p = engines = ibus_component_get_engines (component);
         for (; p != NULL; p = p->next) {
@@ -770,7 +769,7 @@ _ibus_register_component (BusIBusImpl     *ibus,
     g_object_unref (factory);
 
     engines = ibus_component_get_engines (component);
-    
+
     g_list_foreach (engines, (GFunc) g_object_ref, NULL);
     ibus->register_engine_list = g_list_concat (ibus->register_engine_list, engines);
     g_object_unref (component);
@@ -820,7 +819,7 @@ _ibus_list_active_engines (BusIBusImpl   *ibus,
     for (p = ibus->engine_list; p != NULL; p = p->next) {
         ibus_message_iter_append (&sub_iter, IBUS_TYPE_ENGINE_DESC, &(p->data));
     }
-    
+
     for (p = ibus->register_engine_list; p != NULL; p = p->next) {
         ibus_message_iter_append (&sub_iter, IBUS_TYPE_ENGINE_DESC, &(p->data));
     }

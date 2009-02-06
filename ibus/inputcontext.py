@@ -203,7 +203,7 @@ class InputContext(object.Object):
     def set_capabilities(self, caps):
         caps = dbus.UInt32(caps)
         return self.__context.SetCapabilities(caps)
-    
+
     def destroy(self):
         self.__context.Destroy()
         super(InputContext, self).destroy()

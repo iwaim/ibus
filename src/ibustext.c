@@ -251,7 +251,7 @@ ibus_text_new_from_unichar (gunichar c)
     text->text[len] =  0;
 
     return text;
-   
+
 }
 
 void

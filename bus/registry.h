@@ -48,11 +48,11 @@ typedef struct _BusRegistryClass BusRegistryClass;
 
 struct _BusRegistry {
     IBusObject parent;
-    
+
     /* instance members */
     GList *observed_paths;
     GList *components;
-    
+
     GHashTable *engine_table;
     GList *active_engines;
 };
@@ -82,7 +82,7 @@ BusFactoryProxy *bus_registry_name_owner_changed(BusRegistry    *registry,
                                                  const gchar    *name,
                                                  const gchar    *old_name,
                                                  const gchar    *new_name);
-                                            
+
 G_END_DECLS
 #endif
 

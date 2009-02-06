@@ -31,6 +31,7 @@ IBUS_PATH_CONFIG = "/org/freedesktop/IBus/Config"
 import gobject
 import object
 import interface
+import dbus
 from dbus.proxies import ProxyObject
 
 class ConfigBase(object.Object):
@@ -81,13 +82,13 @@ class Config(object.Object):
         super(Config, self).__init__()
         self.__bus = bus
         self.__bus_name = None
-        
+
         self.__bus.add_match("type='signal',\
                               sender='org.freedesktop.DBus',\
                               member='NameOwnerChanged',\
                               arg0='org.freedesktop.IBus.Config'")
         self.__bus.get_dbusconn().add_signal_receiver(self.__name_owner_changed_cb, signal_name="NameOwnerChanged")
-        
+
         try:
             self.__init_config()
         except:
@@ -103,7 +104,7 @@ class Config(object.Object):
     def __init_config(self, bus_name=None):
         if bus_name == None:
             bus_name = self.__bus.get_name_owner(IBUS_SERVICE_CONFIG)
-        
+
         match_rule = "type='signal',\
                       sender='%s',\
                       member='ValueChanged',\
@@ -115,7 +116,7 @@ class Config(object.Object):
 
         self.__config = self.__bus.get_dbusconn().get_object(bus_name, IBUS_PATH_CONFIG)
         self.__config.connect_to_signal("ValueChanged", self.__value_changed_cb)
-        
+
         self.__bus_name = bus_name
         self.__bus.add_match(match_rule % self.__bus_name)
         self.emit("reloaded")

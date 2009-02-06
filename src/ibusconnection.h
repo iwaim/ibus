@@ -127,7 +127,7 @@ gboolean         ibus_connection_send_valist        (IBusConnection     *connect
                                                      va_list             args);
 gboolean         ibus_connection_send_with_reply    (IBusConnection     *connection,
                                                      IBusMessage        *message,
-                                                     IBusPendingCall   **pending_return,    
+                                                     IBusPendingCall   **pending_return,
                                                      gint                timeout_milliseconds);
 IBusMessage     *ibus_connection_send_with_reply_and_block
                                                     (IBusConnection     *connection,

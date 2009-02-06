@@ -212,7 +212,7 @@ class Panel(ibus.PanelBase):
                 self.__set_im_icon(engine.icon)
             else:
                 self.__set_im_icon(self.__ibus_icon)
-                
+
 
     def reset(self):
         self.__candidate_panel.reset()

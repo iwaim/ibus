@@ -355,7 +355,7 @@ ibus_engine_init (IBusEngine *engine)
 {
     IBusEnginePrivate *priv;
     priv = IBUS_ENGINE_GET_PRIVATE (engine);
-    
+
     priv->name = NULL;
     priv->connection = NULL;
 }
@@ -413,11 +413,11 @@ ibus_engine_get_property (IBusEngine *engine,
     case PROP_NAME:
         g_value_set_string (value, priv->name);
         break;
-    
+
     case PROP_CONNECTION:
         g_value_set_object (value, priv->connection);
         break;
-    
+
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (engine, prop_id, pspec);
     }
@@ -684,10 +684,10 @@ ibus_engine_ibus_message (IBusEngine     *engine,
     }
     else if (ibus_message_is_method_call (message, IBUS_INTERFACE_ENGINE, "Destroy")) {
         return_message = ibus_message_new_method_return (message);
-        
+
         ibus_connection_send (connection, return_message);
         ibus_message_unref (return_message);
-        
+
         ibus_object_destroy ((IBusObject *) engine);
     }
 
@@ -948,7 +948,7 @@ const gchar *
 ibus_engine_get_name (IBusEngine *engine)
 {
     g_assert (IBUS_IS_ENGINE (engine));
-    
+
     IBusEnginePrivate *priv;
     priv = IBUS_ENGINE_GET_PRIVATE (engine);
 

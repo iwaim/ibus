@@ -333,7 +333,7 @@ ibus_input_context_real_destroy (IBusInputContext *context)
                          "Destroy",
                          G_TYPE_INVALID);
     }
-    
+
     IBUS_OBJECT_CLASS(parent_class)->destroy (IBUS_OBJECT (context));
 }
 

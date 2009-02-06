@@ -103,7 +103,7 @@ bus_engine_proxy_new (const gchar    *path,
     g_assert (path);
     g_assert (IBUS_IS_ENGINE_DESC (desc));
     g_assert (BUS_IS_CONNECTION (connection));
-    
+
     BusEngineProxy *engine;
 
     engine = (BusEngineProxy *) g_object_new (BUS_TYPE_ENGINE_PROXY,
@@ -116,7 +116,7 @@ bus_engine_proxy_new (const gchar    *path,
     priv = BUS_ENGINE_PROXY_GET_PRIVATE (engine);
     priv->desc = desc;
     g_object_ref (desc);
-    
+
     return engine;
 }
 
@@ -336,7 +336,7 @@ bus_engine_proxy_real_destroy (BusEngineProxy *engine)
 {
     BusEngineProxyPrivate *priv;
     priv = BUS_ENGINE_PROXY_GET_PRIVATE (engine);
-    
+
     if (priv->prop_list) {
         g_object_unref (priv->prop_list);
         priv->prop_list = NULL;
@@ -486,7 +486,7 @@ bus_engine_proxy_ibus_signal (IBusProxy     *proxy,
             g_object_unref (priv->prop_list);
             priv->prop_list = NULL;
         }
-    
+
         retval = ibus_message_get_args (message,
                                         &error,
                                         IBUS_TYPE_PROP_LIST, &priv->prop_list,
@@ -540,7 +540,7 @@ bus_engine_proxy_process_key_event_reply_cb (IBusPendingCall *pending,
     gboolean retval;
 
     reply_message = dbus_pending_call_steal_reply (pending);
-    
+
     if ((error = ibus_error_new_from_message (reply_message)) != NULL) {
         g_warning ("%s: %s", error->name, error->message);
         ibus_message_unref (reply_message);

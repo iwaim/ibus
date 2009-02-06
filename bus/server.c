@@ -142,7 +142,7 @@ static void
 bus_server_destroy (BusServer *server)
 {
     g_assert (BUS_IS_SERVER (server));
-    
+
     while (g_main_loop_is_running (server->loop)) {
         g_main_loop_quit (server->loop);
     }

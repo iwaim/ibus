@@ -51,7 +51,7 @@ typedef struct _IBusComponentClass IBusComponentClass;
 struct _IBusComponent {
     IBusSerializable parent;
     /* instance members */
-    
+
     gchar *name;
     gchar *description;
     gchar *version;
@@ -59,16 +59,16 @@ struct _IBusComponent {
     gchar *author;
     gchar *homepage;
     gchar *exec;
-    
+
     /* text domain for dgettext */
     gchar *textdomain;
-    
+
     /* engines */
     GList *engines;
-    
+
     /* observed paths */
     GList *observed_paths;
-    
+
     GPid     pid;
 };
 

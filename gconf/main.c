@@ -12,7 +12,7 @@ static IBusConfigGConf *config = NULL;
 static gboolean ibus = FALSE;
 static gboolean verbose = FALSE;
 
-static const GOptionEntry entries[] = 
+static const GOptionEntry entries[] =
 {
     { "ibus", 'i', 0, G_OPTION_ARG_NONE, &ibus, "component is executed by ibus", NULL },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "verbose", NULL },
@@ -51,7 +51,7 @@ main (gint argc, gchar **argv)
     setlocale (LC_ALL, "");
 
     context = g_option_context_new ("- ibus gconf component");
-    
+
     g_option_context_add_main_entries (context, entries, "ibus-gconf");
 
     if (!g_option_context_parse (context, &argc, &argv, &error)) {

@@ -420,7 +420,7 @@ bus_input_context_class_init (BusInputContextClass *klass)
             ibus_marshal_VOID__VOID,
             G_TYPE_NONE,
             0);
-    
+
     context_signals[REQUEST_ENGINE] =
         g_signal_new (I_("request-engine"),
             G_TYPE_FROM_CLASS (klass),
@@ -431,7 +431,7 @@ bus_input_context_class_init (BusInputContextClass *klass)
             G_TYPE_NONE,
             1,
             G_TYPE_STRING);
-    
+
     context_signals[REQUEST_NEXT_ENGINE] =
         g_signal_new (I_("request-next-engine"),
             G_TYPE_FROM_CLASS (klass),
@@ -441,7 +441,7 @@ bus_input_context_class_init (BusInputContextClass *klass)
             ibus_marshal_VOID__VOID,
             G_TYPE_NONE,
             0);
-    
+
     context_signals[REQUEST_PREV_ENGINE] =
         g_signal_new (I_("request-prev-engine"),
             G_TYPE_FROM_CLASS (klass),
@@ -559,7 +559,7 @@ _ic_process_key_event_reply_cb (gboolean  retval,
     IBusMessage *reply;
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (call_data->context);
-    
+
     reply = ibus_message_new_method_return (call_data->message);
     ibus_message_append_args (reply,
                               G_TYPE_BOOLEAN, &retval,
@@ -875,7 +875,7 @@ _ic_get_engine (BusInputContext  *context,
 
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-    
+
     if (priv->engine) {
         desc = bus_engine_proxy_get_desc (priv->engine);
         if (desc != NULL) {
@@ -904,11 +904,11 @@ _ic_destroy (BusInputContext  *context,
 
     IBusMessage *reply;
     reply = ibus_message_new_method_return (message);
-    
+
     ibus_connection_send ((IBusConnection *) connection, reply);
     ibus_connection_flush ((IBusConnection *) connection);
     ibus_message_unref (reply);
-    
+
     ibus_object_destroy ((IBusObject *) context);
 
     return NULL;
@@ -1040,10 +1040,10 @@ void
 bus_input_context_page_up (BusInputContext *context)
 {
     g_assert (BUS_IS_INPUT_CONTEXT (context));
-    
+
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-    
+
     if (priv->engine) {
         bus_engine_proxy_page_up (priv->engine);
     }
@@ -1053,10 +1053,10 @@ void
 bus_input_context_page_down (BusInputContext *context)
 {
     g_assert (BUS_IS_INPUT_CONTEXT (context));
-    
+
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-    
+
     if (priv->engine) {
         bus_engine_proxy_page_down (priv->engine);
     }
@@ -1066,10 +1066,10 @@ void
 bus_input_context_cursor_up (BusInputContext *context)
 {
     g_assert (BUS_IS_INPUT_CONTEXT (context));
-    
+
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-    
+
     if (priv->engine) {
         bus_engine_proxy_cursor_up (priv->engine);
     }
@@ -1079,10 +1079,10 @@ void
 bus_input_context_cursor_down (BusInputContext *context)
 {
     g_assert (BUS_IS_INPUT_CONTEXT (context));
-    
+
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-    
+
     if (priv->engine) {
         bus_engine_proxy_cursor_down (priv->engine);
     }
@@ -1094,10 +1094,10 @@ bus_input_context_property_activate (BusInputContext *context,
                                      gint             prop_state)
 {
     g_assert (BUS_IS_INPUT_CONTEXT (context));
-    
+
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-    
+
     if (priv->engine) {
         bus_engine_proxy_property_activate (priv->engine, prop_name, prop_state);
     }
@@ -1114,7 +1114,7 @@ _engine_destroy_cb (BusEngineProxy  *engine,
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
 
     g_assert (priv->engine == engine);
-    
+
     bus_input_context_set_engine (context, NULL);
 }
 
@@ -1363,7 +1363,7 @@ bus_input_context_enable (BusInputContext *context)
         return;
 
     priv->enabled = TRUE;
-    
+
     bus_engine_proxy_enable (priv->engine);
     bus_input_context_send_signal (context,
                                    "Enabled",
@@ -1385,14 +1385,14 @@ bus_input_context_disable (BusInputContext *context)
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
 
     priv->enabled = FALSE;
-    
+
     if (priv->engine) {
         if (priv->has_focus) {
             bus_engine_proxy_focus_out (priv->engine);
         }
         bus_engine_proxy_disable (priv->engine);
     }
-    
+
     bus_input_context_send_signal (context,
                                    "Disabled",
                                    G_TYPE_INVALID);
@@ -1462,7 +1462,7 @@ bus_input_context_set_engine (BusInputContext *context,
                           signals[i].callback,
                           context);
     }
-    
+
     g_signal_emit (context,
                    context_signals[ENGINE_CHANGED],
                    0);
@@ -1477,7 +1477,7 @@ bus_input_context_filter_keyboard_shortcuts (BusInputContext    *context,
 
     BusInputContextPrivate *priv;
     priv = BUS_INPUT_CONTEXT_GET_PRIVATE (context);
-    
+
     static GQuark trigger;
     static GQuark next_factory;
     static GQuark prev_factory;

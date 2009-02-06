@@ -48,7 +48,7 @@ typedef struct _IBusConfigServiceClass IBusConfigServiceClass;
 
 struct _IBusConfigService {
     IBusService parent;
-    
+
     /* instance members */
 };
 

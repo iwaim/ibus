@@ -29,7 +29,7 @@ ibus_xml_free (XMLNode *node)
     g_free (node->name);
 
     g_free (node->text);
-   
+
     g_strfreev (node->attributes);
 
     g_list_foreach (node->sub_nodes, (GFunc) ibus_xml_free, NULL);
@@ -48,10 +48,10 @@ _start_root_element_cb (GMarkupParseContext *context,
 {
     XMLNode **node = (XMLNode **) user_data;
     g_assert (node != NULL);
-    
+
     XMLNode *p = g_slice_new0 (XMLNode);
-    
-    
+
+
     p->name = g_strdup (element_name);
 
     GArray *attributes = g_array_new (TRUE, TRUE, sizeof (gchar *));
@@ -62,9 +62,9 @@ _start_root_element_cb (GMarkupParseContext *context,
         p = g_strdup (*attribute_values++);
         g_array_append_val (attributes, p);
     }
-    
+
     p->attributes = (gchar **) g_array_free (attributes, FALSE);
-    
+
     g_markup_parse_context_push (context, &parser, p);
     *node = p;
 }
@@ -84,9 +84,9 @@ _start_element_cb (GMarkupParseContext *context,
         g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT, " ");
         return;
     }
-    
+
     XMLNode *p = g_slice_new0 (XMLNode);
-    
+
     node->sub_nodes = g_list_append (node->sub_nodes, p);
     g_markup_parse_context_push (context, &parser, p);
 
@@ -100,7 +100,7 @@ _start_element_cb (GMarkupParseContext *context,
         p = g_strdup (*attribute_values++);
         g_array_append_val (attributes, p);
     }
-    
+
     p->attributes = (gchar **)g_array_free (attributes, FALSE);
 }
 
@@ -145,7 +145,7 @@ _is_space (const gchar *text,
 static void
 _text_cb (GMarkupParseContext *context,
           const gchar         *text,
-          gsize                text_len,  
+          gsize                text_len,
           gpointer             user_data,
           GError             **error)
 {
@@ -181,20 +181,20 @@ ibus_xml_parse_file (const gchar *filename)
     if (pf == NULL) {
         return NULL;
     }
-    
+
     GMarkupParseContext *context;
     XMLNode *node;
-    
+
     const static GMarkupParser root_parser = {
         _start_root_element_cb,
         _end_element_cb,
         _text_cb,
         0,
         0,
-    };   
-    
+    };
+
     context = g_markup_parse_context_new (&root_parser, 0, &node, 0);
-    
+
     while (!feof (pf)) {
         gchar buf[1024];
         gssize len = 0;
@@ -205,7 +205,7 @@ ibus_xml_parse_file (const gchar *filename)
         if (!retval)
             goto _failed_out;
     }
-    
+
     fclose (pf);
 
     retval = g_markup_parse_context_end_parse (context, &error);
@@ -228,25 +228,25 @@ ibus_xml_parse_buffer (const gchar *buffer)
 {
     gboolean retval;
     GError *error = NULL;
-    
+
     GMarkupParseContext *context;
     XMLNode *node;
-    
+
     const static GMarkupParser root_parser = {
         _start_root_element_cb,
         _end_element_cb,
         _text_cb,
         0,
         0,
-    };   
-    
+    };
+
     context = g_markup_parse_context_new (&root_parser, 0, &node, 0);
-    
+
     retval = g_markup_parse_context_parse (context, buffer, strlen (buffer), &error);
 
     if (!retval)
         goto _failed_out;
-    
+
     retval = g_markup_parse_context_end_parse (context, &error);
     if (!retval)
         goto _failed_out;
@@ -312,6 +312,6 @@ xml_output_indent (const XMLNode *node, int level, GString *output)
 void
 xml_output (const XMLNode *node, GString *output)
 {
-    xml_output_indent (node, 0, output);    
+    xml_output_indent (node, 0, output);
 }
 

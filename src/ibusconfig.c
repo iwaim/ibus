@@ -268,7 +268,7 @@ ibus_config_ibus_signal (IBusProxy     *proxy,
             g_warning ("%s: Can not parse arguments of ValueChanges.", DBUS_ERROR_INVALID_ARGS);
             return FALSE;
         }
-    
+
         g_signal_emit (config,
                        config_signals[VALUE_CHANGED],
                        0,
@@ -276,9 +276,9 @@ ibus_config_ibus_signal (IBusProxy     *proxy,
                        name,
                        &value);
         g_value_unset (&value);
-        
+
         g_signal_stop_emission_by_name (config, "ibus-signal");
-        
+
         return TRUE;
     }
 

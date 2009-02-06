@@ -50,7 +50,7 @@ typedef struct _BusComponent BusComponent;
 struct _IBusEngineDesc {
     IBusSerializable parent;
     /* instance members */
-    
+
     gchar *name;
     gchar *longname;
     gchar *description;
@@ -63,7 +63,7 @@ struct _IBusEngineDesc {
 
 struct _IBusEngineDescClass {
     IBusSerializableClass parent;
-    
+
     /* class members */
 };
 

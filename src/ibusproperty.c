@@ -134,10 +134,10 @@ ibus_property_serialize (IBusProperty    *prop,
 
     retval = ibus_message_iter_append (iter, G_TYPE_STRING, &prop->key);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_append (iter, G_TYPE_UINT, &prop->type);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_append (iter, IBUS_TYPE_TEXT, &prop->label);
     g_return_val_if_fail (retval, FALSE);
 
@@ -178,14 +178,14 @@ ibus_property_deserialize (IBusProperty    *prop,
 
     retval = ibus_message_iter_get (iter, G_TYPE_UINT, &prop->type);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_get (iter, IBUS_TYPE_TEXT, &prop->label);
     g_return_val_if_fail (retval, FALSE);
 
     retval = ibus_message_iter_get (iter, G_TYPE_STRING, &p);
     g_return_val_if_fail (retval, FALSE);
     prop->icon = g_strdup (p);
-    
+
     retval = ibus_message_iter_get (iter, IBUS_TYPE_TEXT, &prop->tooltip);
     g_return_val_if_fail (retval, FALSE);
 

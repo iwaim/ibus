@@ -58,7 +58,7 @@ static void
 ibus_config_gconf_class_init (IBusConfigGConfClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	
+
     parent_class = (IBusConfigServiceClass *) g_type_class_peek_parent (klass);
 
 	IBUS_OBJECT_CLASS (object_class)->destroy = (IBusObjectDestroyFunc) ibus_config_gconf_destroy;
@@ -79,7 +79,7 @@ _value_changed_cb (GConfClient     *client,
     section = p + sizeof (GCONF_PREFIX);
     name = rindex (p, '/') + 1;
     *(name - 1) = '\0';
-   
+
 
     _from_gconf_value (&v, value);
     ibus_config_service_value_changed ((IBusConfigService *) config,
@@ -94,7 +94,7 @@ static void
 ibus_config_gconf_init (IBusConfigGConf *config)
 {
     config->client = gconf_client_get_default ();
-    gconf_client_add_dir (config->client, GCONF_PREFIX, GCONF_CLIENT_PRELOAD_NONE, NULL);    
+    gconf_client_add_dir (config->client, GCONF_PREFIX, GCONF_CLIENT_PRELOAD_NONE, NULL);
     g_signal_connect (config->client, "value-changed", G_CALLBACK (_value_changed_cb), config);
 }
 
@@ -153,19 +153,19 @@ _to_gconf_value (const GValue *value)
         }
         break;
     default:
-        if (type == IBUS_TYPE_ARRAY) {
-            
+        if (type == G_TYPE_VALUE_ARRAY) {
+
             GSList *l = NULL;
             GType list_type = G_TYPE_STRING;
             GValueArray *array = g_value_get_boxed (value);
             gint i;
-            
+
             if (array && array->n_values > 0) {
                 list_type = G_VALUE_TYPE (&(array->values[0]));
             }
-            
+
             gv = gconf_value_new (GCONF_VALUE_LIST);
-            
+
             switch (list_type) {
             case G_TYPE_STRING:
                 gconf_value_set_list_type (gv, GCONF_VALUE_STRING); break;
@@ -180,7 +180,7 @@ _to_gconf_value (const GValue *value)
             default:
                 g_assert_not_reached ();
             }
-                
+
             for (i = 0; array && i < array->n_values; i++) {
                 GConfValue *tmp;
                 g_assert (G_VALUE_TYPE (&(array->values[i])) == list_type);
@@ -189,7 +189,7 @@ _to_gconf_value (const GValue *value)
             }
             gconf_value_set_list_nocopy (gv, l);
         }
-        else 
+        else
             g_assert_not_reached ();
     }
     return gv;
@@ -222,10 +222,10 @@ _from_gconf_value (GValue           *value,
     case GCONF_VALUE_LIST:
         {
             g_value_init (value, G_TYPE_VALUE_ARRAY);
-            
+
             GSList *list, *p;
             GValueArray *va;
-            
+
             list = gconf_value_get_list (gv);
             va = g_value_array_new (g_slist_length (list));
             for (p = list; p != NULL; p = p->next) {
@@ -233,7 +233,7 @@ _from_gconf_value (GValue           *value,
                 _from_gconf_value (&tmp, (GConfValue *) p->data);
                 g_value_array_append (va, &tmp);
             }
-            
+
             g_value_take_boxed (value, va);
         }
         return;

@@ -62,7 +62,7 @@ bus_factory_proxy_new (IBusComponent *component,
                        BusConnection *connection)
 {
     g_assert (IBUS_IS_COMPONENT (component));
-    
+
     BusFactoryProxy *factory;
     GList *p;
 
@@ -79,7 +79,7 @@ bus_factory_proxy_new (IBusComponent *component,
                             "path", "/org/freedesktop/IBus/Factory",
                             "connection", connection,
                             NULL);
-    
+
     g_object_ref (component);
     factory->component = component;
     g_object_set_data ((GObject *)factory->component, "factory", factory);

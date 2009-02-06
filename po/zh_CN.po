@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.1.20080813\n"
 "Report-Msgid-Bugs-To: http://code.google.com/p/ibus/issues/entry\n"
-"POT-Creation-Date: 2009-02-04 14:46+1000\n"
+"POT-Creation-Date: 2009-02-05 10:11+0800\n"
 "PO-Revision-Date: 2008-08-13 21:59+0800\n"
 "Last-Translator: Huang Peng <shawn.p.huang@gmail.com>\n"
 "Language-Team: Huang Peng <shawn.p.huang@gmail.com>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #: ibus/lang.py:40 ui/gtk/panel.py:307 ui/gtk/panel.py:308 ui/gtk/panel.py:309
-#: ui/gtk/panel.py:310 setup/main.py:369 setup/main.py:370 setup/main.py:371
+#: ui/gtk/panel.py:310
 msgid "Other"
 msgstr "其他"
 
@@ -37,23 +37,23 @@ msgstr "Huang Peng <shawn.p.huang@gmail.com>"
 msgid "Switch engine"
 msgstr "切换引擎"
 
-#: setup/main.py:102
+#: setup/main.py:99
 msgid "trigger"
 msgstr "开关"
 
-#: setup/main.py:112
+#: setup/main.py:109
 msgid "next engine"
 msgstr "下一个引擎"
 
-#: setup/main.py:122
+#: setup/main.py:119
 msgid "prev engine"
 msgstr "上一个引擎"
 
-#: setup/main.py:168
+#: setup/main.py:197
 msgid "IBus daemon is not started. Do you want to start it now?"
 msgstr "IBus守护进程没有启动，您是否想现在启动它？"
 
-#: setup/main.py:183
+#: setup/main.py:212
 msgid ""
 "IBus has been started! If you can not use IBus, please add below lines in "
 "$HOME/.bashrc, and relogin your desktop.\n"
@@ -66,19 +66,7 @@ msgstr ""
 "  export XMODIFIERS=@im=ibus\n"
 "  export QT_IM_MODULE=ibus"
 
-#: setup/main.py:205 setup/setup.glade:367
-msgid "Engine"
-msgstr "输入法引擎"
-
-#: setup/main.py:233
-msgid "Started"
-msgstr "启动"
-
-#: setup/main.py:243
-msgid "Preload"
-msgstr "预加载"
-
-#: setup/main.py:253
+#: setup/main.py:227
 #, python-format
 msgid "Select keyboard shortcut for %s"
 msgstr "选择%s的快捷键"
@@ -115,21 +103,21 @@ msgstr "IBus - 设置"
 msgid "Auto start IBus on session login"
 msgstr "启动桌面时自动启动IBus"
 
-#: setup/setup.glade:62 setup/setup.glade:81 setup/setup.glade:100
-msgid "..."
-msgstr ""
+#: setup/setup.glade:60
+msgid "Trigger:"
+msgstr "开关:"
 
-#: setup/setup.glade:162
-msgid "Previous engine:"
-msgstr "上一个引擎:"
-
-#: setup/setup.glade:178
+#: setup/setup.glade:74
 msgid "Next engine:"
 msgstr "下一个引擎:"
 
-#: setup/setup.glade:194
-msgid "Trigger:"
-msgstr "开关:"
+#: setup/setup.glade:90
+msgid "Previous engine:"
+msgstr "上一个引擎:"
+
+#: setup/setup.glade:153 setup/setup.glade:170 setup/setup.glade:190
+msgid "..."
+msgstr ""
 
 #: setup/setup.glade:211
 msgid "<b>Keyboard Shortcuts</b>"
@@ -163,7 +151,27 @@ msgstr "<b>用户界面</b>"
 msgid "General"
 msgstr "通用"
 
-#: setup/setup.glade:384
+#: setup/setup.glade:399
+msgid "gtk-add"
+msgstr ""
+
+#: setup/setup.glade:409
+msgid "gtk-remove"
+msgstr ""
+
+#: setup/setup.glade:422
+msgid "gtk-go-up"
+msgstr ""
+
+#: setup/setup.glade:435
+msgid "gtk-go-down"
+msgstr ""
+
+#: setup/setup.glade:460
+msgid "Engine"
+msgstr "输入法引擎"
+
+#: setup/setup.glade:477
 msgid ""
 "<big><b>iBus</b></big>\n"
 "<small>The intelligent input bus</small>\n"
@@ -173,13 +181,19 @@ msgid ""
 "\n"
 msgstr ""
 
-#: setup/setup.glade:409
+#: setup/setup.glade:502
 msgid "About"
 msgstr "关于"
 
-#: setup/setup.glade:431
+#: setup/setup.glade:524
 msgid "gtk-close"
 msgstr ""
+
+#~ msgid "Started"
+#~ msgstr "启动"
+
+#~ msgid "Preload"
+#~ msgstr "预加载"
 
 #~ msgid "Cannot enable input engine"
 #~ msgstr "不能启动输入引擎"

@@ -341,7 +341,7 @@ xim_create_ic (XIMS xims, IMChangeICStruct *call_data)
         g_slice_free (X11IC, x11ic);
         g_return_val_if_reached (0);
     }
-    
+
     g_signal_connect (x11ic->context, "commit-text",
                         G_CALLBACK (_context_commit_text_cb), x11ic);
     g_signal_connect (x11ic->context, "forward-key-event",
@@ -398,7 +398,7 @@ xim_destroy_ic (XIMS xims, IMChangeICStruct *call_data)
 
     g_free (x11ic->preedit_string);
     x11ic->preedit_string = NULL;
-    
+
     if (x11ic->preedit_attrs) {
         g_object_unref (x11ic->preedit_attrs);
         x11ic->preedit_attrs = NULL;
@@ -524,12 +524,12 @@ _free_ic (gpointer data, gpointer user_data)
     g_return_if_fail (x11ic != NULL);
 
     g_free (x11ic->preedit_string);
-    
+
     if (x11ic->preedit_attrs) {
         g_object_unref (x11ic->preedit_attrs);
         x11ic->preedit_attrs = NULL;
     }
-    
+
     if (x11ic->context) {
         ibus_object_destroy ((IBusObject *)x11ic->context);
         g_object_unref (x11ic->context);
@@ -796,7 +796,7 @@ _context_forward_key_event_cb (IBusInputContext *context,
                                X11IC            *x11ic)
 {
     g_assert (x11ic);
-    
+
     // _xim_forward_gdk_event (&(event->key), x11ic);
 }
 
@@ -838,7 +838,7 @@ _context_update_preedit_text_cb (IBusInputContext *context,
     if (x11ic->preedit_attrs) {
         g_object_unref (x11ic->preedit_attrs);
     }
-    
+
     g_object_ref(text->attrs);
     x11ic->preedit_attrs = text->attrs;
 
@@ -854,7 +854,7 @@ _context_show_preedit_text_cb (IBusInputContext *context,
 {
     g_assert (IBUS_IS_INPUT_CONTEXT (context));
     g_assert (x11ic);
-    
+
     x11ic->preedit_visible = TRUE;
     _update_preedit (x11ic);
 }
@@ -865,7 +865,7 @@ _context_hide_preedit_text_cb (IBusInputContext *context,
 {
     g_assert (IBUS_IS_INPUT_CONTEXT (context));
     g_assert (x11ic);
-    
+
     x11ic->preedit_visible = FALSE;
     _update_preedit (x11ic);
 }
@@ -876,7 +876,7 @@ _context_enabled_cb (IBusInputContext *context,
 {
     g_assert (IBUS_IS_INPUT_CONTEXT (context));
     g_assert (x11ic);
-    
+
     _xim_preedit_start (_xims, x11ic);
 }
 
@@ -886,7 +886,7 @@ _context_disabled_cb (IBusInputContext *context,
 {
     g_assert (IBUS_IS_INPUT_CONTEXT (context));
     g_assert (x11ic);
-    
+
     _xim_preedit_end (_xims, x11ic);
 }
 
@@ -896,7 +896,7 @@ _init_ibus (void)
     if (_bus != NULL)
         return;
     ibus_init ();
-    
+
     _bus = ibus_bus_new ();
 
     if (!ibus_bus_is_connected (_bus)) {

@@ -58,10 +58,10 @@ class Component(Serializable):
 
     def get_author(self):
         return self.__author
-        
+
     def get_homepage(self):
         return self.__homepage
-    
+
     def get_exec(self):
         return self.__exec
 
@@ -116,7 +116,7 @@ class Component(Serializable):
         self.__homepage = struct.pop(0)
         self.__exec = struct.pop(0)
         self.__textdomain = struct.pop(0)
-        
+
         self.__observed_paths = map(deserialize_object, struct.pop(0))
         self.__engines = map(deserialize_object, struct.pop(0))
 

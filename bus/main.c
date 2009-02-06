@@ -32,7 +32,7 @@ static gchar *config = "default";
 static gchar *desktop = "gnome";
 static gboolean verbose = FALSE;
 
-static const GOptionEntry entries[] = 
+static const GOptionEntry entries[] =
 {
     { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "run ibus as background process.", NULL },
     { "single", 's', 0, G_OPTION_ARG_NONE, &single, "do not execute panel and config module.", NULL },
@@ -84,11 +84,11 @@ main (gint argc, gchar **argv)
     BusServer *server;
 
     GError *error = NULL;
-    
+
     setlocale (LC_ALL, "");
-    
+
     context = g_option_context_new ("- ibus daemon");
-    
+
     g_option_context_add_main_entries (context, entries, "ibus-daemon");
 
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
@@ -104,7 +104,7 @@ main (gint argc, gchar **argv)
     }
 
     g_type_init ();
-    
+
     server = bus_server_get_default ();
     bus_server_listen (server);
 
@@ -115,7 +115,7 @@ main (gint argc, gchar **argv)
             component = bus_registry_lookup_component_by_name (BUS_DEFAULT_REGISTRY, IBUS_SERVICE_CONFIG);
             if (component == NULL || !ibus_component_start (component)) {
                 g_printerr ("Can not execute default config program\n");
-                exit (-1);    
+                exit (-1);
             }
         } else if (g_strcmp0 (config, "disable") != 0 && g_strcmp0 (config, "") != 0) {
             if (!execute_cmdline (config))
@@ -128,7 +128,7 @@ main (gint argc, gchar **argv)
             component = bus_registry_lookup_component_by_name (BUS_DEFAULT_REGISTRY, IBUS_SERVICE_PANEL);
             if (component == NULL || !ibus_component_start (component)) {
                 g_printerr ("Can not execute default panel program\n");
-                exit (-1);    
+                exit (-1);
             }
         } else if (g_strcmp0 (panel, "disable") != 0 && g_strcmp0 (panel, "") != 0) {
             if (!execute_cmdline (panel))

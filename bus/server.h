@@ -49,10 +49,10 @@ typedef struct _BusServerClass BusServerClass;
 
 struct _BusServer {
     IBusServer parent;
-    
+
     /* instance members */
     GMainLoop *loop;
-    
+
 };
 
 struct _BusServerClass {

@@ -309,7 +309,7 @@ GList *
 ibus_service_get_connections (IBusService *service)
 {
     g_assert (IBUS_IS_SERVICE (service));
-    
+
     IBusServicePrivate *priv;
     priv = IBUS_SERVICE_GET_PRIVATE (service);
 

@@ -62,7 +62,7 @@ class IIBus(dbus.service.Object):
 
     @method(out_signature="av")
     def ListEngines(self, dbusconn): pass
-    
+
     @method(out_signature="av")
     def ListActiveEngines(self, dbusconn): pass
 

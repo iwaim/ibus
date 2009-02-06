@@ -97,7 +97,7 @@ bus_registry_init (BusRegistry *registry)
     for (p = registry->components; p != NULL; p = p->next) {
         IBusComponent *comp = (IBusComponent *)p->data;
         GList *p1;
-        
+
         for (p1 = comp->engines; p1 != NULL; p1 = p1->next) {
             IBusEngineDesc *desc = (IBusEngineDesc *)p1->data;
             g_hash_table_insert (registry->engine_table, desc->name, desc);
@@ -142,26 +142,26 @@ bus_registry_load (BusRegistry *registry)
     IBusObservedPath *path;
 
     dirname = g_build_filename (PKGDATADIR, "component", NULL);
-    
+
     path = ibus_observed_path_new (dirname, TRUE);
     registry->observed_paths = g_list_append (registry->observed_paths, path);
-    
+
     bus_registry_load_in_dir (registry, dirname);
-    
+
     g_free (dirname);
 
     homedir = (gchar *) g_getenv ("HOME");
     if (!homedir)
         homedir = (gchar *) g_get_home_dir ();
     dirname = g_build_filename (homedir, ".ibus", "component", NULL);
-    
+
     path = ibus_observed_path_new (dirname, TRUE);
     registry->observed_paths = g_list_append (registry->observed_paths, path);
-   
+
     if (g_file_test(dirname, G_FILE_TEST_EXISTS)) {
         bus_registry_load_in_dir (registry, dirname);
     }
-    
+
     g_free (dirname);
 }
 
@@ -287,7 +287,7 @@ bus_registry_save_cache (BusRegistry *registry)
         g_string_append_indent (output, 1);
         g_string_append (output, "</observed-paths>\n");
     }
-    
+
     if (registry->components) {
         g_string_append_indent (output, 1);
         g_string_append (output, "<components>\n");
@@ -337,7 +337,7 @@ bus_registry_load_in_dir (BusRegistry *registry,
         path = g_build_filename (dirname, filename, NULL);
         component = ibus_component_new_from_file (path);
         registry->components = g_list_append (registry->components, component);
-        
+
         g_free (path);
     }
 
@@ -371,7 +371,7 @@ bus_registry_lookup_component_by_name (BusRegistry *registry,
     g_assert (name);
 
     GList *p;
-    p = g_list_find_custom (registry->components, 
+    p = g_list_find_custom (registry->components,
                             name,
                             (GCompareFunc)_component_is_name);
     if (p) {
@@ -386,7 +386,7 @@ GList *
 bus_registry_get_components (BusRegistry *registry)
 {
     g_assert (BUS_IS_REGISTRY (registry));
-    
+
     return g_list_copy (registry->components);
 }
 
@@ -405,7 +405,7 @@ bus_registry_find_engine_by_name (BusRegistry *registry,
 {
     g_assert (BUS_IS_REGISTRY (registry));
     g_assert (name);
-    
+
     return (IBusEngineDesc *) g_hash_table_lookup (registry->engine_table, name);
 }
 
@@ -432,7 +432,7 @@ bus_registry_name_owner_changed (BusRegistry *registry,
 
     if (g_strcmp0 (old_name, "") != 0) {
         factory = bus_factory_proxy_get_from_component (component);
-        
+
         if (factory != NULL) {
             ibus_object_destroy ((IBusObject *)factory);
         }

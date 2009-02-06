@@ -554,7 +554,7 @@ ibus_connection_send_with_reply (IBusConnection   *connection,
     g_assert (message != NULL);
     g_assert (pending_return != NULL);
     g_assert (timeout_milliseconds > 0 || timeout_milliseconds == -1);
-    
+
     IBusConnectionPrivate *priv;
     priv = IBUS_CONNECTION_GET_PRIVATE (connection);
 

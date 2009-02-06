@@ -60,11 +60,11 @@ typedef struct _BusIBusImplClass BusIBusImplClass;
 struct _BusIBusImpl {
     IBusService parent;
     /* instance members */
-    
+
     GHashTable *factory_dict;
     GList *factory_list;
     GList *contexts;
- 
+
     GList *engine_list;
     GList *register_engine_list;
     GList *component_list;
