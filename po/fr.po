@@ -1,29 +1,32 @@
-# Translation for ibus.
+# Japanese translation of ibus.
 # Copyright (C) 2008 Huang Peng <shawn.p.huang@gmail.com>
 # This file is distributed under the same license as the ibus package.
-# Huang Peng <shawn.p.huang@gmail.com>, 2008.
+# UTUMI Hirosi <utuhiro78@yahoo.co.jp>, 2008.
+#
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: 0.1.1.20080813\n"
+"Project-Id-Version: ibus VERSION\n"
 "Report-Msgid-Bugs-To: http://code.google.com/p/ibus/issues/entry\n"
 "POT-Creation-Date: 2009-02-11 09:02+0800\n"
-"PO-Revision-Date: 2008-08-13 21:59+0800\n"
-"Last-Translator: Huang Peng <shawn.p.huang@gmail.com>\n"
-"Language-Team: Huang Peng <shawn.p.huang@gmail.com>\n"
+"PO-Revision-Date: 2009-02-06 01:55+0100\n"
+"Last-Translator: Julroy67 <julroy67@gmail.com>\n"
+"Language-Team: French <julroy67@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Poedit-Language: French\n"
+"X-Poedit-Country: FRANCE\n"
 
 #: ibus/lang.py:40 ui/gtk/panel.py:311 ui/gtk/panel.py:312 ui/gtk/panel.py:313
 #: ui/gtk/panel.py:314
 msgid "Other"
-msgstr "其他"
+msgstr "Autre"
 
 #: ui/gtk/panel.py:99
+#, fuzzy
 msgid "IBus - Running"
-msgstr "IBus - 运行"
+msgstr "IBus - Démarré"
 
 #: ui/gtk/panel.py:281
 msgid "Restart"
@@ -31,31 +34,31 @@ msgstr ""
 
 #: ui/gtk/panel.py:374
 msgid "IBus is an intelligent input bus for Linux/Unix."
-msgstr ""
+msgstr "IBus est un IME intelligent pour Linux/Unix"
 
 #: ui/gtk/panel.py:378
 msgid "translator-credits"
-msgstr "Huang Peng <shawn.p.huang@gmail.com>"
+msgstr "HUMBERT Julien <julroy67@gmail.com>"
 
 #: ui/gtk/languagebar.py:81
 msgid "Switch engine"
-msgstr "切换引擎"
+msgstr "Changer de moteur"
 
 #: setup/main.py:99
 msgid "trigger"
-msgstr "开关"
+msgstr "déclencheur"
 
 #: setup/main.py:109
 msgid "next engine"
-msgstr "下一个引擎"
+msgstr "moteur suivant"
 
 #: setup/main.py:119
 msgid "prev engine"
-msgstr "上一个引擎"
+msgstr "moteur précédent"
 
 #: setup/main.py:197
 msgid "IBus daemon is not started. Do you want to start it now?"
-msgstr "IBus守护进程没有启动，您是否想现在启动它？"
+msgstr "Le démon IBus n'est pas démarré. Voulez-vous le démarrer maintenant ?"
 
 #: setup/main.py:212
 msgid ""
@@ -65,115 +68,118 @@ msgid ""
 "  export XMODIFIERS=@im=ibus\n"
 "  export QT_IM_MODULE=ibus"
 msgstr ""
-"IBus已经被成功启动！如果你不能正常使用IBus，请将下面代码加入到$HOME/.bashrc"
-"中，并重新登录桌面。  export GTK_IM_MODULE=ibus\n"
+"IBus est démarré ! Si vous ne pouvez pas utiliser IBus, veuillez ajouter les "
+"lignes suivantes dans le fichier $HOME/.bashrc, et veuillez vous "
+"reconnecter.\n"
+"  export GTK_IM_MODULE=ibus\n"
 "  export XMODIFIERS=@im=ibus\n"
 "  export QT_IM_MODULE=ibus"
 
 #: setup/main.py:227
 #, python-format
 msgid "Select keyboard shortcut for %s"
-msgstr "选择%s的快捷键"
+msgstr "Choisissez le raccourci clavier pour %s"
 
 #: setup/keyboardshortcut.py:53
 msgid "Keyboard shortcuts"
-msgstr "快捷键"
+msgstr "Raccourcis claviers"
 
 #: setup/keyboardshortcut.py:61
 msgid "Key code:"
-msgstr "按键:"
+msgstr "Code touche :"
 
 #: setup/keyboardshortcut.py:76
+#, fuzzy
 msgid "Modifiers:"
-msgstr "修饰符:"
+msgstr "Modificateurs :"
 
 #: setup/keyboardshortcut.py:205
 msgid ""
 "Please press a key (or a key combination).\n"
 "The dialog will be closed when the key is released."
 msgstr ""
-"请按一个键盘按键（或者一个组合按键）\n"
-"当您松开任意按键时，对话框会自动关闭。"
+"Veuillez presser une touche (ou une combinaison de touches).\n"
+"La boîte de dialogue se fermera lorsque la touche sera relâchée."
 
 #: setup/keyboardshortcut.py:207
 msgid "Please press a key (or a key combination)"
-msgstr "请按一个键盘按键（或者一个组合按键）"
+msgstr "Veuillez presser une touche (ou une combinaison de touches)"
 
 #: setup/setup.glade:7
 msgid "IBus - Setup"
-msgstr "IBus - 设置"
+msgstr "IBus - Configuration"
 
 #: setup/setup.glade:32
 msgid "Auto start IBus on session login"
-msgstr "启动桌面时自动启动IBus"
+msgstr "Démarrer automatiquement IBus lors de la connexion"
 
 #: setup/setup.glade:60
 msgid "Trigger:"
-msgstr "开关:"
+msgstr "Déclencheur :"
 
 #: setup/setup.glade:74
 msgid "Next engine:"
-msgstr "下一个引擎:"
+msgstr "Moteur suivant :"
 
 #: setup/setup.glade:90
 msgid "Previous engine:"
-msgstr "上一个引擎:"
+msgstr "Moteur précédent :"
 
 #: setup/setup.glade:153 setup/setup.glade:170 setup/setup.glade:190
 msgid "..."
-msgstr ""
+msgstr "…"
 
 #: setup/setup.glade:211
 msgid "<b>Keyboard Shortcuts</b>"
-msgstr "<b>快捷键</b>"
+msgstr "<b>Raccourcis claviers</b>"
 
 #: setup/setup.glade:243
 msgid "Lookup table orientation:"
-msgstr "候选词表方向:"
+msgstr "Orientation de la table :"
 
 #: setup/setup.glade:254
 msgid ""
 "Horizontal\n"
 "Vertical"
 msgstr ""
-"水平\n"
-"竖直"
+"Horizontal\n"
+"Vertical"
 
 #: setup/setup.glade:267
 msgid "Auto hide language bar"
-msgstr "自动隐藏语言栏"
+msgstr "Cacher automatiquement la barre de langue"
 
 #: setup/setup.glade:279
 msgid "Use custom font"
-msgstr "使用自定义字体"
+msgstr "Utiliser une police personnalisée"
 
 #: setup/setup.glade:305
 msgid "<b>UI</b>"
-msgstr "<b>用户界面</b>"
+msgstr "<b>Interface Utilisateur</b>"
 
 #: setup/setup.glade:328
 msgid "General"
-msgstr "通用"
+msgstr "Général"
 
 #: setup/setup.glade:399
 msgid "gtk-add"
-msgstr ""
+msgstr "gtk-add"
 
 #: setup/setup.glade:409
 msgid "gtk-remove"
-msgstr ""
+msgstr "gtk-remove"
 
 #: setup/setup.glade:422
 msgid "gtk-go-up"
-msgstr ""
+msgstr "gtk-go-up"
 
 #: setup/setup.glade:435
 msgid "gtk-go-down"
-msgstr ""
+msgstr "gtk-go-down"
 
 #: setup/setup.glade:460
 msgid "Engine"
-msgstr "输入法引擎"
+msgstr "Moteur"
 
 #: setup/setup.glade:477
 msgid ""
@@ -184,34 +190,17 @@ msgid ""
 "\n"
 "\n"
 msgstr ""
+"<big><b>IBus</b></big>\n"
+"<small>The intelligent input bus</small>\n"
+"Page d'accueil : http://code.google.com/p/ibus\n"
+"\n"
+"\n"
+"\n"
 
 #: setup/setup.glade:502
 msgid "About"
-msgstr "关于"
+msgstr "À propos"
 
 #: setup/setup.glade:524
 msgid "gtk-close"
-msgstr ""
-
-#~ msgid "Started"
-#~ msgstr "启动"
-
-#~ msgid "Preload"
-#~ msgstr "预加载"
-
-#~ msgid "Cannot enable input engine"
-#~ msgstr "不能启动输入引擎"
-
-#~ msgid ""
-#~ "IBus can not enable input engine, because IBus does not load any input "
-#~ "engines!\n"
-#~ "Please use ibus-setup program to load some input engines."
-#~ msgstr ""
-#~ "IBus不能启动输入引擎，因为IBus没有加载任何输入引擎！\n"
-#~ "请运行ibus-setup程序，启动需要的输入法引擎。"
-
-#~ msgid "Setup"
-#~ msgstr "设置"
-
-#~ msgid "Don't show this again"
-#~ msgstr "不再显示该信息"
+msgstr "gtk-close"

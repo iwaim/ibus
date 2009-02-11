@@ -345,7 +345,7 @@ bus_engine_proxy_real_destroy (BusEngineProxy *engine)
     if (ibus_proxy_get_connection ((IBusProxy *) engine)) {
         ibus_proxy_call ((IBusProxy *) engine,
                          "Destroy",
-                         DBUS_TYPE_INVALID);
+                         G_TYPE_INVALID);
     }
 
     if (priv->desc) {
@@ -556,11 +556,11 @@ bus_engine_proxy_process_key_event_reply_cb (IBusPendingCall *pending,
         g_warning ("%s: %s", error->name, error->message);
         ibus_message_unref (reply_message);
         ibus_error_free (error);
-        call_data->func(FALSE, call_data->user_data);
+        call_data->func (GINT_TO_POINTER (FALSE), call_data->user_data);
         return;
     }
 
-    call_data->func((gpointer *)retval, call_data->user_data);
+    call_data->func (GINT_TO_POINTER (retval), call_data->user_data);
     g_slice_free (CallData, call_data);
 }
 
@@ -590,7 +590,7 @@ bus_engine_proxy_process_key_event (BusEngineProxy *engine,
     if (!retval) {
         g_warning ("%s: %s", error->name, error->message);
         ibus_error_free (error);
-        return_cb (FALSE, user_data);
+        return_cb (GINT_TO_POINTER (FALSE), user_data);
         return;
     }
 
@@ -606,7 +606,7 @@ bus_engine_proxy_process_key_event (BusEngineProxy *engine,
 
     if (!retval) {
         g_warning ("%s : ProcessKeyEvent", DBUS_ERROR_NO_MEMORY);
-        return_cb (FALSE, user_data);
+        return_cb (GINT_TO_POINTER (FALSE), user_data);
         return;
     }
 }
@@ -688,7 +688,7 @@ void bus_engine_proxy_property_hide (BusEngineProxy *engine,
         g_assert (BUS_IS_ENGINE_PROXY (engine));            \
         ibus_proxy_call ((IBusProxy *) engine,              \
                      #Name,                                 \
-                     DBUS_TYPE_INVALID);                    \
+                     G_TYPE_INVALID);                       \
     }
 
 DEFINE_FUNCTION (FocusIn, focus_in)

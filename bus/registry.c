@@ -87,8 +87,12 @@ bus_registry_init (BusRegistry *registry)
     registry->observed_paths = NULL;
     registry->components = NULL;
     registry->engine_table = g_hash_table_new (g_str_hash, g_str_equal);
+    
+    extern gboolean g_rescan;
 
-    if (bus_registry_load_cache (registry) == FALSE || bus_registry_check_modification (registry)) {
+    if (g_rescan ||
+        bus_registry_load_cache (registry) == FALSE ||
+        bus_registry_check_modification (registry)) {
         bus_registry_remove_all (registry);
         bus_registry_load (registry);
         bus_registry_save_cache (registry);
@@ -409,6 +413,14 @@ bus_registry_find_engine_by_name (BusRegistry *registry,
     return (IBusEngineDesc *) g_hash_table_lookup (registry->engine_table, name);
 }
 
+void
+bus_registry_stop_all_components (BusRegistry *registry)
+{
+    g_assert (BUS_IS_REGISTRY (registry));
+
+    g_list_foreach (registry->components, (GFunc) ibus_component_stop, NULL);
+    
+}
 
 BusFactoryProxy *
 bus_registry_name_owner_changed (BusRegistry *registry,

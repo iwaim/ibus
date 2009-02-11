@@ -96,7 +96,7 @@ class Panel(ibus.PanelBase):
         self.__status_icon.connect("popup-menu", self.__status_icon_popup_menu_cb)
         self.__status_icon.connect("activate", self.__status_icon_activate_cb)
         self.__status_icon.set_from_file(self.__ibus_icon)
-        self.__status_icon.set_tooltip(_("iBus - Running"))
+        self.__status_icon.set_tooltip(_("IBus - Running"))
         self.__status_icon.set_visible(True)
 
         self.__config_load_lookup_table_orientation()
@@ -278,6 +278,10 @@ class Panel(ibus.PanelBase):
             self.__sys_menu_item_activate_cb, gtk.STOCK_ABOUT)
         menu.add(item)
         menu.add(gtk.SeparatorMenuItem())
+        item = gtk.MenuItem(_("Restart"))
+        item.connect("activate",
+            self.__sys_menu_item_activate_cb, "Restart")
+        menu.add(item)
         item = gtk.ImageMenuItem(gtk.STOCK_QUIT)
         item.connect("activate",
             self.__sys_menu_item_activate_cb, gtk.STOCK_QUIT)
@@ -363,7 +367,7 @@ class Panel(ibus.PanelBase):
             self.__start_setup()
         elif command == gtk.STOCK_ABOUT:
             about_dialog = gtk.AboutDialog()
-            about_dialog.set_program_name("iBus")
+            about_dialog.set_program_name("IBus")
             about_dialog.set_version(ibus.get_version())
             about_dialog.set_copyright(ibus.get_copyright())
             about_dialog.set_license(ibus.get_license())
@@ -375,8 +379,10 @@ class Panel(ibus.PanelBase):
             about_dialog.set_logo_icon_name("ibus")
             about_dialog.run()
             about_dialog.destroy()
-        elif command == gtk.STOCK_QUIT:
-            self.__bus.kill()
+        elif command == gtk.STOCK_QUIT: 
+            self.__bus.exit(False)
+        elif command == "Restart":
+            self.__bus.exit(True)
         else:
             print >> sys.stderr, "Unknown command %s" % command
     
