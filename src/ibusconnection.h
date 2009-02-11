@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION: iBus-connection
- * @short_description: DBusConnection wrapper
+ * SECTION: ibusconnection
+ * @short_description: DBusConnection wrapper.
  * @see_also: <ulink url="http://dbus.freedesktop.org/doc/api/html/structDBusConnection.html">DBusConnection</ulink>
  * 
  * iBus-connection provides DBusConnection wrapper.

@@ -17,6 +17,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION: ibustext
+ * @short_description: Preedit buffer and candidate handling.
+ * 
+ * iBus-text handles preedit buffer and candidate string.
+ */
+
 #ifndef __IBUS_TEXT_H_
 #define __IBUS_TEXT_H_
 

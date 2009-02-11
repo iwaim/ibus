@@ -17,6 +17,12 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION: ibusattribute
+ * @short_description: Attributes of preedit and auxiliary text.
+ * 
+ */
+
 #ifndef __IBUS_ATTRIBUTE_H_
 #define __IBUS_ATTRIBUTE_H_
 

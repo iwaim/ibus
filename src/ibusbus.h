@@ -18,7 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION: iBus-bus
+ * SECTION: ibusbus
  * @short_description: iBus-daemon communicating functions.
  * 
  * iBus-bus handles the communication with iBus-daemon, including 
@@ -59,7 +59,7 @@ G_BEGIN_DECLS
 /**
  * IBusBus:
  *
- * Struct for containing dBus status.
+ * Struct for containing iBus bus (daemon communication) status.
  */
 typedef struct _IBusBus IBusBus;
 typedef struct _IBusBusClass IBusBusClass;
@@ -118,6 +118,14 @@ const gchar *ibus_bus_hello             (IBusBus        *bus);
 guint        ibus_bus_request_name      (IBusBus        *bus,
                                          const gchar    *name,
                                          guint           flags);
+/**
+ * ibus_bus_release_name:
+ * @bus: the IBusBus instance to be processed.
+ * @name: Name to be released.
+ * @returns: 0 if failed; positive number otherwise.
+ * 
+ * Release a name to iBus daemon.
+ */
 guint        ibus_bus_release_name      (IBusBus        *bus,
                                          const gchar    *name);
 gboolean     ibus_bus_name_has_owner    (IBusBus        *bus,

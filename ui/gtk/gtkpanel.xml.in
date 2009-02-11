@@ -3,8 +3,8 @@
 <component>
 	<name>org.freedesktop.IBus.Panel</name>
 	<description>Gtk Panel Component</description>
-	<exec>@prefix@/libexec/ibus-ui-gtk</exec>
-	<version>@VERSION@</version>
+	<exec>${libexecdir}/ibus-ui-gtk</exec>
+	<version>1.1.0.20090206</version>
 	<author>Peng Huang &lt;shawn.p.huang@gmail.com&gt;</author>
 	<license>GPL</license>
 	<homepage>http://code.google.com/p/ibus</homepage>
