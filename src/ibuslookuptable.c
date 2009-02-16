@@ -121,7 +121,7 @@ ibus_lookup_table_serialize (IBusLookupTable *table,
 
     retval = ibus_message_iter_append (iter, G_TYPE_BOOLEAN, &table->cursor_visible);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_append (iter, G_TYPE_BOOLEAN, &table->round);
     g_return_val_if_fail (retval, FALSE);
 
@@ -168,7 +168,7 @@ ibus_lookup_table_deserialize (IBusLookupTable *table,
 
     retval = ibus_message_iter_get (iter, G_TYPE_BOOLEAN, &table->cursor_visible);
     g_return_val_if_fail (retval, FALSE);
-    
+
     retval = ibus_message_iter_get (iter, G_TYPE_BOOLEAN, &table->round);
     g_return_val_if_fail (retval, FALSE);
 
@@ -223,6 +223,8 @@ ibus_lookup_table_new (guint page_size,
                        gboolean cursor_visible,
                        gboolean round)
 {
+    g_assert (page_size > 0);
+
     IBusLookupTable *table;
 
     table= g_object_new (IBUS_TYPE_LOOKUP_TABLE, NULL);
@@ -278,15 +280,150 @@ ibus_lookup_table_set_cursor_pos (IBusLookupTable *table,
                                   guint            cursor_pos)
 {
     g_assert (IBUS_IS_LOOKUP_TABLE (table));
+    g_assert (cursor_pos < table->candidates->len);
 
     table->cursor_pos = cursor_pos;
 }
+
+guint
+ibus_lookup_table_get_cursor_pos (IBusLookupTable *table)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+
+    return table->cursor_pos;
+}
+
+guint
+ibus_lookup_table_get_cursor_in_page (IBusLookupTable *table)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+
+    return table->cursor_pos % table->page_size;
+}
+
+void
+ibus_lookup_table_set_cursor_visible (IBusLookupTable *table,
+                                      gboolean         visible)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+
+    table->cursor_visible = visible;
+}
+
+gboolean
+ibus_lookup_table_is_cursor_visible (IBusLookupTable *table)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+
+    return table->cursor_visible;
+}
+
 void
 ibus_lookup_table_set_page_size  (IBusLookupTable *table,
                                   guint            page_size)
 {
     g_assert (IBUS_IS_LOOKUP_TABLE (table));
+    g_assert (page_size > 0);
 
     table->page_size = page_size;
 }
 
+guint
+ibus_lookup_table_get_page_size (IBusLookupTable *table)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+
+    return table->page_size;
+}
+
+gboolean
+ibus_lookup_table_page_up (IBusLookupTable *table)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+
+    if (table->cursor_pos < table->page_size) {
+        gint i;
+        gint page_nr;
+
+        if (!table->round) {
+            return FALSE;
+        }
+
+        /* cursor index in page */
+        i = table->cursor_pos % table->page_size;
+        page_nr = (table->candidates->len + table->page_size - 1) / table->page_size;
+
+        table->cursor_pos = page_nr * table->page_size + i;
+        if (table->cursor_pos >= table->candidates->len) {
+            table->cursor_pos = table->candidates->len - 1;
+        }
+        return TRUE;
+    }
+
+    table->cursor_pos -= table->page_size;
+    return TRUE;
+}
+
+gboolean
+ibus_lookup_table_page_down (IBusLookupTable *table)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+
+    gint i;
+    gint page;
+    gint page_nr;
+
+    /* cursor index in page */
+    i = table->cursor_pos % table->page_size;
+    page = table->cursor_pos  / table->page_size;
+    page_nr = (table->candidates->len + table->page_size - 1) / table->page_size;
+
+    if (page == page_nr - 1) {
+        if (!table->round)
+            return FALSE;
+
+        table->cursor_pos = i;
+        return TRUE;
+    }
+
+    table->cursor_pos += table->page_size;
+    if (table->cursor_pos > table->candidates->len - 1) {
+        table->cursor_pos = table->candidates->len - 1;
+    }
+    return TRUE;
+}
+
+gboolean
+ibus_lookup_table_cursor_up (IBusLookupTable *table)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+
+    if (table->cursor_pos == 0) {
+        if (!table->round)
+            return FALSE;
+
+        table->cursor_pos = table->candidates->len - 1;
+        return TRUE;
+    }
+
+    table->cursor_pos --;
+
+    return TRUE;
+}
+
+gboolean
+ibus_lookup_table_cursor_down (IBusLookupTable *table)
+{
+    g_assert (IBUS_IS_LOOKUP_TABLE (table));
+
+    if (table->cursor_pos == table->candidates->len - 1) {
+        if (!table->round)
+            return FALSE;
+
+        table->cursor_pos = 0;
+        return TRUE;
+    }
+
+    table->cursor_pos ++;
+    return TRUE;
+}
