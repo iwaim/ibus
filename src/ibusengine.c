@@ -101,7 +101,7 @@ static void     ibus_engine_cursor_down     (IBusEngine         *engine);
 static void     ibus_engine_property_activate
                                             (IBusEngine         *engine,
                                              const gchar        *prop_name,
-                                             gint                prop_state);
+                                             guint               prop_state);
 static void     ibus_engine_property_show   (IBusEngine         *engine,
                                              const gchar        *prop_name);
 static void     ibus_engine_property_hide   (IBusEngine         *engine,
@@ -486,6 +486,7 @@ ibus_engine_ibus_message (IBusEngine     *engine,
         ibus_message_iter_init (message, &iter);
         if (ibus_message_iter_has_next (&iter)) {
             error_message = ibus_message_new_error_printf (message,
+                                DBUS_ERROR_INVALID_ARGS,
                                 "%s.%s: Method does not have arguments",
                                 IBUS_INTERFACE_ENGINE, no_arg_methods[i].member);
             ibus_connection_send (connection, error_message);
@@ -533,6 +534,7 @@ ibus_engine_ibus_message (IBusEngine     *engine,
 
     _keypress_fail:
         error_message = ibus_message_new_error_printf (message,
+                        DBUS_ERROR_INVALID_ARGS,
                         "%s.%s: Can not match signature (ubu) of method",
                         IBUS_INTERFACE_ENGINE, "ProcessKeyEvent");
         ibus_connection_send (connection, error_message);
@@ -548,7 +550,7 @@ ibus_engine_ibus_message (IBusEngine     *engine,
         retval = ibus_message_get_args (message,
                                         &error,
                                         G_TYPE_STRING, &name,
-                                        G_TYPE_INT, &state,
+                                        G_TYPE_UINT, &state,
                                         G_TYPE_INVALID);
 
         if (!retval)
@@ -567,6 +569,7 @@ ibus_engine_ibus_message (IBusEngine     *engine,
 
     _property_activate_fail:
         error_message = ibus_message_new_error_printf (message,
+                        DBUS_ERROR_INVALID_ARGS,
                         "%s.%s: Can not match signature (si) of method",
                         IBUS_INTERFACE_ENGINE,
                         "PropertyActivate");
@@ -600,6 +603,7 @@ ibus_engine_ibus_message (IBusEngine     *engine,
 
     _property_show_fail:
         error_message = ibus_message_new_error_printf (message,
+                        DBUS_ERROR_INVALID_ARGS,
                         "%s.%s: Can not match signature (s) of method",
                         IBUS_INTERFACE_ENGINE,
                         "PropertyShow");
@@ -628,6 +632,7 @@ ibus_engine_ibus_message (IBusEngine     *engine,
 
     _property_hide_fail:
         error_message = ibus_message_new_error_printf (message,
+                        DBUS_ERROR_INVALID_ARGS,
                         "%s.%s: Can not match signature (s) of method",
                         IBUS_INTERFACE_ENGINE, "PropertyHide");
         ibus_connection_send (connection, error_message);
@@ -666,6 +671,7 @@ ibus_engine_ibus_message (IBusEngine     *engine,
 
     _set_cursor_location_fail:
         error_message = ibus_message_new_error_printf (message,
+                        DBUS_ERROR_INVALID_ARGS,
                         "%s.%s: Can not match signature (iiii) of method",
                         IBUS_INTERFACE_ENGINE,
                         "SetCursorLocation");
@@ -697,6 +703,7 @@ ibus_engine_ibus_message (IBusEngine     *engine,
 
     _set_capabilities_fail:
         error_message = ibus_message_new_error_printf (message,
+                        DBUS_ERROR_INVALID_ARGS,
                         "%s.%s: Can not match signature (u) of method",
                         IBUS_INTERFACE_ENGINE, "SetCapabilities");
         ibus_connection_send (connection, error_message);
@@ -796,8 +803,9 @@ ibus_engine_cursor_down (IBusEngine *engine)
 }
 
 static void
-ibus_engine_property_activate (IBusEngine *engine,
-    const gchar *prop_name, gint prop_state)
+ibus_engine_property_activate (IBusEngine  *engine,
+                               const gchar *prop_name,
+                               guint        prop_state)
 {
     // g_debug ("property-activate ('%s', %d)", prop_name, prop_state);
 }
