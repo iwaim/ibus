@@ -99,3 +99,4 @@ EXTRA_DIST +=
 #TESTS = $(GTKDOC_CHECK)
 
 CLEANFILES+= ${DOC_MODULE}-decl.txt ${DOC_MODULE}-decl-list.txt  ${DOC_MODULE}-overrides.txt ${DOC_MODULE}-sections.txt
+

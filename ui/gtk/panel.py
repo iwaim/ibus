@@ -166,6 +166,8 @@ class Panel(ibus.PanelBase):
         return self.__status_icon
 
     def __set_im_icon(self, icon_name):
+        if not icon_name:
+            icon_name = "engine-default"
         self.__language_bar.set_im_icon(icon_name)
         if icon_name.startswith("/"):
             self.__status_icon.set_from_file(icon_name)
@@ -317,7 +319,10 @@ class Panel(ibus.PanelBase):
                     engine = tmp[lang][0]
                     item = gtk.ImageMenuItem("%s - %s" % (lang, engine.longname))
                     size = gtk.icon_size_lookup(gtk.ICON_SIZE_MENU)
-                    item.set_image (_icon.IconWidget(engine.icon, size[0]))
+                    if engine.icon:
+                        item.set_image (_icon.IconWidget(engine.icon, size[0]))
+                    else:
+                        item.set_image (_icon.IconWidget("engine-default", size[0]))
                     item.connect("activate", self.__im_menu_item_activate_cb, engine)
                     menu.add(item)
                 else:
@@ -328,7 +333,10 @@ class Panel(ibus.PanelBase):
                     for engine in tmp[lang]:
                         item = gtk.ImageMenuItem(engine.longname)
                         size = gtk.icon_size_lookup(gtk.ICON_SIZE_MENU)
-                        item.set_image (_icon.IconWidget(engine.icon, size[0]))
+                        if engine.icon:
+                            item.set_image (_icon.IconWidget(engine.icon, size[0]))
+                        else:
+                            item.set_image (_icon.IconWidget("engine-default", size[0]))
                         item.connect("activate", self.__im_menu_item_activate_cb, engine)
                         submenu.add(item)
 

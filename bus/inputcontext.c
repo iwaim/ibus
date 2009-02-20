@@ -514,8 +514,7 @@ _ibus_introspect (BusInputContext   *context,
                   BusConnection     *connection)
 {
     static const gchar *introspect =
-        "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
-        "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
+        DBUS_INTROSPECT_1_0_XML_DOCTYPE_DECL_NODE
         "<node>\n"
         "  <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
         "    <method name=\"Introspect\">\n"
@@ -1121,6 +1120,7 @@ _engine_destroy_cb (BusEngineProxy  *engine,
     g_assert (priv->engine == engine);
 
     bus_input_context_unset_engine (context);
+    bus_input_context_disable (context);
 }
 
 static void
@@ -1445,6 +1445,8 @@ bus_input_context_unset_engine (BusInputContext *context)
         for (i = 0; signals[i].name != NULL; i++) {
             g_signal_handlers_disconnect_by_func (priv->engine, signals[i].callback, context);
         }
+        /* we destroy the engine */
+        ibus_object_destroy ((IBusObject *) priv->engine);
         g_object_unref (priv->engine);
         priv->engine = NULL;
     }
