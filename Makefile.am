@@ -29,7 +29,7 @@ SUBDIRS = 		\
 	client 		\
 	setup 		\
 	bus 		\
-	icons 		\
+	data 		\
 	m4 			\
 	po 			\
 	docs 		\
@@ -40,11 +40,17 @@ ACLOCAL_AMFLAGS = -I m4
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = ibus-1.0.pc
 
+# xinitrc_SCRIPTS = \
+# 	ibus.sh \
+# 	$(NULL)
+# xinitrcdir = $(sysconfdir)/X11/xinit/xinitrc.d
+
 EXTRA_DIST = \
 	autogen.sh \
 	ibus-1.0.pc.in \
 	ibus.spec.in \
 	python-config.py \
+	ibus.sh \
 	$(NULL)
 
 noinst_DIST = \
@@ -59,8 +65,8 @@ install-data-hook:
 	$(MKDIR_P) $(DESTDIR)${pkgdatadir}/engine
 
 DISTCHECK_CONFIGURE_FLAGS = \
-	--enable-pygconf \
 	--enable-gtk-doc \
+	--disable-schemas-install \
 	$(NULL)
 
 rpm: dist @PACKAGE_NAME@.spec

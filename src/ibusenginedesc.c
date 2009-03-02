@@ -17,6 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#include <stdlib.h>
 #include "ibusenginedesc.h"
 #include "ibusxml.h"
 
@@ -108,6 +109,7 @@ ibus_engine_desc_init (IBusEngineDesc *desc)
     desc->author = NULL;
     desc->icon = NULL;
     desc->layout = NULL;
+    desc->rank = 0;
 }
 
 static void
@@ -239,8 +241,8 @@ ibus_engine_desc_copy (IBusEngineDesc       *dest,
 
 void
 ibus_engine_desc_output (IBusEngineDesc *desc,
-                        GString       *output,
-                        gint           indent)
+                         GString        *output,
+                         gint            indent)
 {
     g_string_append_indent (output, indent);
     g_string_append (output, "<engine>\n");
@@ -261,6 +263,8 @@ ibus_engine_desc_output (IBusEngineDesc *desc,
     OUTPUT_ENTRY_1(author);
     OUTPUT_ENTRY_1(icon);
     OUTPUT_ENTRY_1(layout);
+    g_string_append_indent (output, indent + 1);
+    g_string_append_printf (output, "<rank>%u</rank>", desc->rank);
 #undef OUTPUT_ENTRY
 #undef OUTPUT_ENTRY_1
     g_string_append_indent (output, indent);
@@ -294,6 +298,10 @@ ibus_engine_desc_parse_xml_node (IBusEngineDesc *desc,
         PARSE_ENTRY_1(layout);
 #undef PARSE_ENTRY
 #undef PARSE_ENTRY1
+        if (g_strcmp0 (sub_node->name , "rank") == 0) {
+            desc->rank = atoi (sub_node->text);
+            continue;
+        }
         g_warning ("<engines> element contains invalidate element <%s>", sub_node->name);
     }
     return TRUE;

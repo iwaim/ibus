@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ibus VERSION\n"
 "Report-Msgid-Bugs-To: http://code.google.com/p/ibus/issues/entry\n"
-"POT-Creation-Date: 2009-02-20 10:58+1000\n"
+"POT-Creation-Date: 2009-02-24 18:14+0800\n"
 "PO-Revision-Date: 2009-02-06 01:55+0100\n"
 "Last-Translator: Julroy67 <julroy67@gmail.com>\n"
 "Language-Team: French <julroy67@gmail.com>\n"
@@ -18,25 +18,28 @@ msgstr ""
 "X-Poedit-Language: French\n"
 "X-Poedit-Country: FRANCE\n"
 
-#: ibus/lang.py:40 ui/gtk/panel.py:312 ui/gtk/panel.py:313 ui/gtk/panel.py:314
-#: ui/gtk/panel.py:315
+#: ibus/lang.py:40 ui/gtk/panel.py:307 ui/gtk/panel.py:308 ui/gtk/panel.py:309
+#: ui/gtk/panel.py:310
 msgid "Other"
 msgstr "Autre"
 
 #: ui/gtk/panel.py:97
-#, fuzzy
-msgid "IBus - Running"
-msgstr "IBus - Démarré"
+msgid "IBus input method framework"
+msgstr ""
 
 #: ui/gtk/panel.py:282
 msgid "Restart"
 msgstr ""
 
-#: ui/gtk/panel.py:381
+#: ui/gtk/panel.py:337
+msgid "No input method"
+msgstr ""
+
+#: ui/gtk/panel.py:383
 msgid "IBus is an intelligent input bus for Linux/Unix."
 msgstr "IBus est un IME intelligent pour Linux/Unix"
 
-#: ui/gtk/panel.py:385
+#: ui/gtk/panel.py:387
 msgid "translator-credits"
 msgstr "HUMBERT Julien <julroy67@gmail.com>"
 
@@ -113,6 +116,7 @@ msgstr ""
 msgid "IBus Preferences"
 msgstr ""
 
+<<<<<<< HEAD:po/fr.po
 #: setup/setup.glade:48 setup/setup.glade:67 setup/setup.glade:86
 msgid "..."
 msgstr "…"
@@ -138,6 +142,33 @@ msgid "Lookup table orientation:"
 msgstr "Orientation de la table :"
 
 #: setup/setup.glade:239
+=======
+#: setup/setup.glade:44 setup/setup.glade:63 setup/setup.glade:81
+msgid "..."
+msgstr "…"
+
+#: setup/setup.glade:145
+msgid "Previous engine:"
+msgstr "Moteur précédent :"
+
+#: setup/setup.glade:161
+msgid "Next engine:"
+msgstr "Moteur suivant :"
+
+#: setup/setup.glade:177
+msgid "Trigger:"
+msgstr "Déclencheur :"
+
+#: setup/setup.glade:194
+msgid "<b>Keyboard Shortcuts</b>"
+msgstr "<b>Raccourcis claviers</b>"
+
+#: setup/setup.glade:226
+msgid "Lookup table orientation:"
+msgstr "Orientation de la table :"
+
+#: setup/setup.glade:238
+>>>>>>> cd4d9b6ebfa4a66ba6bd89c5b7d2b34eb25864af:po/fr.po
 msgid ""
 "Horizontal\n"
 "Vertical"
@@ -153,11 +184,11 @@ msgstr "Cacher automatiquement la barre de langue"
 msgid "Use custom font"
 msgstr "Utiliser une police personnalisée"
 
-#: setup/setup.glade:290
+#: setup/setup.glade:291
 msgid "<b>Font and Style</b>"
 msgstr ""
 
-#: setup/setup.glade:316
+#: setup/setup.glade:314
 #, fuzzy
 msgid "Start ibus on login"
 msgstr "Démarrer automatiquement IBus lors de la connexion"
@@ -171,28 +202,27 @@ msgstr "<b>Interface Utilisateur</b>"
 msgid "General"
 msgstr "Général"
 
-#: setup/setup.glade:422
+#: setup/setup.glade:425
 msgid "gtk-add"
 msgstr "gtk-add"
 
-#: setup/setup.glade:432
+#: setup/setup.glade:439
 msgid "gtk-remove"
 msgstr "gtk-remove"
 
-#: setup/setup.glade:445
+#: setup/setup.glade:453
 msgid "gtk-go-up"
 msgstr "gtk-go-up"
 
-#: setup/setup.glade:458
+#: setup/setup.glade:467
 msgid "gtk-go-down"
 msgstr "gtk-go-down"
 
-#: setup/setup.glade:483
-#, fuzzy
-msgid "Engines"
-msgstr "Moteur"
+#: setup/setup.glade:496
+msgid "Input Methods"
+msgstr ""
 
-#: setup/setup.glade:499
+#: setup/setup.glade:512
 msgid ""
 "<big><b>IBus</b></big>\n"
 "<small>The intelligent input bus</small>\n"
@@ -208,13 +238,20 @@ msgstr ""
 "\n"
 "\n"
 
-#: setup/setup.glade:524
+#: setup/setup.glade:537
 msgid "About"
 msgstr "À propos"
 
-#: setup/setup.glade:546
+#: setup/setup.glade:556
 msgid "gtk-close"
 msgstr "gtk-close"
 
+#, fuzzy
+#~ msgid "IBus - Running"
+#~ msgstr "IBus - Démarré"
+
 #~ msgid "IBus - Setup"
 #~ msgstr "IBus - Configuration"
+
+#~ msgid "Engine"
+#~ msgstr "Moteur"

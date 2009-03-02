@@ -819,6 +819,7 @@ _connection_ibus_message_cb (BusConnection  *connection,
     ibus_message_set_sender (message, bus_connection_get_unique_name (connection));
 
     switch (ibus_message_get_type (message)) {
+#if 1
     case DBUS_MESSAGE_TYPE_ERROR:
         g_debug ("From :%s to %s, Error: %s : %s",
                  ibus_message_get_sender (message),
@@ -826,6 +827,7 @@ _connection_ibus_message_cb (BusConnection  *connection,
                  ibus_message_get_error_name (message),
                  ibus_message_get_error_message (message));
         break;
+#endif
 #if 0
     case DBUS_MESSAGE_TYPE_METHOD_CALL:
         g_debug("From %s to %s, Method %s on %s",
@@ -1066,11 +1068,10 @@ bus_dbus_impl_dispatch_message_by_rule (BusDBusImpl     *dbus,
 #endif
 
     for (link = dbus->rules; link != NULL; link = link->next) {
-        if (bus_match_rule_get_recipients (BUS_MATCH_RULE (link->data),
-                                           message,
-                                           &recipients)) {
+        recipients = bus_match_rule_get_recipients (BUS_MATCH_RULE (link->data),
+                                                    message);
+        if (recipients != NULL)
             break;
-        }
     }
 
     for (link = recipients; link != NULL; link = link->next) {
@@ -1078,7 +1079,7 @@ bus_dbus_impl_dispatch_message_by_rule (BusDBusImpl     *dbus,
         if (connection != skip_connection) {
             ibus_connection_send (IBUS_CONNECTION (connection), message);
         }
-        g_object_unref (link->data);
+        g_object_unref (connection);
     }
     g_list_free (recipients);
 }

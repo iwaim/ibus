@@ -22,7 +22,7 @@
  * @short_description: Base Object of iBus.
  * @stability: Stable
  *
- * iBus Object is the base object for all objects in iBus.
+ * Base object handling functions of iBus.
  */
 #ifndef __IBUS_OBJECT_H_
 #define __IBUS_OBJECT_H_
@@ -80,6 +80,12 @@ struct _IBusObject {
 
 typedef void ( *IBusObjectDestroyFunc) (IBusObject *);
 
+
+/**
+ * IBusObjectClass:
+ * @destroy: IBus object destroy method, usually implemented by subclass. 
+ *
+ */
 struct _IBusObjectClass {
     GObjectClass parent;
 
@@ -91,8 +97,28 @@ struct _IBusObjectClass {
     gpointer pdummy[7];
 };
 
-GType           ibus_object_get_type            (void);
+/**
+ * ibus_object_get_type:
+ * @returns: GType for IBusObject
+ * 
+ * Returns GType for IBusObject.
+ */
+ GType           ibus_object_get_type            (void);
+
+/**
+ * ibus_object_new:
+ * @returns: A newly allocated IBusObject
+ *
+ * Returns a newly allocated IBusObject.
+ */
 IBusObject     *ibus_object_new                 (void);
+
+/**
+ * ibus_object_destory:
+ * @object: IBusObject to be destroy.
+ *
+ * Destroy an IBusObject.
+ */
 void            ibus_object_destroy             (IBusObject     *object);
 
 G_END_DECLS

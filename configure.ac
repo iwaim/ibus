@@ -90,10 +90,37 @@ PKG_CHECK_MODULES(GDK2, [
 
 # check for gtk-doc
 GTK_DOC_CHECK(1.9)
+
 # check for dbus-glib
 PKG_CHECK_MODULES(DBUS, [
     dbus-1
 ])
+
+# check gconf
+PKG_CHECK_MODULES(GCONF,
+    [gconf-2.0 >= 2.12],
+)
+
+AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
+if test x"$GCONFTOOL" = xno; then
+    AC_MSG_ERROR([gconftool-2 executable not found in your path - should be installed with GConf])
+fi
+
+AM_GCONF_SOURCE_2
+
+# GCONF_SERVERDIR=`$PKG_CONFIG --variable=gconf_serverdir gconf-2.0`
+# old_path=$PATH
+# if test x"$GCONF_SERVERDIR" != x; then
+#     PATH=$GCONF_SERVERDIR:$PATH
+# fi
+# 
+# AC_PATH_PROG(GCONF_SANITY_CHECK, gconf-sanity-check-2, no)
+# if test x"$GCONF_SANITY_CHECK" = xno; then
+#     AC_MSG_ERROR([gconf-sanity-check-2 executable not found in your path - should be installed with GConf])
+# fi
+# 
+# AC_SUBST(GCONF_SANITY_CHECK)
+# PATH=$old_path
 
 # Check for Qt4
 PKG_CHECK_MODULES(QT,
@@ -180,9 +207,25 @@ fi
 enable_qt4=no
 AM_CONDITIONAL(IBUS_BUILD_QT4, [test x"$enable_qt4" = x"yes" ])
 
-PKG_CHECK_MODULES(GCONF,
-    [gconf-2.0 >= 2.12],
+# check for dbus-python
+AC_ARG_ENABLE(dbus-python-check,
+    AS_HELP_STRING([--disable-dbus-python-check],
+        [Do not check dbus-python]),
+    [enable_dbus_python_check=$enableval],
+    [enable_dbus_python_check=yes],
 )
+PKG_CHECK_MODULES(DBUS_PYTHON,
+    [dbus-python >= 0.83.0],
+    [IBUS_HAS_DBUS_PYTHON=yes],
+    [IBUS_HAS_DBUS_PYTHON=no]
+)
+if test x"$IBUS_HAS_DBUS_PYTHON" != x"yes"; then
+    if test x"$enable_dbus_python_check" != x"no"; then
+        AC_MSG_ERROR([can not find dbus-python >= 0.83.0. Please install or update dbus-python.])
+    else
+        AC_MSG_WARN([can not find dbus-python >= 0.83.0. It is required.])
+    fi
+fi
 
 # check iso-codes
 AC_ARG_ENABLE(iso-codes-check,
@@ -230,7 +273,8 @@ bindings/Makefile
 bindings/python/Makefile
 util/Makefile
 util/IMdkit/Makefile
-icons/Makefile
+data/Makefile
+data/icons/Makefile
 docs/Makefile
 docs/reference/Makefile
 docs/reference/ibus/Makefile

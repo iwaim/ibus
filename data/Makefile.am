@@ -18,53 +18,26 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 # Boston, MA  02111-1307  USA
+
 SUBDIRS = \
-	interface \
+	icons \
 	$(NULL)
 
-ibus_PYTHON = \
-	ascii.py \
-	application.py \
-	attribute.py \
-	common.py \
-	bus.py \
-	inputcontext.py \
-	engine.py \
-	exception.py \
-	factory.py \
-	_gtk.py \
-	__init__.py \
-	keysyms.py \
-	lang.py \
-	lookuptable.py \
-	modifier.py \
-	object.py \
-	panel.py \
-	notifications.py \
-	property.py \
-	serializable.py \
-	text.py \
-	component.py \
-	enginedesc.py \
-	observedpath.py \
-	utility.py \
-	config.py \
+schemas_DATA = \
+	ibus.schemas \
 	$(NULL)
+schemasdir = $(GCONF_SCHEMA_FILE_DIR)
 
-nodist_ibus_PYTHON = \
-	_config.py \
-	$(NULL)
-
-ibusdir = @pkgpythondir@
+install-data-local:
+if GCONF_SCHEMAS_INSTALL
+	if test -z "$(DESTDIR)" ; then \
+		for p in $(schemas_DATA) ; do \
+			GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) $(GCONFTOOL) \
+				--makefile-install-rule $(top_builddir)/data/$$p >&1 > /dev/null; \
+		done \
+	fi
+endif
 
 EXTRA_DIST = \
-	_config.py.in \
-	$(NULL)
-
-CLEANFILES = \
-	*.pyc \
-	$(NULL)
-
-DISTCLEANFILES = \
-	_config.py \
+	$(schemas_DATA) \
 	$(NULL)
