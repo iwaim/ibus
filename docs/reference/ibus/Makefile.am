@@ -99,5 +99,9 @@ EXTRA_DIST +=
 # Comment this out if you want your docs-status tested during 'make check'
 #TESTS = $(GTKDOC_CHECK)
 
-CLEANFILES+= ${DOC_MODULE}-decl.txt ${DOC_MODULE}-decl-list.txt  ${DOC_MODULE}-overrides.txt ${DOC_MODULE}-sections.txt
+clean-local:
+	rm -rf tmpl
+
+CLEANFILES+= *.stamp
+
 

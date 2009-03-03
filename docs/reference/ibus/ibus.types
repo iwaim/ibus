@@ -1,3 +1,5 @@
+ibus_attribute_get_type
+ibus_attr_list_get_type
 ibus_property_get_type
 ibus_prop_list_get_type
 ibus_proxy_get_type
@@ -8,8 +10,6 @@ ibus_factory_get_type
 ibus_factory_info_get_type
 ibus_object_get_type
 ibus_bus_get_type
-ibus_attribute_get_type
-ibus_attr_list_get_type
 ibus_service_get_type
 ibus_serializable_get_type
 ibus_object_flags_get_type

@@ -1,3 +1,12 @@
+/**
+ * SECTION: ibusattribute
+ * @short_description: Attributes of IBusText.
+ * @stability: Stable
+ * @see_also: #IBusText
+ *
+ * An IBusAttribute represents an attribute that associate to IBusText.
+ * It decorates preedit buffer and auxiliary text with underline, foreground and background colors.
+ */
 /* vim:set et sts=4: */
 /* IBus - The Input Bus
  * Copyright (C) 2008-2009 Huang Peng <shawn.p.huang@gmail.com>
@@ -21,26 +30,10 @@
 #define __IBUS_ATTRIBUTE_H_
 
 #include "ibusserializable.h"
-/**
- * IBusAttribute:
- * @type: IBusAttributeType
- * @value: Value for the type.
- * @start_index: The starting index, inclusive.
- * @end_index: The ending index, exclusive.
- *
- * Signify the type, value and range of the attribute.
- * The range starts from @start_index till the @end_index-1.
- */
-
 /*
  * Type macros.
  */
 /* define IBusAttribute macros */
-/**
- * Return GType of IBusAttribute
- *
- * Return: GType of IBusAttribute.
- */
 #define IBUS_TYPE_ATTRIBUTE             \
     (ibus_attribute_get_type ())
 #define IBUS_ATTRIBUTE(obj)             \
@@ -107,20 +100,19 @@ typedef struct _IBusAttrListClass IBusAttrListClass;
 
 
 /**
- * SECTION: ibusattribute
- * @short_description: Attributes of IBusText.
- * @stability: Stable
- * @see_also: #IBusText
+ * IBusAttribute:
+ * @type: IBusAttributeType
+ * @value: Value for the type.
+ * @start_index: The starting index, inclusive.
+ * @end_index: The ending index, exclusive.
  *
- * An IBusAttribute represents an attribute that associate to IBusText.
- * It decorates preedit buffer and auxiliary text with underline, foreground and background colors.
+ * Signify the type, value and range of the attribute.
+ * The range starts from @start_index till the @end_index-1.
  */
-
-
 struct _IBusAttribute {
     IBusSerializable parent;
 
-    /* members */
+    /*< public >*/
     guint type;
     guint value;
     guint start_index;
@@ -133,14 +125,14 @@ struct _IBusAttributeClass {
 
 /**
  * IBusAttrList:
- * @attribute: GArray that holds #IBusAttribute.
+ * @attributes: GArray that holds #IBusAttribute.
  *
  * Array of IBusAttribute.
  */
 struct _IBusAttrList {
     IBusSerializable parent;
 
-    /* members */
+    /*< public >*/
     GArray *attributes;
 };
 
@@ -171,7 +163,7 @@ IBusAttribute       *ibus_attribute_new         (guint           type,
                                                  guint           start_index,
                                                  guint           end_index);
 /**
- * ibus_attribute_underline_new:
+ * ibus_attr_underline_new:
  * @underline_type: Type of underline.
  * @start_index: Where attribute starts.
  * @end_index: Where attribute ends.
@@ -183,7 +175,7 @@ IBusAttribute       *ibus_attr_underline_new    (guint           underline_type,
                                                  guint           start_index,
                                                  guint           end_index);
 /**
- * ibus_attribute_foreground_new:
+ * ibus_attr_foreground_new:
  * @color: Color in RGB.
  * @start_index: Where attribute starts.
  * @end_index: Where attribute ends.
@@ -195,7 +187,7 @@ IBusAttribute       *ibus_attr_foreground_new   (guint           color,
                                                  guint           start_index,
                                                  guint           end_index);
 /**
- * ibus_attribute_background_new:
+ * ibus_attr_background_new:
  * @color: Color in RGB.
  * @start_index: Where attribute starts.
  * @end_index: Where attribute ends.
@@ -237,6 +229,7 @@ void                 ibus_attr_list_append      (IBusAttrList   *attr_list,
  * ibus_attr_list_get:
  * @attr_list: An IBusAttrList instance.
  * @index: Index of the @attr_list.
+ * @returns: The IBusAttribute from IBusAttrList at specified index.
  *
  * Get the IBusAttribute from IBusAttrList at specified index.
  */
