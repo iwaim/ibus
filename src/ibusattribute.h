@@ -1,12 +1,3 @@
-/**
- * SECTION: ibusattribute
- * @short_description: Attributes of IBusText.
- * @stability: Stable
- * @see_also: #IBusText
- *
- * An IBusAttribute represents an attribute that associate to IBusText.
- * It decorates preedit buffer and auxiliary text with underline, foreground and background colors.
- */
 /* vim:set et sts=4: */
 /* IBus - The Input Bus
  * Copyright (C) 2008-2009 Huang Peng <shawn.p.huang@gmail.com>
@@ -25,6 +16,15 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+/**
+ * SECTION: ibusattribute
+ * @short_description: Attributes of IBusText.
+ * @stability: Stable
+ * @see_also: #IBusText
+ *
+ * An IBusAttribute represents an attribute that associate to IBusText.
+ * It decorates preedit buffer and auxiliary text with underline, foreground and background colors.
  */
 #ifndef __IBUS_ATTRIBUTE_H_
 #define __IBUS_ATTRIBUTE_H_
@@ -106,8 +106,8 @@ typedef struct _IBusAttrListClass IBusAttrListClass;
  * @start_index: The starting index, inclusive.
  * @end_index: The ending index, exclusive.
  *
- * Signify the type, value and range of the attribute.
- * The range starts from @start_index till the @end_index-1.
+ * Signify the type, value and scope of the attribute.
+ * The scope starts from @start_index till the @end_index-1.
  */
 struct _IBusAttribute {
     IBusSerializable parent;
@@ -229,9 +229,9 @@ void                 ibus_attr_list_append      (IBusAttrList   *attr_list,
  * ibus_attr_list_get:
  * @attr_list: An IBusAttrList instance.
  * @index: Index of the @attr_list.
- * @returns: The IBusAttribute from IBusAttrList at specified index.
+ * @returns: IBusAttribute at given index, NULL if no such IBusAttribute.
  *
- * Get the IBusAttribute from IBusAttrList at specified index.
+ * Returns IBusAttribute at given index.
  */
 IBusAttribute       *ibus_attr_list_get         (IBusAttrList   *attr_list,
                                                  guint           index);

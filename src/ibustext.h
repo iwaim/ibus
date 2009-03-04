@@ -19,9 +19,13 @@
  */
 /**
  * SECTION: ibustext
- * @short_description: Preedit buffer and candidate handling.
+ * @short_description: Text with decorating information.
+ * @see_also: #IBusAttribute
  * 
- * iBus-text handles preedit buffer and candidate string.
+ * An IBusText is the main text object in IBus.
+ * The text is decorated according to associated IBusAttribute,
+ * e.g. the foreground/background color, underline, and
+ * applied scope.
  */
 
 #ifndef __IBUS_TEXT_H_
@@ -52,6 +56,14 @@ G_BEGIN_DECLS
 typedef struct _IBusText IBusText;
 typedef struct _IBusTextClass IBusTextClass;
 
+/**
+ * IBusText:
+ * @is_static: Whether @text is static, i.e., no need and will not be freed. Only TRUE if IBusText is newed from ibus_text_new_from_static_string().
+ * @text: The string content of IBusText in UTF-8.
+ * @attrs: Associated IBusAttributes.
+ *
+ * A text object in IBus.
+ */
 struct _IBusText {
     IBusSerializable parent;
 
@@ -66,17 +78,78 @@ struct _IBusTextClass {
 };
 
 GType            ibus_text_get_type                 (void);
+
+/**
+ * ibus_text_new_from_string:
+ * @str: An text string to be set.
+ * @returns: A newly allocated IBusText.
+ * 
+ * New an IBusText whose content is copied from a text string.
+ */
 IBusText        *ibus_text_new_from_string          (const gchar    *str);
+
+/**
+ * ibus_text_new_from_string:
+ * @str: An text string to be set.
+ * @returns: A newly allocated IBusText.
+ * 
+ * New an IBusText whose content is copied from a UCS4 encoded text string.
+ */
 IBusText        *ibus_text_new_from_ucs4            (const gunichar *str);
+
+/**
+ * ibus_text_new_from_string:
+ * @str: An text string to be set.
+ * @returns: A newly allocated IBusText.
+ * 
+ * New an IBusText whose content is from a static string.
+ * Note that it is the developer's duty to ensure @str is static.
+ */
 IBusText        *ibus_text_new_from_static_string   (const gchar    *str);
+
+/**
+ * ibus_text_new_from_string:
+ * @fmt: printf format string.
+ * @returns: A newly allocated IBusText.
+ * 
+ * New an IBusText from a printf expression.
+ */
 IBusText        *ibus_text_new_from_printf          (const gchar    *fmt,
                                                      ...);
+
+/**
+ * ibus_text_new_from_unichar:
+ * @c: A single UCS4-encoded character.
+ * @returns: A newly allocated IBusText.
+ * 
+ * New an IBusText from a single UCS4-encoded character.
+ */
 IBusText        *ibus_text_new_from_unichar         (gunichar        c);
+
+/**
+ * ibus_text_append_attribute:
+ * @text: an IBusText
+ * @type: IBusAttributeType for @text.
+ * @value: Value for the type.
+ * @start_index: The starting index, inclusive.
+ * @end_index: The ending index, exclusive.
+ * 
+ * Append an IBusAttribute for IBusText. 
+ */
 void             ibus_text_append_attribute         (IBusText       *text,
                                                      guint           type,
                                                      guint           value,
                                                      guint           start_index,
                                                      gint            end_index);
+/**
+ * ibus_text_get_length:
+ * @text: An IBusText.
+ * @returns: Number of character in @text, not counted by bytes.
+ * 
+ * Return number of characters in an IBusText.
+ * This function is based on g_utf8_strlen(), so unlike strlen(),
+ * it does not count by bytes but characters instead.
+ */
 guint            ibus_text_get_length               (IBusText       *text);
 
 G_END_DECLS

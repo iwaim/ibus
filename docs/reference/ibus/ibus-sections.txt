@@ -90,6 +90,15 @@ IBUS_PROXY_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>ibustypes</FILE>
+<TITLE>IBusTypes</TITLE>
+IBusModifierType
+IBusCapabilite
+IBusRectangle
+IBusFreeFunc
+</SECTION>
+
+<SECTION>
 <FILE>ibusconfig</FILE>
 <TITLE>IBusConfig</TITLE>
 IBusConfig
@@ -516,13 +525,6 @@ ibus_xml_free
 ibus_xml_output
 </SECTION>
 
-<SECTION>
-<FILE>ibustypes</FILE>
-IBusModifierType
-IBusCapabilite
-IBusRectangle
-IBusFreeFunc
-</SECTION>
 
 <SECTION>
 <FILE>ibusmessage</FILE>
