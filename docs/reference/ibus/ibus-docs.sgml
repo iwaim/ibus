@@ -36,9 +36,11 @@
       <para>
       </para>
       <xi:include href="xml/ibusbus.xml"/>
+      <xi:include href="xml/ibuscomponent.xml"/>
       <xi:include href="xml/ibusconnection.xml"/>
       <xi:include href="xml/ibusengine.xml"/>
       <xi:include href="xml/ibusenginedesc.xml"/>
+      <xi:include href="xml/ibusfactory.xml"/>
       <xi:include href="xml/ibushotkey.xml"/>
       <xi:include href="xml/ibuskeysyms.xml"/>
   </chapter>
@@ -47,17 +49,16 @@
       <para>
       </para>
       <xi:include href="xml/ibusconfig.xml"/>
+      <xi:include href="xml/ibusconfigservice.xml"/>
       <xi:include href="xml/ibusxml.xml"/>
   </chapter>
   <chapter>
       <title>Others</title>     
       <para>
       </para>
-      <xi:include href="xml/ibuscomponent.xml"/>
       <xi:include href="xml/ibusdebug.xml"/>
       <xi:include href="xml/ibusenumtypes.xml"/>
       <xi:include href="xml/ibuserror.xml"/>
-      <xi:include href="xml/ibusfactory.xml"/>
       <xi:include href="xml/ibusinputcontext.xml"/>
       <xi:include href="xml/ibusinternal.xml"/>
       <xi:include href="xml/ibusmarshalers.xml"/>

@@ -171,6 +171,7 @@ struct _IBusPropertyClass {
 struct _IBusPropList {
     IBusSerializable parent;
 
+    /*< public >*/
     GArray *properties;
 };
 
@@ -189,7 +190,7 @@ GType            ibus_property_get_type     ();
  * @visible: Whether the IBusProperty is visible.
  * @type: IBusPropType of IBusProperty.
  * @state: IBusPropState of IBusProperty.
- * @sub_props: IBusPropList that contains sub IBusProperties.
+ * @prop_list: IBusPropList that contains sub IBusProperties.
  * @returns: A newly allocated IBusProperty.
  *
  * New a IBusProperty.
@@ -274,9 +275,6 @@ IBusProperty    *ibus_prop_list_get         (IBusPropList   *prop_list,
  * @returns: TRUE if succeeded, FALSE otherwise.
  *
  * Update an IBusProperty in IBusPropList.
- *
- * <note><para>This function is not implemented yet.</para>
- * </note>
  */
 gboolean         ibus_prop_list_update_property
                                             (IBusPropList   *prop_list,

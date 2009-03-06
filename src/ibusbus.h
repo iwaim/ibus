@@ -86,7 +86,7 @@ IBusBus     *ibus_bus_new               (void);
 
 /**
  * ibus_bus_is_connected:
- * @bus: the IBusBus instance to be processed.
+ * @bus: An IBusBus.
  * @returns: TRUE if @bus is connected, FALSE otherwise.
  *
  * Return TRUE if @bus is connected to iBus daemon.
@@ -96,7 +96,7 @@ gboolean     ibus_bus_is_connected      (IBusBus        *bus);
 
 /**
  * ibus_bus_get_connection:
- * @bus: the IBusBus instance to be processed.
+ * @bus: An IBusBus.
  * @returns: TRUE if @bus is connected, FALSE otherwise.
  *
  * Return IBusConnection of an IBusIBus instance.
@@ -111,6 +111,7 @@ const gchar *ibus_bus_hello             (IBusBus        *bus);
  * ibus_bus_request_name:
  * @bus: the IBusBus instance to be processed.
  * @name: Name to be requested.
+ * @flags: Flags (FixMe).
  * @returns: 0 if failed; positive number otherwise.
  * 
  * Request a name from iBus daemon.
@@ -120,7 +121,7 @@ guint        ibus_bus_request_name      (IBusBus        *bus,
                                          guint           flags);
 /**
  * ibus_bus_release_name:
- * @bus: the IBusBus instance to be processed.
+ * @bus: An IBusBus.
  * @name: Name to be released.
  * @returns: 0 if failed; positive number otherwise.
  * 
@@ -128,13 +129,54 @@ guint        ibus_bus_request_name      (IBusBus        *bus,
  */
 guint        ibus_bus_release_name      (IBusBus        *bus,
                                          const gchar    *name);
+
+/**
+ * ibus_bus_name_has_owner:
+ * @bus: An IBusBus.
+ * @name: Name to be released.
+ * @returns: TRUE if the name has owner, FALSE otherwise.
+ * 
+ * Whether the name has owner.
+ */
 gboolean     ibus_bus_name_has_owner    (IBusBus        *bus,
                                          const gchar    *name);
+
+/**
+ * ibus_bus_list_names:
+ * @bus: An IBusBus.
+ * @returns: Lists that attached to @bus.
+ * 
+ * Return lists that attached to @bus.
+ * <note><para>[FixMe] Not implemented yet, only return NULL.</para></note>
+ */
 GList       *ibus_bus_list_names        (IBusBus        *bus);
+
+/**
+ * ibus_bus_add_match:
+ * @bus: An IBusBus.
+ * @rule: Match rule.
+ * 
+ * Add a match rule to an IBusBus.
+ */
 void         ibus_bus_add_match         (IBusBus        *bus,
                                          const gchar    *rule);
+/**
+ * ibus_bus_remove_match:
+ * @bus: An IBusBus.
+ * @rule: Match rule.
+ * 
+ * Remove a match rule to an IBusBus.
+ */
 void         ibus_bus_remove_match      (IBusBus        *bus,
                                          const gchar    *rule);
+/**
+ * ibus_bus_get_name_owner:
+ * @bus: An IBusBus.
+ * @name: Name.
+ * @returns: Owner of the name.
+ * 
+ * Return the name owner.
+ */
 const gchar *ibus_bus_get_name_owner    (IBusBus        *bus,
                                          const gchar    *name);
 /* declare ibus methods */
@@ -146,6 +188,7 @@ IBusInputContext
                                          const gchar    *client_name);
 gboolean     ibus_bus_register_component(IBusBus        *bus,
                                          IBusComponent  *component);
+
 GList       *ibus_bus_list_engines      (IBusBus        *bus);
 GList       *ibus_bus_list_active_engines
                                         (IBusBus        *bus);

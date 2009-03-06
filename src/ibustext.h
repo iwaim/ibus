@@ -68,6 +68,7 @@ struct _IBusText {
     IBusSerializable parent;
 
     /* members */
+    /*< public >*/
     gboolean is_static;
     gchar  *text;
     IBusAttrList *attrs;
@@ -89,7 +90,7 @@ GType            ibus_text_get_type                 (void);
 IBusText        *ibus_text_new_from_string          (const gchar    *str);
 
 /**
- * ibus_text_new_from_string:
+ * ibus_text_new_from_ucs4:
  * @str: An text string to be set.
  * @returns: A newly allocated IBusText.
  * 
@@ -98,7 +99,7 @@ IBusText        *ibus_text_new_from_string          (const gchar    *str);
 IBusText        *ibus_text_new_from_ucs4            (const gunichar *str);
 
 /**
- * ibus_text_new_from_string:
+ * ibus_text_new_from_static_string:
  * @str: An text string to be set.
  * @returns: A newly allocated IBusText.
  * 
@@ -108,8 +109,9 @@ IBusText        *ibus_text_new_from_ucs4            (const gunichar *str);
 IBusText        *ibus_text_new_from_static_string   (const gchar    *str);
 
 /**
- * ibus_text_new_from_string:
+ * ibus_text_new_from_printf:
  * @fmt: printf format string.
+ * @...: arguments for @fmt.
  * @returns: A newly allocated IBusText.
  * 
  * New an IBusText from a printf expression.

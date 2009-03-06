@@ -121,7 +121,7 @@ struct _IBusRectangle {
 
 /**
  * IBusFreeFunc:
- * @object object to be freed.
+ * @object: object to be freed.
  * 
  * Free function prototype.
  */

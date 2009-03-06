@@ -377,7 +377,16 @@ ibus_bus_set_watch_dbus_signal (IBusBus        *bus,
     }
 }
 
-
+/*
+ * ibus_bus_call:
+ * @bus: An IBusBus
+ * @name: 
+ * @path:
+ * @interface:
+ * @member:
+ * @first_arg_type:
+ * @returns: TRUE if succeed, FALSE otherwise.
+ */
 static gboolean
 ibus_bus_call (IBusBus      *bus,
                const gchar  *name,
