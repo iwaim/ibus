@@ -499,6 +499,7 @@ bus_match_rule_match (BusMatchRule   *rule,
             ibus_message_iter_next (&iter);
         }
     }
+
     return TRUE;
 }
 
